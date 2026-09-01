@@ -539,6 +539,7 @@ tbody tr:hover td{background:#F5F9FF}
         <option value="EM DIA">Em dia</option>
         <option value="VENCIDO">Vencido</option>
         <option value="A TERMINAR">A terminar</option>
+        <option value="ISENTO">Isento</option>
       </select>
       <select class="filter-select" id="sf-tipo" onchange="renderSociosList()">
         <option value="">Todos os tipos</option>
@@ -549,6 +550,15 @@ tbody tr:hover td{background:#F5F9FF}
         <option value="BENEMÉRITO">Benemérito</option>
       </select>
       <input type="text" class="filter-input" id="sf-busca" placeholder="Pesquisar nome, NIF, email..." oninput="renderSociosList()" style="min-width:200px">
+      <span id="sf-contagem" style="margin-left:auto;font-size:12.5px;font-weight:700;color:#1B4570;background:#E6F1FB;padding:6px 12px;border-radius:20px;white-space:nowrap">—</span>
+      <button class="btn-secondary" onclick="toggleResumoSocios()" id="btn-resumo-socios" title="Ver quantos sócios há por tipo e estado">📊 Contagem</button>
+    </div>
+    <div class="card" id="socios-resumo" style="display:none;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <div class="card-title" style="margin:0">📊 Contagem de sócios por tipo</div>
+        <div style="font-size:11.5px;color:var(--text-2)">Clica numa linha para filtrar a lista por esse tipo · <a href="#" onclick="limparFiltrosSocios();return false" style="color:#1B4570">limpar filtros</a></div>
+      </div>
+      <div class="table-wrap" id="socios-resumo-tabela"></div>
     </div>
     <div class="card"><div class="table-wrap" id="tabela-socios"></div></div>
   </div>
@@ -9698,6 +9708,44 @@ function renderSociosMetrics(){
     <div class="metric-card"><div class="metric-label">A Terminar</div><div class="metric-value" style="color:var(--amber)">${at2}</div></div>`;
 }
 
+// ---- Contagem de sócios por tipo × estado / situação ----
+function toggleResumoSocios(){
+  const c=document.getElementById('socios-resumo'); if(!c) return;
+  const abrir = c.style.display==='none';
+  c.style.display = abrir ? 'block' : 'none';
+  const b=document.getElementById('btn-resumo-socios'); if(b) b.textContent = abrir ? '📊 Esconder contagem' : '📊 Contagem';
+  if(abrir) renderResumoSocios();
+}
+function limparFiltrosSocios(){
+  ['sf-estado','sf-situacao','sf-tipo','sf-busca'].forEach(id=>{const e=document.getElementById(id); if(e) e.value='';});
+  renderSociosList();
+}
+function filtrarPorTipoResumo(tipo){
+  const e=document.getElementById('sf-tipo'); if(!e) return;
+  if(![...e.options].some(o=>o.value===tipo)){ const o=document.createElement('option'); o.value=tipo; o.textContent=tipo.charAt(0)+tipo.slice(1).toLowerCase(); e.appendChild(o); }
+  e.value = (e.value===tipo) ? '' : tipo;
+  renderSociosList();
+}
+function renderResumoSocios(){
+  const el=document.getElementById('socios-resumo-tabela'); if(!el) return;
+  const ordem=['FUNDADOR','EFETIVO','ATLETA','HONORÁRIO','BENEMÉRITO','PARCEIRO/EMPRESA'];
+  const tipos=[...new Set(socios.map(s=>s.tipo||'—'))].sort((a,b)=>{const ia=ordem.indexOf(a),ib=ordem.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b);});
+  const n=(arr,f)=>arr.filter(f).length;
+  const linha=(nome,arr,tipo)=>{
+    const c=n(arr,s=>s.estado==='ATIVO'), i=n(arr,s=>s.estado==='INATIVO'), o=n(arr,s=>s.estado!=='ATIVO'&&s.estado!=='INATIVO');
+    const ed=n(arr,s=>s.situacao==='EM DIA'), ve=n(arr,s=>s.situacao==='VENCIDO'), at=n(arr,s=>s.situacao==='A TERMINAR'), is=n(arr,s=>s.situacao==='ISENTO');
+    const sel = tipo && document.getElementById('sf-tipo')?.value===tipo;
+    const st = tipo ? `cursor:pointer;${sel?'background:#E6F1FB;':''}` : 'font-weight:700;background:var(--bg2);';
+    const cl = tipo ? `onclick="filtrarPorTipoResumo('${tipo.replace(/'/g,"\\'")}')" title="Filtrar a lista por ${nome}"` : '';
+    return `<tr style="${st}" ${cl}><td style="font-weight:600">${nome}</td><td>${arr.length}</td><td style="color:var(--teal-d)">${c}</td><td style="color:var(--text-3)">${i}</td><td style="color:var(--amber-d)">${o}</td><td style="color:#085041">${ed}</td><td style="color:#712B13">${ve}</td><td style="color:#633806">${at}</td><td style="color:#1B4570">${is}</td></tr>`;
+  };
+  el.innerHTML=`<table><thead><tr><th>Tipo</th><th>Total</th><th>Ativos</th><th>Inativos</th><th>Outros*</th><th>Em dia</th><th>Vencidos</th><th>A terminar</th><th>Isentos</th></tr></thead><tbody>
+    ${tipos.map(t=>linha(t.charAt(0)+t.slice(1).toLowerCase(), socios.filter(s=>(s.tipo||'—')===t), t)).join('')}
+    ${linha('Todos', socios, null)}
+  </tbody></table>
+  <div style="font-size:11px;color:var(--text-3);margin-top:8px">* Outros = estados "Atenção" e "Faleceu". Situação (em dia / vencido / a terminar / isento) calculada pela validade da quota.</div>`;
+}
+
 function renderSociosList(){
   const fE=document.getElementById('sf-estado').value;
   const fS=document.getElementById('sf-situacao').value;
@@ -9709,6 +9757,9 @@ function renderSociosList(){
   if(fT) ms=ms.filter(s=>s.tipo===fT);
   if(fB) ms=ms.filter(s=>(s.nome||'').toLowerCase().includes(fB)||(s.nif||'').includes(fB)||(s.email||'').toLowerCase().includes(fB)||String(s.num).includes(fB));
   ms.sort((a,b)=>a.num-b.num);
+  const cont=document.getElementById('sf-contagem');
+  if(cont){ const filtrado=(fE||fS||fT||fB); cont.textContent = filtrado ? `${ms.length} de ${socios.length} sócios` : `${socios.length} sócios`; }
+  if(document.getElementById('socios-resumo')?.style.display!=='none') renderResumoSocios();
   const el=document.getElementById('tabela-socios');
   if(!ms.length){el.innerHTML='<div class="empty-state"><p>Nenhum sócio encontrado.</p></div>';return;}
   const sB=s=>{const c={'EM DIA':'#085041','VENCIDO':'#712B13','A TERMINAR':'#633806','ISENTO':'#1B4570'}[s]||'var(--text-2)';const bg={'EM DIA':'#E1F5EE','VENCIDO':'#FAECE7','A TERMINAR':'#FAEEDA','ISENTO':'#DCE7F0'}[s]||'var(--bg2)';return `<span style="background:${bg};color:${c};padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;display:inline-block;line-height:1.4">${s||'—'}</span>`;};
