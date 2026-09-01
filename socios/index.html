@@ -304,7 +304,7 @@ body{background:#F3F5F8}
 /* Menu lateral com botões coloridos */
 .menu-lateral{width:236px;flex-shrink:0;background:#fff;border-right:0.5px solid #dfe3e8;padding:14px 12px 18px;display:flex;flex-direction:column;gap:7px;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto}
 .ml-grupo{font-size:10px;font-weight:800;color:#8a94a3;text-transform:uppercase;letter-spacing:.9px;padding:12px 4px 4px}
-.ml-btn{flex-shrink:0}
+.ml-btn{flex-shrink:0;background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 55%,#fff) 100%)}
 .menu-lateral{gap:9px}
 .ml-btn{--c:#1B4570;display:flex;align-items:stretch;width:100%;border:none;border-radius:9px;overflow:hidden;cursor:pointer;color:#fff;font-weight:700;font-size:12px;letter-spacing:.5px;text-transform:uppercase;background:var(--c);box-shadow:0 2px 6px rgba(0,0,0,.14);transition:transform .12s,box-shadow .12s,filter .12s;text-decoration:none;padding:0;font-family:inherit;text-align:left}
 .ml-lbl{flex:1;padding:10px 12px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -347,6 +347,13 @@ tbody tr:hover td{background:#F5F9FF}
 .filter-select,.filter-input,.year-sel,.mes-sel{border-radius:9px}
 .filter-select:focus,.filter-input:focus,input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!important;box-shadow:0 0 0 3px rgba(46,97,153,.15)}
 .chat-fab{background:linear-gradient(135deg,#1B4570,#2F7A8F)}
+/* Abas internas das páginas com o mesmo estilo dos botões do menu */
+.inner-tab{--c:#A995D2;color:#2B3440;border-radius:9px;padding:10px 16px;font-weight:700;font-size:12px;letter-spacing:.4px;text-transform:uppercase;background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 55%,#fff) 100%);box-shadow:0 1px 4px rgba(0,0,0,.08);transition:transform .12s,box-shadow .12s}
+.inner-tab:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.14)}
+.inner-tab.active{color:#1E2833;background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 55%,#fff) 100%);box-shadow:0 0 0 2px #fff,0 0 0 4px var(--c),0 4px 10px rgba(0,0,0,.12)}
+.inner-tabs .inner-tab:nth-child(1){--c:#A995D2}.inner-tabs .inner-tab:nth-child(2){--c:#83BEDD}.inner-tabs .inner-tab:nth-child(3){--c:#7CCBB9}
+.inner-tabs .inner-tab:nth-child(4){--c:#E9A27A}.inner-tabs .inner-tab:nth-child(5){--c:#9DD6CD}.inner-tabs .inner-tab:nth-child(6){--c:#7F9CC4}
+.inner-tabs .inner-tab:nth-child(7){--c:#D4B27A}.inner-tabs .inner-tab:nth-child(8){--c:#D99DB7}
 </style>
 </head>
 <body>
@@ -418,13 +425,8 @@ tbody tr:hover td{background:#F5F9FF}
   <button class="ml-btn ml-verde-cl" data-ml="socios:parcerias" onclick="irPara('socios','parcerias')"><span class="ml-lbl">Parcerias</span><span class="ml-ico">🤝</span></button>
   <button class="ml-btn ml-marinho" onclick="openModalSocio()"><span class="ml-lbl">+ Novo Sócio</span><span class="ml-ico">➕</span></button>
 
-  <div class="ml-grupo">Configurações</div>
-  <button class="ml-btn ml-dourado" data-ml="config:quotas" onclick="irPara('config','quotas')"><span class="ml-lbl">Quotas</span><span class="ml-ico">💶</span></button>
-  <button class="ml-btn ml-azul-esc" data-ml="config:direccao" onclick="irPara('config','direccao')"><span class="ml-lbl">Direção</span><span class="ml-ico">👥</span></button>
-  <button class="ml-btn ml-rosa" data-ml="config:acessos" onclick="irPara('config','acessos')"><span class="ml-lbl">Acessos</span><span class="ml-ico">🔐</span></button>
-  <button class="ml-btn ml-teal" data-ml="config:dados" onclick="irPara('config','dados')"><span class="ml-lbl">Dados &amp; Drive</span><span class="ml-ico">💾</span></button>
-  <button class="ml-btn ml-azul" data-ml="config:email" onclick="irPara('config','email')"><span class="ml-lbl">Email</span><span class="ml-ico">📧</span></button>
-  <button class="ml-btn ml-marinho" data-ml="config:associacao" onclick="irPara('config','associacao')"><span class="ml-lbl">Associação</span><span class="ml-ico">🏢</span></button>
+  <div class="ml-grupo">Gestão</div>
+  <button class="ml-btn ml-dourado" data-ml="config" onclick="irPara('config','quotas')"><span class="ml-lbl">Configurações</span><span class="ml-ico">⚙️</span></button>
 
   <div class="ml-rodape">ARCA d'Ajuda · Gestão de Sócios</div>
 </aside>
@@ -1591,7 +1593,7 @@ function atualizarMenuLateral(){
     chave='socios:'+(t||'lista');
   } else if(document.getElementById('page-gestao-config')?.classList.contains('active')){
     const act=document.querySelector('#page-gestao-config .inner-panel.active');
-    chave='config:'+(act ? act.id.replace('config-inner-','') : 'quotas');
+    chave='config';
   }
   ml.querySelectorAll('.ml-btn[data-ml]').forEach(b=>b.classList.toggle('active', b.dataset.ml===chave));
 }
