@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARCA d'Ajuda — Ofícios e Protocolos</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1B4570;--navy2:#2E6199;--teal:#0F6E56;--teal-l:#E1F5EE;--teal-d:#085041;
+  --coral:#D85A30;--coral-l:#FAECE7;--coral-d:#712B13;--amber:#BA7517;--amber-l:#FAEEDA;--amber-d:#633806;
+  --blue:#185FA5;--blue-l:#E6F1FB;
+  --text:#1a1a1a;--text-2:#555;--text-3:#888;--bg:#fff;--bg2:#F8F8F6;--bg3:#F1F1EE;
+  --border:0.5px solid #ddd;--radius:9px;--radius-lg:12px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;color:var(--text);background:#F3F5F8;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:64px;background:linear-gradient(90deg,#1B4570 0%,#2E6199 60%,#2F7A8F 100%);box-shadow:0 3px 12px rgba(27,69,112,.28);position:sticky;top:0;z-index:100;gap:12px}
+.logo-wrap{display:flex;align-items:center;gap:12px}
+.logo-badge{width:48px;height:48px;border-radius:50%;background:#fff;color:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,.2);overflow:hidden;flex-shrink:0}
+.logo-badge img{width:100%;height:100%;object-fit:cover}
+.logo-text{font-size:16px;font-weight:600;color:#fff}
+.logo-sub{font-size:11px;color:rgba(255,255,255,.75);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.user-chip{color:#fff;font-size:12px;text-align:right;line-height:1.3}
+.user-chip small{color:rgba(255,255,255,.7)}
+.icon-btn{--c:#83BEDD;width:42px;height:42px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 55%,#fff) 100%);color:#2B3440;box-shadow:0 2px 6px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;transition:transform .12s}
+.icon-btn:hover{transform:translateY(-1px);filter:brightness(1.06)}
+.icon-btn svg{width:19px;height:19px}
+.icon-btn.sair{--c:#DC9A92}.icon-btn.ajuda{--c:#83BEDD}
+
+/* LAYOUT */
+.app-body{display:flex;flex:1;min-height:0}
+.menu-lateral{width:236px;flex-shrink:0;background:#fff;border-right:0.5px solid #dfe3e8;padding:12px 12px 10px;display:flex;flex-direction:column;gap:clamp(9px,1.9vh,22px);position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;scrollbar-width:none}
+.menu-lateral::-webkit-scrollbar{display:none}
+.ml-grupo{font-size:10px;font-weight:800;color:#8a94a3;text-transform:uppercase;letter-spacing:.9px;padding:clamp(6px,1.5vh,16px) 4px 2px}
+.ml-btn{--c:#1B4570;flex-shrink:0;display:flex;align-items:stretch;width:100%;border:none;border-radius:9px;overflow:hidden;cursor:pointer;color:#fff;font-weight:700;font-size:12.5px;letter-spacing:.5px;text-transform:uppercase;background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 72%,#fff) 100%);box-shadow:0 3px 9px color-mix(in srgb,var(--c) 45%,transparent);transition:transform .12s,filter .12s;text-decoration:none;padding:0;font-family:inherit;text-align:left}
+.ml-lbl{flex:1;padding:clamp(9px,1.8vh,15px) 13px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ml-ico{width:40px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.22);font-size:16px}
+.ml-btn:hover{transform:translateX(3px);filter:brightness(1.08)}
+.ml-btn.active,.ml-btn.active:hover{transform:translateX(3px);outline:1.5px solid color-mix(in srgb,var(--c) 55%,#0E1A26);outline-offset:0}
+.ml-btn.active .ml-ico{background:rgba(255,255,255,.38)}
+.ml-geral{--c:#1B4570;background:linear-gradient(135deg,#1B4570,#2E6199 60%,#2F7A8F)!important;font-size:13.5px;margin-bottom:4px}
+.ml-geral .ml-lbl{padding-top:clamp(13px,2.4vh,20px);padding-bottom:clamp(13px,2.4vh,20px)}
+.ml-roxo{--c:#6C4BB6}.ml-azul{--c:#1F8FC8}.ml-verde{--c:#15A38F}.ml-marinho{--c:#2F5F9E}.ml-dourado{--c:#B8863B}.ml-laranja{--c:#E0703A}
+.ml-rodape{margin-top:auto;padding-top:8px;font-size:10.5px;color:#9aa3ae;text-align:center;line-height:1.5}
+.main{flex:1;overflow-y:auto;padding:24px 26px}
+@media(max-width:900px){.menu-lateral{display:none}.main{padding:16px 14px}.topbar{height:auto;padding:10px 14px;flex-wrap:wrap}.mobile-nav.inner-tabs{display:flex}}
+@media(max-height:720px){.ml-rodape{display:none}}
+.mobile-nav.inner-tabs{display:none;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.mobile-nav .inner-tab{flex:1;text-align:center}
+
+/* PAGES */
+.page{display:none}.page.active{display:block}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:12px;flex-wrap:wrap}
+.page-title{font-size:23px;font-weight:700;letter-spacing:-.2px}
+.page-sub{font-size:12.5px;color:var(--text-3);margin-top:3px}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn-primary{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:linear-gradient(135deg,#1B4570,#2E6199);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;box-shadow:0 3px 10px rgba(27,69,112,.28);white-space:nowrap}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-primary:disabled{opacity:.6;cursor:default}
+.btn-secondary{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#fff;color:var(--text-2);border:var(--border);border-radius:9px;font-size:13px;white-space:nowrap;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.btn-secondary:hover{background:var(--bg2)}
+.btn-danger{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--coral-l);color:var(--coral-d);border:0.5px solid #E8B4A3;border-radius:9px;font-size:13px}
+.btn-edit{display:inline-flex;align-items:center;gap:4px;padding:4px 7px;background:transparent;color:var(--text-2);border:var(--border);border-radius:7px;font-size:12px}
+.btn-edit:hover{background:var(--bg2)}
+.card{background:#fff;border-radius:var(--radius-lg);padding:18px;box-shadow:0 1px 3px rgba(16,24,40,.06),0 6px 18px rgba(16,24,40,.05);margin-bottom:14px}
+.card-title{font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px}
+.metric-card{background:#fff;border-radius:var(--radius-lg);padding:15px;box-shadow:0 1px 3px rgba(16,24,40,.06),0 6px 18px rgba(16,24,40,.05);position:relative;overflow:hidden}
+.metric-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:#1FA7DA}
+.metric-card:nth-child(2)::before{background:#12B8A4}.metric-card:nth-child(3)::before{background:#E8752E}.metric-card:nth-child(4)::before{background:#6C4BB6}
+.metric-label{font-size:10px;color:var(--text-3);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.metric-value{font-size:24px;font-weight:700}
+.filters-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;padding:12px 14px;background:#fff;border-radius:var(--radius-lg);box-shadow:0 1px 3px rgba(16,24,40,.06)}
+.filter-select,.filter-input{padding:8px 10px;border-radius:9px;border:var(--border);background:var(--bg2);font-size:13px;color:var(--text)}
+.filter-input{min-width:200px}
+.contador{margin-left:auto;font-size:12.5px;font-weight:700;color:#1B4570;background:#E6F1FB;padding:6px 12px;border-radius:20px;white-space:nowrap}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 8px;color:#4A5568;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.2px;border-bottom:1px solid #E1E6ED;white-space:nowrap;background:linear-gradient(180deg,#F7F9FC,#EEF2F7)}
+td{padding:8px 8px;border-bottom:var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#F5F9FF}
+.td-actions{white-space:nowrap;display:flex;gap:3px}
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10.5px;font-weight:600;white-space:nowrap}
+.badge-tipo{background:var(--amber-l);color:var(--amber-d)}
+.badge-rascunho{background:var(--bg3);color:var(--text-2)}
+.badge-enviado{background:var(--teal-l);color:var(--teal-d)}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-3);font-size:13px}
+.inner-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.inner-tab{--c:#A995D2;padding:9px 16px;font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;border-radius:9px;border:none;color:#2B3440;background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 55%,#fff) 100%);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.inner-tab:nth-child(2){--c:#83BEDD}.inner-tab:nth-child(3){--c:#7CCBB9}.inner-tab:nth-child(4){--c:#E9A27A}
+.inner-tab.active{outline:1.5px solid color-mix(in srgb,var(--c) 45%,#1E2833)}
+
+/* FORMS */
+.form-grid{display:flex;flex-direction:column;gap:12px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:5px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 11px;border:1.5px solid #E2D5BC;border-radius:8px;font-size:13.5px;background:#FBF8F0}
+.form-group textarea{min-height:220px;line-height:1.6;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!important;box-shadow:0 0 0 3px rgba(46,97,153,.15)}
+.ajuda{font-size:11.5px;color:var(--text-3);margin-top:4px;line-height:1.5}
+@media(max-width:640px){.form-row{grid-template-columns:1fr}}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,25,40,.5);display:none;align-items:center;justify-content:center;z-index:500;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:720px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);padding:22px 24px}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.modal-title{font-size:17px;font-weight:700}
+.modal-close{background:none;border:none;font-size:22px;color:var(--text-3);line-height:1}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;flex-wrap:wrap}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;opacity:0;transition:all .25s;z-index:900;pointer-events:none;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:#A23B2E}
+
+/* LOGIN */
+#login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#12314F,#1B4570);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px}
+#login-overlay .box{background:#fff;border-radius:16px;padding:28px 26px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-overlay">
+  <div class="box">
+    <div id="login-logo-area" style="display:flex;justify-content:center;margin-bottom:10px"></div>
+    <div style="text-align:center;font-size:13px;font-weight:700;color:#1B4570;letter-spacing:.5px;text-transform:uppercase">ARCA d'Ajuda</div>
+    <div style="text-align:center;font-size:19px;font-weight:700;margin:4px 0 18px">Ofícios e Protocolos</div>
+    <div class="form-group"><label>Email</label><input type="email" id="login-email" placeholder="email da associação" autocomplete="username"></div>
+    <div class="form-group" style="margin-top:10px"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')fazerLogin()"></div>
+    <div id="login-erro" style="color:#A23B2E;font-size:12.5px;margin-top:10px;text-align:center;display:none"></div>
+    <button class="btn-primary" id="login-btn" style="width:100%;justify-content:center;margin-top:16px" onclick="fazerLogin()">Entrar</button>
+    <div class="ajuda" style="text-align:center;margin-top:12px">Mesmo email e password da app de Sócios.</div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-wrap">
+    <div class="logo-badge" id="logo-badge">AR</div>
+    <div>
+      <div class="logo-text">ARCA d'Ajuda</div>
+      <div class="logo-sub">Ofícios e Protocolos</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="user-chip"><div id="user-email">—</div><small>sessão iniciada</small></div>
+    <button class="icon-btn ajuda" onclick="abrirAjuda()" title="Ajuda">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </button>
+    <button class="icon-btn sair" onclick="if(confirm('Sair da conta neste dispositivo?'))supaLogout()" title="Sair">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="app-body">
+<aside class="menu-lateral" id="menu-lateral">
+  <a class="ml-btn ml-geral" href="../index.html" title="Menu Geral"><span class="ml-lbl">Menu Geral</span><span class="ml-ico">🏠</span></a>
+  <div class="ml-grupo">Ofícios</div>
+  <button class="ml-btn ml-roxo active" data-ml="lista" onclick="irPara('lista')"><span class="ml-lbl">Lista de Ofícios</span><span class="ml-ico">📋</span></button>
+  <button class="ml-btn ml-marinho" onclick="openModalOficio()"><span class="ml-lbl">+ Novo Ofício</span><span class="ml-ico">✍️</span></button>
+  <div class="ml-grupo">Protocolos</div>
+  <button class="ml-btn ml-azul" data-ml="protocolos" onclick="irPara('protocolos')"><span class="ml-lbl">Lista de Protocolos</span><span class="ml-ico">🤝</span></button>
+  <button class="ml-btn ml-laranja" onclick="openModalProtocolo()"><span class="ml-lbl">+ Novo Protocolo</span><span class="ml-ico">📜</span></button>
+  <div class="ml-grupo">Modelos</div>
+  <button class="ml-btn ml-verde" data-ml="modelos" onclick="irPara('modelos')"><span class="ml-lbl">Modelos de texto</span><span class="ml-ico">📑</span></button>
+  <div class="ml-grupo">Gestão</div>
+  <button class="ml-btn ml-dourado" data-ml="config" onclick="irPara('config')"><span class="ml-lbl">Configurações</span><span class="ml-ico">⚙️</span></button>
+  <div class="ml-rodape">ARCA d'Ajuda · Ofícios e Protocolos</div>
+</aside>
+
+<main class="main">
+  <div class="mobile-nav inner-tabs">
+    <button class="inner-tab active" onclick="irPara('lista')">📋 Lista</button>
+    <button class="inner-tab" onclick="irPara('protocolos')">🤝 Protocolos</button>
+    <button class="inner-tab" onclick="irPara('modelos')">📑 Modelos</button>
+    <button class="inner-tab" onclick="irPara('config')">⚙️ Config</button>
+  </div>
+
+  <!-- LISTA -->
+  <div class="page active" id="page-lista">
+    <div class="page-header">
+      <div><div class="page-title">📝 Ofícios</div><div class="page-sub">Documentos oficiais numerados automaticamente, com papel timbrado</div></div>
+      <div class="header-actions">
+        <button class="btn-secondary" onclick="exportarCSV()">⬇ CSV</button>
+        <button class="btn-primary" onclick="openModalOficio()">+ Novo Ofício</button>
+      </div>
+    </div>
+    <div class="metrics-grid" id="of-metrics"></div>
+    <div class="filters-bar">
+      <select class="filter-select" id="f-ano" onchange="renderOficios()"><option value="">Todos os anos</option></select>
+      <select class="filter-select" id="f-tipo" onchange="renderOficios()"><option value="">Todos os tipos</option></select>
+      <select class="filter-select" id="f-estado" onchange="renderOficios()">
+        <option value="">Todos os estados</option>
+        <option value="rascunho">Rascunho</option>
+        <option value="enviado">Enviado</option>
+      </select>
+      <input type="text" class="filter-input" id="f-busca" placeholder="Pesquisar nº, destinatário, assunto..." oninput="renderOficios()">
+      <span class="contador" id="f-contagem">—</span>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap" id="tabela-oficios"><div class="empty-state">A carregar…</div></div></div>
+  </div>
+
+  <!-- PROTOCOLOS -->
+  <div class="page" id="page-protocolos">
+    <div class="page-header">
+      <div><div class="page-title">🤝 Protocolos</div><div class="page-sub">Acordos com entidades, parceiros e patrocinadores — cláusulas e assinatura das duas partes</div></div>
+      <div class="header-actions">
+        <button class="btn-secondary" onclick="exportarCSV('protocolo')">⬇ CSV</button>
+        <button class="btn-primary" onclick="openModalProtocolo()">+ Novo Protocolo</button>
+      </div>
+    </div>
+    <div class="metrics-grid" id="pr-metrics"></div>
+    <div class="filters-bar">
+      <select class="filter-select" id="pf-ano" onchange="renderProtocolos()"><option value="">Todos os anos</option></select>
+      <select class="filter-select" id="pf-tipo" onchange="renderProtocolos()"><option value="">Todos os tipos</option></select>
+      <select class="filter-select" id="pf-estado" onchange="renderProtocolos()">
+        <option value="">Todos os estados</option>
+        <option value="rascunho">Rascunho</option>
+        <option value="assinado">Assinado / em vigor</option>
+        <option value="terminado">Terminado</option>
+      </select>
+      <input type="text" class="filter-input" id="pf-busca" placeholder="Pesquisar nº, entidade, objeto..." oninput="renderProtocolos()">
+      <span class="contador" id="pf-contagem">—</span>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap" id="tabela-protocolos"><div class="empty-state">A carregar…</div></div></div>
+  </div>
+
+  <!-- MODELOS -->
+  <div class="page" id="page-modelos">
+    <div class="page-header">
+      <div><div class="page-title">📑 Modelos de ofício</div><div class="page-sub">Textos base por tipo. Ao criar um ofício, o modelo é preenchido e podes alterá-lo à vontade.</div></div>
+      <div class="header-actions">
+        <button class="btn-secondary" onclick="reporModelosPadrao()">↺ Repor modelos originais</button>
+        <button class="btn-primary" onclick="guardarModelos()">💾 Guardar modelos</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ajuda" style="margin-bottom:12px">Usa <b>[texto entre parênteses retos]</b> para marcar o que deve ser preenchido em cada ofício. Podes ainda usar as etiquetas <b>{associacao}</b>, <b>{ano}</b> e <b>{data}</b>, substituídas automaticamente.</div>
+      <div id="modelos-area"></div>
+    </div>
+  </div>
+
+  <!-- CONFIG -->
+  <div class="page" id="page-config">
+    <div class="page-header">
+      <div><div class="page-title">⚙️ Configurações</div><div class="page-sub">Dados do papel timbrado e assinatura</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🏢 Dados no papel timbrado</div>
+      <div class="ajuda" style="margin-bottom:12px">Estes dados vêm da app de <b>Sócios → Configurações → Associação</b>. Para os alterar, edita-os lá — aparecem aqui automaticamente.</div>
+      <div id="cfg-assoc" style="font-size:13px;line-height:1.8"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">✍️ Assinatura por defeito</div>
+      <div class="form-row">
+        <div class="form-group"><label>Nome</label><input type="text" id="cfg-assin-nome" placeholder="Ex: João Silva"></div>
+        <div class="form-group"><label>Cargo</label><input type="text" id="cfg-assin-cargo" placeholder="Ex: Presidente da Direção"></div>
+      </div>
+      <div class="ajuda">Se a Direção estiver preenchida na app de Sócios, podes escolher um membro em cada ofício. Este é o valor usado por defeito.</div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn-primary" onclick="guardarConfigAssinatura()">💾 Guardar</button>
+        <select class="filter-select" id="cfg-dir-sel" onchange="preencherAssinaturaDaDirecao(this.value)"><option value="">Escolher da Direção…</option></select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🖼️ Logótipo</div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div id="cfg-logo-prev" style="width:70px;height:70px;border-radius:50%;background:#F1F1EE;display:flex;align-items:center;justify-content:center;overflow:hidden;font-weight:700;color:#1B4570">AR</div>
+        <div>
+          <div class="ajuda" style="margin-bottom:8px">O logótipo é partilhado com a app de Sócios (mesmo dispositivo). Se não aparecer, carrega-o aqui.</div>
+          <input type="file" id="cfg-logo-file" accept="image/*" style="display:none" onchange="carregarLogoFicheiro(this)">
+          <button class="btn-secondary" onclick="document.getElementById('cfg-logo-file').click()">📤 Carregar logótipo</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔢 Numeração</div>
+      <div style="font-size:13px;line-height:1.7">Os ofícios são numerados automaticamente por ano, no formato <b>001/2026</b>, <b>002/2026</b>…; os protocolos têm numeração própria, <b>P-001/2026</b>, <b>P-002/2026</b>… A numeração recomeça em cada ano civil e nunca reutiliza números de documentos apagados.</div>
+    </div>
+  </div>
+</main>
+</div>
+
+<!-- MODAL OFÍCIO -->
+<div class="modal-overlay" id="modal-oficio">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="oficio-modal-title">Novo Ofício</div>
+      <button class="modal-close" onclick="closeModal('modal-oficio')">×</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <div class="form-group"><label>Tipo de ofício</label><select id="of-tipo" onchange="aplicarModelo()"></select></div>
+        <div class="form-group"><label>Número (automático)</label><input type="text" id="of-numero" readonly style="background:var(--bg3);color:var(--text-3)"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Destinatário</label><input type="text" id="of-dest" placeholder="Ex: Câmara Municipal do Funchal"></div>
+        <div class="form-group"><label>Data</label><input type="date" id="of-data"></div>
+      </div>
+      <div class="form-group"><label>Assunto</label><input type="text" id="of-assunto" placeholder="Assunto do ofício"></div>
+      <div class="form-group"><label>Corpo do ofício</label><textarea id="of-corpo"></textarea><div class="ajuda">Preenche o que está entre [parênteses retos]. Linhas em branco separam parágrafos.</div></div>
+      <div class="form-row">
+        <div class="form-group"><label>Assinante</label><input type="text" id="of-assinante" placeholder="Ex: João Silva — Presidente da Direção"></div>
+        <div class="form-group"><label>Escolher da Direção</label><select id="of-dir-sel" onchange="if(this.value){document.getElementById('of-assinante').value=this.value;}"><option value="">—</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Estado</label><select id="of-estado"><option value="rascunho">Rascunho</option><option value="enviado">Enviado</option></select></div>
+        <div class="form-group"><label>Notas internas (não saem no ofício)</label><input type="text" id="of-notas" placeholder="Ex: enviado por email a 3/9"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-oficio')">Cancelar</button>
+      <button class="btn-secondary" onclick="previewOficio()">👁 Pré-visualizar</button>
+      <button class="btn-primary" id="of-guardar-btn" onclick="saveOficio()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PROTOCOLO -->
+<div class="modal-overlay" id="modal-protocolo">
+  <div class="modal" style="max-width:780px">
+    <div class="modal-header">
+      <div class="modal-title" id="protocolo-modal-title">Novo Protocolo</div>
+      <button class="modal-close" onclick="closeModal('modal-protocolo')">×</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <div class="form-group"><label>Tipo de protocolo</label><select id="pr-tipo" onchange="aplicarModeloProtocolo()"></select></div>
+        <div class="form-group"><label>Número (automático)</label><input type="text" id="pr-numero" readonly style="background:var(--bg3);color:var(--text-3)"></div>
+      </div>
+      <div class="card" style="background:#FBF8F0;box-shadow:none;border:0.5px solid #E2D5BC;margin:0;padding:12px 14px">
+        <div class="card-title" style="margin-bottom:10px">Segunda outorgante (entidade)</div>
+        <div class="form-row">
+          <div class="form-group"><label>Nome da entidade</label><input type="text" id="pr-entidade" placeholder="Ex: Junta de Freguesia de São Martinho"></div>
+          <div class="form-group"><label>NIF / NIPC</label><input type="text" id="pr-entidade-nif" placeholder="Opcional"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Representada por</label><input type="text" id="pr-entidade-rep" placeholder="Ex: Maria Santos, Presidente"></div>
+          <div class="form-group"><label>Morada</label><input type="text" id="pr-entidade-morada" placeholder="Opcional"></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Objeto do protocolo (título)</label><input type="text" id="pr-objeto" placeholder="Ex: Protocolo de colaboração para cedência de instalações"></div>
+        <div class="form-group"><label>Data de assinatura</label><input type="date" id="pr-data"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Início de vigência</label><input type="date" id="pr-inicio"></div>
+        <div class="form-group"><label>Fim de vigência</label><input type="date" id="pr-fim"><div class="ajuda">Deixa vazio se for por tempo indeterminado.</div></div>
+      </div>
+      <div class="form-group"><label>Cláusulas</label><textarea id="pr-corpo" style="min-height:260px"></textarea><div class="ajuda">Escreve cada cláusula começando por <b>Cláusula 1.ª — Título</b> numa linha; as linhas seguintes são o texto. Linhas em branco separam cláusulas.</div></div>
+      <div class="form-row">
+        <div class="form-group"><label>Assina pela ARCA</label><input type="text" id="pr-assinante" placeholder="Ex: João Silva — Presidente da Direção"></div>
+        <div class="form-group"><label>Escolher da Direção</label><select id="pr-dir-sel" onchange="if(this.value){document.getElementById('pr-assinante').value=this.value;}"><option value="">—</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Estado</label><select id="pr-estado"><option value="rascunho">Rascunho</option><option value="assinado">Assinado / em vigor</option><option value="terminado">Terminado</option></select></div>
+        <div class="form-group"><label>Notas internas</label><input type="text" id="pr-notas" placeholder="Ex: original assinado guardado na pasta X"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-protocolo')">Cancelar</button>
+      <button class="btn-secondary" onclick="previewProtocolo()">👁 Pré-visualizar</button>
+      <button class="btn-primary" id="pr-guardar-btn" onclick="saveProtocolo()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AJUDA -->
+<div class="modal-overlay" id="modal-ajuda">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header"><div class="modal-title">❓ Como usar a app de Ofícios</div><button class="modal-close" onclick="closeModal('modal-ajuda')">×</button></div>
+    <div style="font-size:13.5px;line-height:1.8">
+      <p><b>1. Criar um ofício</b> — carrega em <b>+ Novo Ofício</b>, escolhe o tipo (o texto do modelo é preenchido), completa o que está entre [parênteses retos], escolhe o assinante e guarda. O número é atribuído automaticamente (001/2026, 002/2026…).</p>
+      <p><b>2. Imprimir / PDF</b> — na lista, botão 🖨. Abre o ofício em papel timbrado numa nova janela; usa "Imprimir" e escolhe "Guardar como PDF" para enviar por email.</p>
+      <p><b>3. Estado</b> — um ofício nasce como <i>Rascunho</i>; quando o enviares, muda para <i>Enviado</i> (podes fazê-lo na lista com ✅).</p>
+      <p><b>4. Modelos</b> — em <b>Modelos</b> podes alterar os textos base de cada tipo. Ficam guardados na cloud para todos os dispositivos.</p>
+      <p><b>5. Dados do timbrado</b> — nome, NIF, morada, email e site vêm da app de Sócios (Configurações → Associação). O logótipo é partilhado no mesmo dispositivo.</p>
+      <p><b>6. Protocolos</b> — em <b>Protocolos</b> registas acordos com entidades (colaboração, patrocínio, cedência de espaço…): identificas as duas partes, o objeto, a vigência e as cláusulas. A impressão sai em formato de protocolo, com assinatura das duas partes, e a numeração é própria (P-001/2026).</p>
+      <p><b>7. Duplicar</b> — botão ⧉ na lista cria um novo ofício com o mesmo texto (útil para enviar o mesmo pedido a várias entidades).</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIG / SESSÃO (partilhada com a app de Sócios)
+// ============================================================
+const SUPA_URL = 'https://yfsyifypsrqnwkqkfrnm.supabase.co';
+const SUPA_KEY = 'sb_publishable_AkzlMeHlYHDyl0HzeC7_qg__j_Y6C9W';
+const LS = {
+  get: k => { try{const v=localStorage.getItem(k); return v?JSON.parse(v):null;}catch(e){return null;} },
+  set: (k,v) => { try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} }
+};
+let supaSession = LS.get('arca_supa_session');
+
+function toast(msg, ok=true){
+  const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(ok?'':' err');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2600);
+}
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+async function supaAuthLogin(email, password){
+  const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
+    method:'POST', headers:{'Content-Type':'application/json','apikey':SUPA_KEY},
+    body: JSON.stringify({email,password})
+  });
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.error_description||data.msg||'Email ou password incorretos.');
+  supaSession = data; LS.set('arca_supa_session', supaSession); return data;
+}
+async function supaRefreshSession(){
+  if(!supaSession?.refresh_token) return false;
+  try{
+    const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method:'POST', headers:{'Content-Type':'application/json','apikey':SUPA_KEY},
+      body: JSON.stringify({refresh_token: supaSession.refresh_token})
+    });
+    const data = await res.json(); if(!res.ok) return false;
+    supaSession = data; LS.set('arca_supa_session', supaSession); return true;
+  }catch(e){ return false; }
+}
+function supaLogout(){ supaSession=null; LS.set('arca_supa_session',null); location.reload(); }
+function mostrarLogin(msg){
+  const ov=document.getElementById('login-overlay'); ov.style.display='flex';
+  const e=document.getElementById('login-erro'); if(msg){ e.textContent=msg; e.style.display='block'; }
+}
+async function supaFetch(path, method='GET', body=null, extraHeaders=null, _tentativa=0){
+  const headers = {'apikey':SUPA_KEY,'Content-Type':'application/json'};
+  headers['Authorization'] = 'Bearer ' + (supaSession?.access_token || SUPA_KEY);
+  if(method!=='GET') headers['Prefer']='return=representation';
+  if(extraHeaders) Object.assign(headers, extraHeaders);
+  const opts = {method, headers}; if(body) opts.body = JSON.stringify(body);
+  const res = await fetch(`${SUPA_URL}/rest/v1/${path}`, opts);
+  if(res.status===401){
+    if(_tentativa===0 && await supaRefreshSession()) return supaFetch(path, method, body, extraHeaders, 1);
+    supaSession=null; LS.set('arca_supa_session',null); mostrarLogin('A tua sessão expirou. Entra novamente.'); throw new Error('AUTH_EXPIRED');
+  }
+  const text = await res.text();
+  if(!res.ok) throw new Error(text || ('Erro '+res.status));
+  return text ? JSON.parse(text) : null;
+}
+async function fazerLogin(){
+  const email=document.getElementById('login-email').value.trim(), pass=document.getElementById('login-pass').value;
+  const erro=document.getElementById('login-erro'); erro.style.display='none';
+  const btn=document.getElementById('login-btn'); btn.disabled=true; btn.textContent='A entrar…';
+  try{ await supaAuthLogin(email, pass); document.getElementById('login-overlay').style.display='none'; await iniciar(); }
+  catch(e){ erro.textContent=e.message; erro.style.display='block'; }
+  finally{ btn.disabled=false; btn.textContent='Entrar'; }
+}
+
+// config_app (chave/valor) — mesma tabela da app de Sócios
+async function lerConfig(chaves){
+  const dados={};
+  try{ const rows=await supaFetch('config_app?chave=in.('+chaves.join(',')+')'); (rows||[]).forEach(r=>{dados[r.chave]=r.valor||'';}); }
+  catch(e){ console.warn('config_app:',e); }
+  return dados;
+}
+async function guardarChaveConfig(chave, valor){
+  const ex = await supaFetch('config_app?chave=eq.'+encodeURIComponent(chave));
+  if(ex && ex.length) await supaFetch('config_app?chave=eq.'+encodeURIComponent(chave),'PATCH',{valor});
+  else await supaFetch('config_app','POST',{chave, valor});
+}
+
+// ============================================================
+// LOGO (IndexedDB partilhada com a app de Sócios, mesmo dispositivo)
+// ============================================================
+let logoData='';
+function idbOpen(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open('arca_db',1);
+    req.onupgradeneeded=()=>{ if(!req.result.objectStoreNames.contains('ficheiros')) req.result.createObjectStore('ficheiros'); };
+    req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error);
+  });
+}
+async function idbGet(k){ try{ const db=await idbOpen(); return await new Promise(r=>{const q=db.transaction('ficheiros','readonly').objectStore('ficheiros').get(k); q.onsuccess=()=>r(q.result||''); q.onerror=()=>r('');}); }catch(e){ return ''; } }
+async function idbSet(k,v){ try{ const db=await idbOpen(); await new Promise((r,j)=>{const tx=db.transaction('ficheiros','readwrite'); tx.objectStore('ficheiros').put(v,k); tx.oncomplete=()=>r(); tx.onerror=()=>j(tx.error);}); }catch(e){} }
+async function carregarLogo(){
+  logoData = await idbGet('arca_logo');
+  if(!logoData){ const c=await lerConfig(['logo_arca']); if(c.logo_arca && c.logo_arca.startsWith('data:')) logoData=c.logo_arca; }
+  aplicarLogo();
+}
+function aplicarLogo(){
+  const b=document.getElementById('logo-badge'), p=document.getElementById('cfg-logo-prev'), l=document.getElementById('login-logo-area');
+  if(logoData){ b.innerHTML=`<img src="${logoData}" alt="logo">`; if(p) p.innerHTML=`<img src="${logoData}" style="width:100%;height:100%;object-fit:cover">`; if(l) l.innerHTML=`<img src="${logoData}" style="height:64px;width:64px;border-radius:50%;object-fit:cover">`; }
+}
+function carregarLogoFicheiro(input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  const img=new Image(); const url=URL.createObjectURL(f);
+  img.onload=async()=>{
+    const c=document.createElement('canvas'); const s=Math.min(1, 400/Math.max(img.width,img.height));
+    c.width=Math.round(img.width*s); c.height=Math.round(img.height*s);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    logoData=c.toDataURL('image/png'); await idbSet('arca_logo',logoData); aplicarLogo(); toast('Logótipo guardado'); URL.revokeObjectURL(url);
+  };
+  img.src=url;
+}
+
+// ============================================================
+// DADOS
+// ============================================================
+let oficios=[];            // linhas da tabela oficios
+let assoc={};              // dados da associação (config_app assoc_*)
+let assinaturaPadrao={nome:'',cargo:''};
+let direcao=[];            // [{nome,cargo}]
+let editingId=null;
+let modelos={};            // tipo -> {label,dest,assunto,corpo}
+
+const TIPOS_PADRAO = {
+  camara:{label:'Câmara Municipal', dest:'Câmara Municipal do Funchal', assunto:'Pedido de apoio financeiro às atividades da {associacao}',
+    corpo:`Exmo. Senhor Presidente da Câmara Municipal do Funchal,
+
+A {associacao}, com sede no Funchal, fundada a 29 de junho de 2011, vem por este meio dirigir-se a V. Exa. no sentido de solicitar apoio financeiro para o desenvolvimento das suas atividades no ano de {ano}.
+
+A ARCA d'Ajuda conta atualmente com mais de 500 sócios e desenvolve um conjunto diversificado de atividades, entre as quais se destacam modalidades desportivas federadas, o ATL ARCAKIDS destinado a crianças em idade escolar, eventos culturais e recreativos abertos à comunidade, e ações de solidariedade social.
+
+Neste contexto, vimos respeitosamente solicitar a V. Exa. que seja ponderada a concessão de um apoio financeiro no valor de [valor solicitado] €, destinado a [descreva o fim específico do apoio: equipamento, instalações, evento, etc.].
+
+Disponibilizamo-nos para prestar todos os esclarecimentos adicionais que V. Exa. entenda necessários, bem como para reunir em data e hora a combinar.
+
+Certos de merecer a melhor atenção de V. Exa., apresentamos os nossos respeitosos cumprimentos.`},
+  junta:{label:'Junta de Freguesia', dest:'Junta de Freguesia de São Martinho', assunto:'Pedido de apoio à {associacao}',
+    corpo:`Exmo. Senhor Presidente da Junta de Freguesia de São Martinho,
+
+A {associacao}, sediada na freguesia de São Martinho, vem por este meio solicitar a V. Exa. o vosso precioso apoio para [descreva o pedido específico].
+
+A nossa associação desenvolve um trabalho continuado de promoção do desporto, da cultura e da coesão social na nossa comunidade, contando com a participação ativa de centenas de sócios e famílias da freguesia.
+
+[Acrescente os detalhes relevantes do pedido]
+
+Ficamos ao inteiro dispor de V. Exa. para qualquer esclarecimento adicional.
+
+Com os nossos melhores cumprimentos.`},
+  parceiro:{label:'Parceiros', dest:'', assunto:'Proposta de protocolo de parceria com a {associacao}',
+    corpo:`Exmos. Senhores,
+
+A {associacao}, fundada em 2011 e sediada no Funchal, Madeira, vem por este meio propor a celebração de um protocolo de parceria mutuamente vantajoso.
+
+A ARCA d'Ajuda é uma associação sem fins lucrativos que conta com mais de 500 sócios, desenvolvendo atividades nas áreas desportiva, cultural e social, com particular impacto junto das comunidades da zona Oeste do Funchal.
+
+A parceria que propomos contempla os seguintes termos:
+— [Descreva o que a ARCA se compromete a oferecer]
+— [Descreva o que solicita em contrapartida]
+
+Acreditamos que esta parceria representa uma oportunidade de benefício mútuo, com impacto positivo na comunidade que servimos.
+
+Ficamos ao vosso dispor para reunir e formalizar os termos do protocolo.
+
+Com os melhores cumprimentos.`},
+  patrocinio:{label:'Patrocínio', dest:'', assunto:'Pedido de patrocínio — [nome do evento/atividade]',
+    corpo:`Exmos. Senhores,
+
+A {associacao} vem por este meio solicitar o vosso patrocínio para [nome e descrição do evento ou atividade], a realizar-se em [local e data previstos].
+
+Este evento [descreva brevemente o evento e o seu impacto esperado, público estimado, âmbito, etc.].
+
+Em reconhecimento do vosso apoio, a ARCA d'Ajuda compromete-se a assegurar as seguintes contrapartidas:
+— Menção do nome/logótipo da vossa empresa em todos os materiais de divulgação
+— Referência nas redes sociais da associação
+— [Acrescente outras contrapartidas relevantes]
+
+O patrocínio solicitado é de [valor] €, a título de [financeiro / material / serviços].
+
+Agradecemos desde já a vossa atenção e ficamos inteiramente disponíveis para reunir e esclarecer qualquer dúvida.
+
+Com os melhores cumprimentos.`},
+  reuniao_camara:{label:'Reunião Câmara', dest:'Câmara Municipal do Funchal', assunto:'Solicitação de reunião — {associacao}',
+    corpo:`Exmo. Senhor Presidente da Câmara Municipal do Funchal,
+
+A {associacao} vem solicitar a V. Exa. a gentileza de marcar uma reunião com o objetivo de [descreva o assunto a tratar].
+
+Consideramos que esta reunião será de grande importância para [indique a relevância e o benefício esperado para a comunidade].
+
+Ficamos inteiramente ao dispor de V. Exa. para combinar data e hora que melhor se adeque à sua agenda.
+
+Com os nossos respeitosos cumprimentos.`},
+  reuniao_junta:{label:'Reunião Junta', dest:'Junta de Freguesia de São Martinho', assunto:'Solicitação de reunião — {associacao}',
+    corpo:`Exmo. Senhor Presidente da Junta de Freguesia de São Martinho,
+
+A {associacao} vem solicitar a V. Exa. a marcação de uma reunião com o intuito de [descreva o assunto a tratar].
+
+[Acrescente o contexto e a importância do encontro]
+
+Ficamos ao dispor de V. Exa. para combinar data e hora conveniente.
+
+Com os melhores cumprimentos.`},
+  agradecimento:{label:'Agradecimento', dest:'', assunto:'Agradecimento pelo apoio prestado à {associacao}',
+    corpo:`Exmos. Senhores,
+
+A {associacao} vem por este meio expressar o seu mais profundo e sincero agradecimento pelo apoio prestado a [descreva o apoio recebido: evento, financiamento, cedência de espaço, etc.].
+
+O vosso contributo foi determinante para o sucesso de [descreva o resultado alcançado] e representa um gesto de solidariedade e parceria que muito nos honra e incentiva a continuar o trabalho que desenvolvemos ao serviço da nossa comunidade.
+
+A ARCA d'Ajuda renova o seu compromisso de continuar a promover o desporto, a cultura e a coesão social, contando sempre com o vosso apoio e colaboração.
+
+Com os nossos mais sinceros e reconhecidos agradecimentos.`},
+  protocolo_colaboracao:{categoria:'protocolo', label:'Protocolo de colaboração', dest:'', assunto:'Protocolo de colaboração entre a {associacao} e [entidade]',
+    corpo:`Cláusula 1.ª — Objeto
+O presente protocolo tem por objeto estabelecer os termos da colaboração entre as partes no âmbito de [descreva a área/atividade], com vista a [descreva a finalidade].
+
+Cláusula 2.ª — Obrigações da Primeira Outorgante
+A {associacao} compromete-se a:
+a) [Descreva a primeira obrigação];
+b) [Descreva a segunda obrigação];
+c) Divulgar a parceria nos seus meios de comunicação.
+
+Cláusula 3.ª — Obrigações da Segunda Outorgante
+A Segunda Outorgante compromete-se a:
+a) [Descreva a primeira obrigação];
+b) [Descreva a segunda obrigação].
+
+Cláusula 4.ª — Vigência
+O presente protocolo entra em vigor na data da sua assinatura e vigora pelo período de [duração], renovando-se automaticamente por iguais períodos, salvo denúncia por qualquer das partes com a antecedência mínima de 30 dias.
+
+Cláusula 5.ª — Revisão e denúncia
+O presente protocolo pode ser revisto por acordo escrito entre as partes e denunciado a todo o tempo por qualquer delas, mediante comunicação escrita com a antecedência mínima de 30 dias, sem lugar a qualquer indemnização.
+
+Cláusula 6.ª — Disposições finais
+As partes comprometem-se a resolver de boa-fé quaisquer dúvidas ou divergências decorrentes da execução do presente protocolo.`},
+  protocolo_patrocinio:{categoria:'protocolo', label:'Protocolo de patrocínio', dest:'', assunto:'Protocolo de patrocínio — [evento/atividade/época]',
+    corpo:`Cláusula 1.ª — Objeto
+O presente protocolo regula o patrocínio concedido pela Segunda Outorgante à {associacao} no âmbito de [evento, modalidade ou época desportiva].
+
+Cláusula 2.ª — Contrapartidas da Segunda Outorgante (patrocinador)
+A Segunda Outorgante concede à {associacao} um apoio no valor de [valor] € / em espécie consistindo em [descreva], a entregar até [data ou condições].
+
+Cláusula 3.ª — Contrapartidas da Primeira Outorgante (ARCA d'Ajuda)
+A {associacao} compromete-se a:
+a) Inserir o logótipo do patrocinador em [equipamentos, cartazes, redes sociais, site];
+b) Mencionar o patrocinador em [eventos, comunicações];
+c) [Outras contrapartidas].
+
+Cláusula 4.ª — Vigência
+O presente protocolo vigora de [data de início] a [data de fim].
+
+Cláusula 5.ª — Utilização de imagem
+Cada parte autoriza a outra a utilizar o seu nome e logótipo exclusivamente para os fins previstos neste protocolo.
+
+Cláusula 6.ª — Disposições finais
+Qualquer alteração ao presente protocolo só é válida se reduzida a escrito e assinada por ambas as partes.`},
+  protocolo_cedencia:{categoria:'protocolo', label:'Protocolo de cedência de espaço', dest:'', assunto:'Protocolo de cedência de [instalações/espaço]',
+    corpo:`Cláusula 1.ª — Objeto
+A Segunda Outorgante cede à {associacao} a utilização de [identifique o espaço/instalações], sito em [morada], para [finalidade].
+
+Cláusula 2.ª — Horário e condições de utilização
+A utilização decorre [dias e horários], devendo a {associacao} zelar pela boa conservação do espaço e equipamentos.
+
+Cláusula 3.ª — Encargos
+[Indique se a cedência é gratuita ou o valor/encargos assumidos, incluindo água, luz e limpeza.]
+
+Cláusula 4.ª — Responsabilidade e seguros
+A {associacao} é responsável pelos danos causados durante a utilização e mantém em vigor o seguro de acidentes pessoais dos seus praticantes.
+
+Cláusula 5.ª — Vigência
+O presente protocolo vigora de [data] a [data], podendo ser renovado por acordo escrito.
+
+Cláusula 6.ª — Denúncia
+Qualquer das partes pode denunciar o protocolo com aviso prévio escrito de 30 dias.`},
+  outro:{label:'Outro', dest:'', assunto:'',
+    corpo:`Exmos. Senhores,
+
+A {associacao} vem por este meio [descreva o objetivo do ofício].
+
+[Desenvolva o conteúdo do ofício]
+
+Ficamos ao vosso dispor para qualquer esclarecimento adicional.
+
+Com os melhores cumprimentos.`}
+};
+
+function catDoTipo(t){ return (modelos[t]&&modelos[t].categoria)||'oficio'; }
+function tiposDaCategoria(c){ return Object.keys(modelos).filter(k=>catDoTipo(k)===c); }
+function nomeAssociacao(){ return assoc.assoc_nome || "Associação Recreativa e Cultural da Ajuda (ARCA d'Ajuda)"; }
+function substituirEtiquetas(txt, dataISO){
+  const d = dataISO ? new Date(dataISO+'T12:00:00') : new Date();
+  return String(txt||'')
+    .replace(/\{associacao\}/g, nomeAssociacao())
+    .replace(/\{ano\}/g, String(d.getFullYear()))
+    .replace(/\{data\}/g, d.toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'}));
+}
+
+// ============================================================
+// ARRANQUE
+// ============================================================
+async function iniciar(){
+  document.getElementById('user-email').textContent = supaSession?.user?.email || '';
+  carregarLogo();
+  await Promise.all([carregarAssociacao(), carregarModelos(), carregarDirecao(), carregarAssinaturaPadrao()]);
+  preencherSelectsTipo();
+  await carregarOficios();
+  renderConfig();
+}
+async function carregarAssociacao(){
+  assoc = await lerConfig(['assoc_nome','assoc_nif','assoc_email','assoc_tel','assoc_morada','assoc_site','assoc_facebook','assoc_instagram']);
+}
+async function carregarModelos(){
+  const c = await lerConfig(['oficios_modelos']);
+  modelos = JSON.parse(JSON.stringify(TIPOS_PADRAO));
+  if(c.oficios_modelos){ try{ const m=JSON.parse(c.oficios_modelos); Object.keys(m).forEach(k=>{ modelos[k]=Object.assign({}, modelos[k]||{label:k}, m[k]); }); }catch(e){ console.warn('modelos:',e); } }
+}
+async function carregarAssinaturaPadrao(){
+  const c = await lerConfig(['oficios_assinante_nome','oficios_assinante_cargo']);
+  assinaturaPadrao = {nome:c.oficios_assinante_nome||'', cargo:c.oficios_assinante_cargo||''};
+}
+async function carregarDirecao(){
+  direcao=[];
+  try{
+    const rows = await supaFetch('direcao_membros?order=ordem.asc,id.asc');
+    const nums = (rows||[]).map(r=>r.socio_num).filter(n=>n!=null);
+    let nomes={};
+    if(nums.length){ const s=await supaFetch('socios?num=in.('+nums.join(',')+')&select=num,nome'); (s||[]).forEach(x=>{nomes[x.num]=x.nome;}); }
+    direcao = (rows||[]).filter(r=>r.socio_num!=null && nomes[r.socio_num]).map(r=>({nome:nomes[r.socio_num], cargo:r.cargo}));
+  }catch(e){ console.warn('direção:',e); }
+  const opts = '<option value="">—</option>'+direcao.map(d=>`<option value="${esc(d.nome+' — '+d.cargo)}">${esc(d.nome)} — ${esc(d.cargo)}</option>`).join('');
+  document.getElementById('of-dir-sel').innerHTML = opts;
+  document.getElementById('pr-dir-sel').innerHTML = opts;
+  document.getElementById('cfg-dir-sel').innerHTML = '<option value="">Escolher da Direção…</option>'+direcao.map((d,i)=>`<option value="${i}">${esc(d.nome)} — ${esc(d.cargo)}</option>`).join('');
+}
+function preencherSelectsTipo(){
+  const opt=k=>`<option value="${k}">${esc(modelos[k].label||k)}</option>`;
+  const o=tiposDaCategoria('oficio').map(opt).join(''), pr=tiposDaCategoria('protocolo').map(opt).join('');
+  document.getElementById('of-tipo').innerHTML = o;
+  document.getElementById('f-tipo').innerHTML = '<option value="">Todos os tipos</option>'+o;
+  document.getElementById('pr-tipo').innerHTML = pr;
+  document.getElementById('pf-tipo').innerHTML = '<option value="">Todos os tipos</option>'+pr;
+}
+async function carregarOficios(){
+  try{ oficios = await supaFetch('oficios?order=ano.desc,seq.desc') || []; }
+  catch(e){
+    console.error(e);
+    document.getElementById('tabela-oficios').innerHTML = `<div class="empty-state">Não foi possível carregar os ofícios.<br><small>${esc(e.message).slice(0,200)}</small><br><br>Se ainda não criaste a tabela no Supabase, corre o SQL da instalação.</div>`;
+    return;
+  }
+  const anos=[...new Set(oficios.map(o=>o.ano))].sort((a,b)=>b-a);
+  ['f-ano','pf-ano'].forEach(id=>{ const fa=document.getElementById(id); const atual=fa.value;
+    fa.innerHTML='<option value="">Todos os anos</option>'+anos.map(a=>`<option value="${a}">${a}</option>`).join('');
+    if(anos.includes(Number(atual))) fa.value=atual; });
+  renderOficios(); renderProtocolos();
+}
+function soOficios(){ return oficios.filter(o=>(o.categoria||'oficio')==='oficio'); }
+function soProtocolos(){ return oficios.filter(o=>o.categoria==='protocolo'); }
+
+// ============================================================
+// LISTA
+// ============================================================
+function fmtNum(o){ return (o.categoria==='protocolo'?'P-':'')+String(o.seq).padStart(3,'0')+'/'+o.ano; }
+function fmtData(d){ return d ? new Date(d+'T12:00:00').toLocaleDateString('pt-PT') : '—'; }
+function renderOficios(){
+  const fA=document.getElementById('f-ano').value, fT=document.getElementById('f-tipo').value, fE=document.getElementById('f-estado').value;
+  const fB=(document.getElementById('f-busca').value||'').toLowerCase();
+  const todos=soOficios(); let list=[...todos];
+  if(fA) list=list.filter(o=>String(o.ano)===fA);
+  if(fT) list=list.filter(o=>o.tipo===fT);
+  if(fE) list=list.filter(o=>(o.estado||'rascunho')===fE);
+  if(fB) list=list.filter(o=>fmtNum(o).includes(fB)||(o.dest||'').toLowerCase().includes(fB)||(o.assunto||'').toLowerCase().includes(fB)||(o.notas||'').toLowerCase().includes(fB));
+  const cont=document.getElementById('f-contagem');
+  cont.textContent = (fA||fT||fE||fB) ? `${list.length} de ${todos.length}` : `${todos.length} ofícios`;
+  // métricas
+  const anoAtual=new Date().getFullYear();
+  const esteAno=todos.filter(o=>o.ano===anoAtual);
+  document.getElementById('of-metrics').innerHTML=`
+    <div class="metric-card"><div class="metric-label">Total</div><div class="metric-value">${todos.length}</div></div>
+    <div class="metric-card"><div class="metric-label">Em ${anoAtual}</div><div class="metric-value" style="color:var(--teal-d)">${esteAno.length}</div></div>
+    <div class="metric-card"><div class="metric-label">Rascunhos</div><div class="metric-value" style="color:var(--amber-d)">${todos.filter(o=>(o.estado||'rascunho')==='rascunho').length}</div></div>
+    <div class="metric-card"><div class="metric-label">Enviados</div><div class="metric-value" style="color:#4A3F86">${todos.filter(o=>o.estado==='enviado').length}</div></div>`;
+  const el=document.getElementById('tabela-oficios');
+  if(!list.length){ el.innerHTML='<div class="empty-state">Nenhum ofício encontrado. Carrega em "+ Novo Ofício" para criar.</div>'; return; }
+  el.innerHTML=`<table><thead><tr><th>Nº</th><th>Data</th><th>Tipo</th><th>Destinatário</th><th>Assunto</th><th>Estado</th><th></th></tr></thead><tbody>${list.map(o=>`<tr>
+    <td style="font-weight:700;color:var(--navy);white-space:nowrap">${fmtNum(o)}</td>
+    <td style="white-space:nowrap;font-size:12px">${fmtData(o.data)}</td>
+    <td><span class="badge badge-tipo">${esc(modelos[o.tipo]?.label||o.tipo||'—')}</span></td>
+    <td style="font-size:12.5px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(o.dest)}">${esc(o.dest||'—')}</td>
+    <td style="font-size:12.5px;color:var(--text-2);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(o.assunto)}">${esc(o.assunto||'—')}</td>
+    <td><span class="badge ${o.estado==='enviado'?'badge-enviado':'badge-rascunho'}">${o.estado==='enviado'?'Enviado':'Rascunho'}</span></td>
+    <td><div class="td-actions">
+      <button class="btn-edit" onclick="openModalOficio(${o.id})" title="Editar">✏</button>
+      <button class="btn-edit" onclick="imprimirOficioById(${o.id})" title="Imprimir / PDF">🖨</button>
+      ${o.estado==='enviado'?'':`<button class="btn-edit" onclick="marcarEnviado(${o.id})" title="Marcar como enviado">✅</button>`}
+      <button class="btn-edit" onclick="duplicarOficio(${o.id})" title="Duplicar">⧉</button>
+      <button class="btn-edit" style="color:var(--coral-d)" onclick="deleteOficio(${o.id})" title="Eliminar">🗑</button>
+    </div></td>
+  </tr>`).join('')}</tbody></table>`;
+}
+function exportarCSV(cat){
+  const prot = cat==='protocolo';
+  const lista = prot ? soProtocolos() : soOficios();
+  const linhas=[prot?['Nº','Data','Tipo','Entidade','Representante','Objeto','Início','Fim','Estado','Notas']:['Nº','Data','Tipo','Destinatário','Assunto','Assinante','Estado','Notas']];
+  lista.forEach(o=>{ const x=o.extra||{}; linhas.push(prot
+    ? [fmtNum(o),o.data||'',modelos[o.tipo]?.label||o.tipo||'',o.dest||'',x.entidade_rep||'',o.assunto||'',x.inicio||'',x.fim||'',o.estado||'rascunho',o.notas||'']
+    : [fmtNum(o),o.data||'',modelos[o.tipo]?.label||o.tipo||'',o.dest||'',o.assunto||'',o.assinante||'',o.estado||'rascunho',o.notas||'']); });
+  const csv='\uFEFF'+linhas.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download=(prot?'protocolos':'oficios')+'_arca.csv'; a.click();
+}
+
+// ============================================================
+// EDITAR / GUARDAR
+// ============================================================
+function assinantePadraoTexto(){ return assinaturaPadrao.nome ? assinaturaPadrao.nome+(assinaturaPadrao.cargo?' — '+assinaturaPadrao.cargo:'') : ''; }
+function openModalOficio(id){
+  editingId = id||null;
+  const of = id ? oficios.find(o=>o.id===id) : null;
+  document.getElementById('oficio-modal-title').textContent = of ? `Editar Ofício ${fmtNum(of)}` : 'Novo Ofício';
+  document.getElementById('of-numero').value = of ? fmtNum(of) : 'atribuído ao guardar';
+  const tipoSel=document.getElementById('of-tipo'); tipoSel.value = of?.tipo || Object.keys(modelos)[0];
+  document.getElementById('of-dest').value = of?.dest||'';
+  document.getElementById('of-data').value = of?.data||new Date().toISOString().slice(0,10);
+  document.getElementById('of-assunto').value = of?.assunto||'';
+  document.getElementById('of-corpo').value = of?.corpo||'';
+  document.getElementById('of-assinante').value = of?.assinante||assinantePadraoTexto();
+  document.getElementById('of-estado').value = of?.estado||'rascunho';
+  document.getElementById('of-notas').value = of?.notas||'';
+  document.getElementById('of-dir-sel').value='';
+  if(!of) aplicarModelo();
+  openModal('modal-oficio');
+}
+function aplicarModelo(){
+  const tipo=document.getElementById('of-tipo').value; const m=modelos[tipo]; if(!m) return;
+  const data=document.getElementById('of-data').value;
+  const corpoAtual=document.getElementById('of-corpo').value.trim();
+  if(corpoAtual && editingId && !confirm('Substituir o texto atual pelo modelo deste tipo?')) return;
+  if(m.dest) document.getElementById('of-dest').value = m.dest;
+  document.getElementById('of-assunto').value = substituirEtiquetas(m.assunto, data);
+  document.getElementById('of-corpo').value = substituirEtiquetas(m.corpo, data);
+}
+function lerFormulario(){
+  return {
+    tipo: document.getElementById('of-tipo').value,
+    dest: document.getElementById('of-dest').value.trim(),
+    data: document.getElementById('of-data').value || new Date().toISOString().slice(0,10),
+    assunto: document.getElementById('of-assunto').value.trim(),
+    corpo: document.getElementById('of-corpo').value.trim(),
+    assinante: document.getElementById('of-assinante').value.trim(),
+    estado: document.getElementById('of-estado').value,
+    notas: document.getElementById('of-notas').value.trim() || null
+  };
+}
+async function saveOficio(){
+  const f=lerFormulario();
+  if(!f.assunto||!f.corpo){ toast('Assunto e corpo são obrigatórios.',false); return; }
+  const btn=document.getElementById('of-guardar-btn'); btn.disabled=true; btn.textContent='A guardar…';
+  try{
+    if(editingId){
+      const rows=await supaFetch('oficios?id=eq.'+editingId,'PATCH',Object.assign({},f,{atualizado_em:new Date().toISOString()}));
+      const i=oficios.findIndex(o=>o.id===editingId); if(i>=0&&rows&&rows[0]) oficios[i]=rows[0];
+      toast('Ofício atualizado ✓');
+    } else {
+      const ano=new Date(f.data+'T12:00:00').getFullYear();
+      const seq=await proximoSeq('oficio',ano);
+      const rows=await supaFetch('oficios','POST',Object.assign({},f,{ano,seq,categoria:'oficio'}));
+      if(rows&&rows[0]) oficios.unshift(rows[0]);
+      toast(`Ofício ${String(seq).padStart(3,'0')}/${ano} guardado ✓`);
+    }
+    editingId=null; closeModal('modal-oficio'); await carregarOficios();
+  }catch(e){ console.error(e); toast('Erro ao guardar: '+e.message.slice(0,120),false); }
+  finally{ btn.disabled=false; btn.textContent='Guardar'; }
+}
+async function proximoSeq(categoria, ano){
+  const ult=await supaFetch(`oficios?ano=eq.${ano}&categoria=eq.${categoria}&select=seq&order=seq.desc&limit=1`);
+  return (ult&&ult.length?ult[0].seq:0)+1;
+}
+async function marcarEnviado(id){
+  try{ await supaFetch('oficios?id=eq.'+id,'PATCH',{estado:'enviado',atualizado_em:new Date().toISOString()}); const o=oficios.find(x=>x.id===id); if(o) o.estado='enviado'; renderOficios(); toast('Marcado como enviado ✓'); }
+  catch(e){ toast('Erro: '+e.message.slice(0,100),false); }
+}
+function duplicarOficio(id){
+  const o=oficios.find(x=>x.id===id); if(!o) return;
+  openModalOficio();
+  document.getElementById('of-tipo').value=o.tipo; document.getElementById('of-dest').value=o.dest||'';
+  document.getElementById('of-assunto').value=o.assunto||''; document.getElementById('of-corpo').value=o.corpo||'';
+  document.getElementById('of-assinante').value=o.assinante||assinantePadraoTexto();
+  document.getElementById('oficio-modal-title').textContent=`Novo Ofício (cópia de ${fmtNum(o)})`;
+}
+async function deleteOficio(id){
+  const o=oficios.find(x=>x.id===id); if(!o) return;
+  if(!confirm(`Eliminar o ofício ${fmtNum(o)}?\n${o.dest||''}\n${o.assunto||''}\n\nO número não será reutilizado.`)) return;
+  try{ await supaFetch('oficios?id=eq.'+id,'DELETE'); oficios=oficios.filter(x=>x.id!==id); renderOficios(); toast('Ofício eliminado'); }
+  catch(e){ toast('Erro: '+e.message.slice(0,100),false); }
+}
+
+// ============================================================
+// IMPRESSÃO — papel timbrado
+// ============================================================
+function previewOficio(){ const f=lerFormulario(); const of=editingId?oficios.find(o=>o.id===editingId):null; imprimirOficio(Object.assign({numeroTxt: of?fmtNum(of):'(sem número — rascunho)'}, f)); }
+function imprimirOficioById(id){ const o=oficios.find(x=>x.id===id); if(!o) return; if(o.categoria==='protocolo') imprimirProtocolo(Object.assign({numeroTxt:fmtNum(o)},o)); else imprimirOficio(Object.assign({numeroTxt:fmtNum(o)},o)); }
+function imprimirOficio(of){
+  const nome = assoc.assoc_nome || "ARCA d'Ajuda";
+  const sub = /ARCA d'Ajuda/i.test(nome) && nome.length<20 ? 'Associação Recreativa e Cultural da Ajuda' : (nome.length>40 ? '' : 'Associação Recreativa e Cultural da Ajuda');
+  const logoHtml = logoData ? `<img src="${logoData}" style="height:70px;width:70px;object-fit:cover;border-radius:50%">` : '<div style="font-size:22px;font-weight:700;color:#1a3a6b">ARCA</div>';
+  const logoSmall = logoData ? `<img src="${logoData}" style="height:28px;width:28px;object-fit:cover;border-radius:50%">` : '';
+  const dataFmt = of.data ? new Date(of.data+'T12:00:00').toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'}) : '';
+  const tipoLabel = modelos[of.tipo]?.label || of.tipo || '—';
+  const contactos=[assoc.assoc_morada, assoc.assoc_tel?('Tel. '+assoc.assoc_tel):'', assoc.assoc_email, assoc.assoc_site].filter(Boolean);
+  const nifTxt = assoc.assoc_nif ? 'NIF '+assoc.assoc_nif : '';
+  const paragrafos = String(of.corpo||'').replace(/\r/g,'').split(/\n{2,}/).map(p=>'<p>'+esc(p).replace(/\n/g,'<br>')+'</p>').join('');
+  const assinLinhas = String(of.assinante||'A Direção').split(' — ');
+  const html=`<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"><title>Ofício ${esc(of.numeroTxt||'')}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    @page{size:A4;margin:0}
+    body{font-family:'Times New Roman',Times,serif;font-size:12pt;color:#111;background:#e5e7eb;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:60px 0 40px}
+    @media print{.noprint{display:none!important}body{background:#fff;padding:0}.pagina{box-shadow:none!important;margin:0!important}}
+    .noprint{position:fixed;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:99;background:#fff;padding:8px 16px;border-radius:30px;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+    .noprint button{padding:8px 20px;border:none;border-radius:20px;font-size:13px;cursor:pointer;font-family:Arial}
+    .p{background:#1a3a6b;color:#fff}.s{background:#555;color:#fff}
+    .pagina{width:210mm;min-height:297mm;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.15);display:flex;flex-direction:column}
+    .timbrado{display:flex;align-items:center;justify-content:space-between;padding:14mm 18mm 8mm;border-bottom:3px solid #1a3a6b}
+    .timbrado-esq{display:flex;align-items:center;gap:12px}
+    .org-nome{font-size:14pt;font-weight:bold;color:#1a3a6b;line-height:1.2}
+    .org-sub{font-size:8.5pt;color:#555;margin-top:2px}
+    .timbrado-dir{text-align:right;font-size:8.5pt;color:#555;line-height:1.7;max-width:70mm}
+    .conteudo{padding:10mm 18mm;flex:1}
+    .ref-box{display:flex;gap:24px;font-size:9.5pt;border:0.5px solid #ddd;border-radius:4px;padding:6px 12px;margin-bottom:16pt;background:#fafafa}
+    .ref-box span{color:#777}
+    .dest{margin-bottom:16pt;font-size:11pt;line-height:1.8}
+    .assunto{font-weight:bold;font-size:11pt;border-left:3px solid #1a3a6b;padding-left:10px;margin-bottom:16pt}
+    .corpo p{line-height:1.9;font-size:11pt;text-align:justify;margin-bottom:12pt}
+    .assinatura-area{margin-top:30pt;display:flex;justify-content:space-between;align-items:flex-end}
+    .local{font-size:10pt;color:#555}
+    .assin{text-align:center}
+    .assin-linha{width:200px;border-top:1px solid #333;margin:50px auto 6px}
+    .assin-nome{font-size:10pt;font-weight:bold}.assin-cargo{font-size:9.5pt;color:#555}
+    .rodape-timbrado{border-top:1.5px solid #1a3a6b;padding:5mm 18mm;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto}
+    .rodape-texto{font-size:7.5pt;color:#666;text-align:center;line-height:1.6;flex:1}
+    .rodape-num{font-size:8pt;color:#999;text-align:right;white-space:nowrap}
+  </style></head><body>
+  <div class="noprint"><button class="p" onclick="window.print()">🖨 Imprimir / PDF</button><button class="s" onclick="window.close()">✕ Fechar</button></div>
+  <div class="pagina">
+    <div class="timbrado">
+      <div class="timbrado-esq">${logoHtml}<div><div class="org-nome">${esc(nome)}</div>${sub?`<div class="org-sub">${esc(sub)}</div>`:''}${nifTxt?`<div class="org-sub">${esc(nifTxt)}</div>`:''}</div></div>
+      <div class="timbrado-dir">${contactos.map(c=>`<div>${esc(c)}</div>`).join('')||'<div>Funchal, Madeira</div>'}</div>
+    </div>
+    <div class="conteudo">
+      <div class="ref-box"><div><span>Ref.:</span> <strong>${esc(of.numeroTxt||'—')}</strong></div><div><span>Data:</span> <strong>${esc(dataFmt)}</strong></div><div><span>Tipo:</span> <strong>${esc(tipoLabel)}</strong></div></div>
+      <div class="dest"><div>Exmo(a). Senhor(a)</div><div><strong>${esc(of.dest||'_______________')}</strong></div></div>
+      <div class="assunto">Assunto: ${esc(of.assunto||'')}</div>
+      <div class="corpo">${paragrafos}</div>
+      <div class="assinatura-area">
+        <div class="local">Funchal, ${esc(dataFmt)}</div>
+        <div class="assin"><div class="assin-linha"></div><div class="assin-nome">${esc(assinLinhas[0])}</div>${assinLinhas[1]?`<div class="assin-cargo">${esc(assinLinhas.slice(1).join(' — '))}</div>`:''}</div>
+      </div>
+    </div>
+    <div class="rodape-timbrado">
+      <div>${logoSmall}</div>
+      <div class="rodape-texto">${esc(nome)}${sub?' — '+esc(sub):''}<br>${esc(contactos.join(' · ')||'Funchal, Madeira')}</div>
+      <div class="rodape-num">Ofício ${esc(of.numeroTxt||'—')}</div>
+    </div>
+  </div></body></html>`;
+  const w=window.open('','_blank','width=900,height=1100');
+  if(w){ w.document.write(html); w.document.close(); } else toast('O browser bloqueou a janela. Permite pop-ups para este site.',false);
+}
+
+// ============================================================
+// PROTOCOLOS
+// ============================================================
+let editingProtId=null;
+function estadoProtLabel(e){ return {rascunho:'Rascunho',assinado:'Em vigor',terminado:'Terminado'}[e||'rascunho']||e; }
+function renderProtocolos(){
+  const fA=document.getElementById('pf-ano').value, fT=document.getElementById('pf-tipo').value, fE=document.getElementById('pf-estado').value;
+  const fB=(document.getElementById('pf-busca').value||'').toLowerCase();
+  const todos=soProtocolos(); let list=[...todos];
+  if(fA) list=list.filter(o=>String(o.ano)===fA);
+  if(fT) list=list.filter(o=>o.tipo===fT);
+  if(fE) list=list.filter(o=>(o.estado||'rascunho')===fE);
+  if(fB) list=list.filter(o=>fmtNum(o).toLowerCase().includes(fB)||(o.dest||'').toLowerCase().includes(fB)||(o.assunto||'').toLowerCase().includes(fB)||(o.notas||'').toLowerCase().includes(fB)||((o.extra||{}).entidade_rep||'').toLowerCase().includes(fB));
+  document.getElementById('pf-contagem').textContent = (fA||fT||fE||fB) ? `${list.length} de ${todos.length}` : `${todos.length} protocolos`;
+  const hoje=new Date().toISOString().slice(0,10);
+  const aTerminar=todos.filter(o=>o.estado==='assinado'&&(o.extra||{}).fim&&(o.extra||{}).fim>=hoje&&(new Date((o.extra||{}).fim)-new Date(hoje))/86400000<=60).length;
+  document.getElementById('pr-metrics').innerHTML=`
+    <div class="metric-card"><div class="metric-label">Total</div><div class="metric-value">${todos.length}</div></div>
+    <div class="metric-card"><div class="metric-label">Em vigor</div><div class="metric-value" style="color:var(--teal-d)">${todos.filter(o=>o.estado==='assinado').length}</div></div>
+    <div class="metric-card"><div class="metric-label">A terminar (60 dias)</div><div class="metric-value" style="color:var(--amber-d)">${aTerminar}</div></div>
+    <div class="metric-card"><div class="metric-label">Rascunhos</div><div class="metric-value" style="color:#4A3F86">${todos.filter(o=>(o.estado||'rascunho')==='rascunho').length}</div></div>`;
+  const el=document.getElementById('tabela-protocolos');
+  if(!list.length){ el.innerHTML='<div class="empty-state">Nenhum protocolo encontrado. Carrega em "+ Novo Protocolo" para criar.</div>'; return; }
+  el.innerHTML=`<table><thead><tr><th>Nº</th><th>Data</th><th>Tipo</th><th>Entidade</th><th>Objeto</th><th>Vigência</th><th>Estado</th><th></th></tr></thead><tbody>${list.map(o=>{const x=o.extra||{}; const vig=(x.inicio||x.fim)?`${fmtData(x.inicio)} → ${x.fim?fmtData(x.fim):'indet.'}`:'—'; const fimProx=o.estado==='assinado'&&x.fim&&x.fim>=hoje&&(new Date(x.fim)-new Date(hoje))/86400000<=60; return `<tr>
+    <td style="font-weight:700;color:var(--navy);white-space:nowrap">${fmtNum(o)}</td>
+    <td style="white-space:nowrap;font-size:12px">${fmtData(o.data)}</td>
+    <td><span class="badge badge-tipo">${esc((modelos[o.tipo]?.label||o.tipo||'—').replace(/^Protocolo de /i,''))}</span></td>
+    <td style="font-size:12px;max-width:125px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(o.dest)}">${esc(o.dest||'—')}</td>
+    <td style="font-size:12px;color:var(--text-2);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(o.assunto)}">${esc(o.assunto||'—')}</td>
+    <td style="font-size:11px;white-space:nowrap;${fimProx?'color:var(--amber-d);font-weight:600':''}">${vig}${fimProx?' ⚠️':''}</td>
+    <td><span class="badge ${o.estado==='assinado'?'badge-enviado':'badge-rascunho'}">${estadoProtLabel(o.estado)}</span></td>
+    <td><div class="td-actions">
+      <button class="btn-edit" onclick="openModalProtocolo(${o.id})" title="Editar">✏</button>
+      <button class="btn-edit" onclick="imprimirOficioById(${o.id})" title="Imprimir / PDF">🖨</button>
+      <button class="btn-edit" onclick="duplicarProtocolo(${o.id})" title="Duplicar">⧉</button>
+      <button class="btn-edit" style="color:var(--coral-d)" onclick="deleteOficio(${o.id})" title="Eliminar">🗑</button>
+    </div></td>
+  </tr>`;}).join('')}</tbody></table>`;
+}
+function openModalProtocolo(id){
+  editingProtId = id||null;
+  const o = id ? oficios.find(x=>x.id===id) : null; const x=(o&&o.extra)||{};
+  document.getElementById('protocolo-modal-title').textContent = o ? `Editar Protocolo ${fmtNum(o)}` : 'Novo Protocolo';
+  document.getElementById('pr-numero').value = o ? fmtNum(o) : 'atribuído ao guardar';
+  const tipos=tiposDaCategoria('protocolo'); document.getElementById('pr-tipo').value = o?.tipo || tipos[0] || '';
+  document.getElementById('pr-entidade').value = o?.dest||'';
+  document.getElementById('pr-entidade-nif').value = x.entidade_nif||'';
+  document.getElementById('pr-entidade-rep').value = x.entidade_rep||'';
+  document.getElementById('pr-entidade-morada').value = x.entidade_morada||'';
+  document.getElementById('pr-objeto').value = o?.assunto||'';
+  document.getElementById('pr-data').value = o?.data||new Date().toISOString().slice(0,10);
+  document.getElementById('pr-inicio').value = x.inicio||'';
+  document.getElementById('pr-fim').value = x.fim||'';
+  document.getElementById('pr-corpo').value = o?.corpo||'';
+  document.getElementById('pr-assinante').value = o?.assinante||assinantePadraoTexto();
+  document.getElementById('pr-estado').value = o?.estado||'rascunho';
+  document.getElementById('pr-notas').value = o?.notas||'';
+  document.getElementById('pr-dir-sel').value='';
+  if(!o) aplicarModeloProtocolo();
+  openModal('modal-protocolo');
+}
+function aplicarModeloProtocolo(){
+  const tipo=document.getElementById('pr-tipo').value; const m=modelos[tipo]; if(!m) return;
+  const data=document.getElementById('pr-data').value;
+  const atual=document.getElementById('pr-corpo').value.trim();
+  if(atual && editingProtId && !confirm('Substituir as cláusulas atuais pelo modelo deste tipo?')) return;
+  if(m.dest) document.getElementById('pr-entidade').value = m.dest;
+  document.getElementById('pr-objeto').value = substituirEtiquetas(m.assunto, data);
+  document.getElementById('pr-corpo').value = substituirEtiquetas(m.corpo, data);
+}
+function lerFormularioProtocolo(){
+  return {
+    categoria:'protocolo',
+    tipo: document.getElementById('pr-tipo').value,
+    dest: document.getElementById('pr-entidade').value.trim(),
+    data: document.getElementById('pr-data').value || new Date().toISOString().slice(0,10),
+    assunto: document.getElementById('pr-objeto').value.trim(),
+    corpo: document.getElementById('pr-corpo').value.trim(),
+    assinante: document.getElementById('pr-assinante').value.trim(),
+    estado: document.getElementById('pr-estado').value,
+    notas: document.getElementById('pr-notas').value.trim() || null,
+    extra: {
+      entidade_nif: document.getElementById('pr-entidade-nif').value.trim(),
+      entidade_rep: document.getElementById('pr-entidade-rep').value.trim(),
+      entidade_morada: document.getElementById('pr-entidade-morada').value.trim(),
+      inicio: document.getElementById('pr-inicio').value || null,
+      fim: document.getElementById('pr-fim').value || null
+    }
+  };
+}
+async function saveProtocolo(){
+  const f=lerFormularioProtocolo();
+  if(!f.dest||!f.assunto||!f.corpo){ toast('Entidade, objeto e cláusulas são obrigatórios.',false); return; }
+  const btn=document.getElementById('pr-guardar-btn'); btn.disabled=true; btn.textContent='A guardar…';
+  try{
+    if(editingProtId){
+      const rows=await supaFetch('oficios?id=eq.'+editingProtId,'PATCH',Object.assign({},f,{atualizado_em:new Date().toISOString()}));
+      const i=oficios.findIndex(o=>o.id===editingProtId); if(i>=0&&rows&&rows[0]) oficios[i]=rows[0];
+      toast('Protocolo atualizado ✓');
+    } else {
+      const ano=new Date(f.data+'T12:00:00').getFullYear();
+      const seq=await proximoSeq('protocolo',ano);
+      const rows=await supaFetch('oficios','POST',Object.assign({},f,{ano,seq}));
+      if(rows&&rows[0]) oficios.unshift(rows[0]);
+      toast(`Protocolo P-${String(seq).padStart(3,'0')}/${ano} guardado ✓`);
+    }
+    editingProtId=null; closeModal('modal-protocolo'); await carregarOficios();
+  }catch(e){ console.error(e); toast('Erro ao guardar: '+e.message.slice(0,120),false); }
+  finally{ btn.disabled=false; btn.textContent='Guardar'; }
+}
+function duplicarProtocolo(id){
+  const o=oficios.find(x=>x.id===id); if(!o) return; const x=o.extra||{};
+  openModalProtocolo();
+  document.getElementById('pr-tipo').value=o.tipo; document.getElementById('pr-entidade').value=o.dest||'';
+  document.getElementById('pr-entidade-nif').value=x.entidade_nif||''; document.getElementById('pr-entidade-rep').value=x.entidade_rep||''; document.getElementById('pr-entidade-morada').value=x.entidade_morada||'';
+  document.getElementById('pr-objeto').value=o.assunto||''; document.getElementById('pr-corpo').value=o.corpo||'';
+  document.getElementById('pr-assinante').value=o.assinante||assinantePadraoTexto();
+  document.getElementById('protocolo-modal-title').textContent=`Novo Protocolo (cópia de ${fmtNum(o)})`;
+}
+function previewProtocolo(){ const f=lerFormularioProtocolo(); const o=editingProtId?oficios.find(x=>x.id===editingProtId):null; imprimirProtocolo(Object.assign({numeroTxt:o?fmtNum(o):'(sem número — rascunho)'},f)); }
+function imprimirProtocolo(o){
+  const x=o.extra||{};
+  const nome = assoc.assoc_nome || "ARCA d'Ajuda";
+  const logoHtml = logoData ? `<img src="${logoData}" style="height:64px;width:64px;object-fit:cover;border-radius:50%">` : '';
+  const dataFmt = o.data ? new Date(o.data+'T12:00:00').toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'}) : '';
+  const tipoLabel = (modelos[o.tipo]?.label || 'Protocolo').toUpperCase();
+  const contactos=[assoc.assoc_morada, assoc.assoc_tel?('Tel. '+assoc.assoc_tel):'', assoc.assoc_email, assoc.assoc_site].filter(Boolean);
+  // cláusulas: blocos separados por linha em branco; 1ª linha = título
+  const blocos=String(o.corpo||'').replace(/\r/g,'').split(/\n{2,}/).map(b=>{const ls=b.split('\n'); const t=ls[0]; const resto=ls.slice(1).join('<br>'); return /^cl[áa]usula/i.test(t) ? `<div class="cl"><div class="cl-t">${esc(t)}</div><div class="cl-x">${esc(resto).replace(/&lt;br&gt;/g,'<br>')||''}</div></div>` : `<div class="cl"><div class="cl-x">${esc(b).replace(/\n/g,'<br>')}</div></div>`;}).join('');
+  const assinA=String(o.assinante||'A Direção').split(' — ');
+  const vig = x.inicio ? `${fmtData(x.inicio)} a ${x.fim?fmtData(x.fim):'tempo indeterminado'}` : (x.fim?`até ${fmtData(x.fim)}`:'');
+  const html=`<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"><title>Protocolo ${esc(o.numeroTxt||'')}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    @page{size:A4;margin:0}
+    body{font-family:'Times New Roman',Times,serif;font-size:11.5pt;color:#111;background:#e5e7eb;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:60px 0 40px}
+    @media print{.noprint{display:none!important}body{background:#fff;padding:0}.pagina{box-shadow:none!important;margin:0!important}}
+    .noprint{position:fixed;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:99;background:#fff;padding:8px 16px;border-radius:30px;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+    .noprint button{padding:8px 20px;border:none;border-radius:20px;font-size:13px;cursor:pointer;font-family:Arial}
+    .p{background:#1a3a6b;color:#fff}.s{background:#555;color:#fff}
+    .pagina{width:210mm;min-height:297mm;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.15);display:flex;flex-direction:column;padding:0}
+    .timbrado{display:flex;align-items:center;justify-content:space-between;padding:12mm 18mm 6mm;border-bottom:3px solid #1a3a6b}
+    .org-nome{font-size:13pt;font-weight:bold;color:#1a3a6b}.org-sub{font-size:8.5pt;color:#555}
+    .timbrado-dir{text-align:right;font-size:8.5pt;color:#555;line-height:1.7;max-width:70mm}
+    .conteudo{padding:8mm 18mm;flex:1}
+    .titulo{text-align:center;font-size:15pt;font-weight:bold;letter-spacing:1px;color:#1a3a6b;margin:4pt 0 2pt}
+    .subtit{text-align:center;font-size:10.5pt;color:#444;margin-bottom:10pt}
+    .ref{text-align:center;font-size:9pt;color:#777;margin-bottom:12pt}
+    .partes{font-size:10.5pt;line-height:1.7;margin-bottom:12pt}
+    .partes p{margin-bottom:6pt;text-align:justify}
+    .cl{margin-bottom:9pt}.cl-t{font-weight:bold;font-size:10.5pt;margin-bottom:2pt}.cl-x{font-size:10.5pt;line-height:1.65;text-align:justify;white-space:normal}
+    .fecho{font-size:10.5pt;margin-top:12pt;text-align:justify;line-height:1.65}
+    .assin{display:flex;justify-content:space-between;gap:30px;margin-top:34pt}
+    .assin>div{flex:1;text-align:center;font-size:9.5pt}
+    .assin .l{border-top:1px solid #333;margin:48px 10px 6px}
+    .assin b{display:block;font-size:10pt}
+    .assin small{color:#555}
+    .rodape{border-top:1.5px solid #1a3a6b;padding:5mm 18mm;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto}
+    .rodape-texto{font-size:7.5pt;color:#666;text-align:center;line-height:1.6;flex:1}
+    .rodape-num{font-size:8pt;color:#999;white-space:nowrap}
+  </style></head><body>
+  <div class="noprint"><button class="p" onclick="window.print()">🖨 Imprimir / PDF</button><button class="s" onclick="window.close()">✕ Fechar</button></div>
+  <div class="pagina">
+    <div class="timbrado">
+      <div style="display:flex;align-items:center;gap:12px">${logoHtml}<div><div class="org-nome">${esc(nome)}</div><div class="org-sub">Associação Recreativa e Cultural da Ajuda${assoc.assoc_nif?' · NIF '+esc(assoc.assoc_nif):''}</div></div></div>
+      <div class="timbrado-dir">${contactos.map(c=>`<div>${esc(c)}</div>`).join('')||'<div>Funchal, Madeira</div>'}</div>
+    </div>
+    <div class="conteudo">
+      <div class="titulo">${esc(tipoLabel)}</div>
+      <div class="subtit">${esc(o.assunto||'')}</div>
+      <div class="ref">Ref. ${esc(o.numeroTxt||'—')}${vig?' · Vigência: '+esc(vig):''}</div>
+      <div class="partes">
+        <p><b>Entre:</b></p>
+        <p><b>${esc(nome)}</b>${assoc.assoc_nif?', pessoa coletiva n.º '+esc(assoc.assoc_nif):''}${assoc.assoc_morada?', com sede em '+esc(assoc.assoc_morada):''}, neste ato representada por <b>${esc(assinA[0])}</b>${assinA[1]?', na qualidade de '+esc(assinA.slice(1).join(' — ')):''}, adiante designada por <b>Primeira Outorgante</b>;</p>
+        <p><b>e</b></p>
+        <p><b>${esc(o.dest||'________________')}</b>${x.entidade_nif?', com o NIF/NIPC '+esc(x.entidade_nif):''}${x.entidade_morada?', com sede em '+esc(x.entidade_morada):''}${x.entidade_rep?', neste ato representada por <b>'+esc(x.entidade_rep)+'</b>':''}, adiante designada por <b>Segunda Outorgante</b>;</p>
+        <p>é celebrado o presente protocolo, que se rege pelas cláusulas seguintes:</p>
+      </div>
+      ${blocos}
+      <div class="fecho">Feito em duplicado, em Funchal, a ${esc(dataFmt)}, ficando cada uma das partes com um exemplar.</div>
+      <div class="assin">
+        <div><small>Pela Primeira Outorgante</small><div class="l"></div><b>${esc(assinA[0])}</b><small>${esc(assinA.slice(1).join(' — ')||nome)}</small></div>
+        <div><small>Pela Segunda Outorgante</small><div class="l"></div><b>${esc(x.entidade_rep||'________________')}</b><small>${esc(o.dest||'')}</small></div>
+      </div>
+    </div>
+    <div class="rodape"><div></div><div class="rodape-texto">${esc(nome)} — Associação Recreativa e Cultural da Ajuda<br>${esc(contactos.join(' · ')||'Funchal, Madeira')}</div><div class="rodape-num">Protocolo ${esc(o.numeroTxt||'—')}</div></div>
+  </div></body></html>`;
+  const w=window.open('','_blank','width=900,height=1100');
+  if(w){ w.document.write(html); w.document.close(); } else toast('O browser bloqueou a janela. Permite pop-ups para este site.',false);
+}
+
+// ============================================================
+// MODELOS
+// ============================================================
+function renderModelos(){
+  const area=document.getElementById('modelos-area');
+  area.innerHTML = Object.keys(modelos).map(k=>{const m=modelos[k]; return `
+    <details style="border:0.5px solid #E1E6ED;border-radius:10px;padding:10px 14px;margin-bottom:10px;background:#fff">
+      <summary style="cursor:pointer;font-weight:700;font-size:13.5px;color:var(--navy)">${(m.categoria||'oficio')==='protocolo'?'🤝':'📝'} ${esc(m.label||k)} <span style="font-size:11px;color:var(--text-3);font-weight:500">· ${(m.categoria||'oficio')==='protocolo'?'protocolo':'ofício'}</span></summary>
+      <div class="form-grid" style="margin-top:12px">
+        <div class="form-row">
+          <div class="form-group"><label>Nome do tipo</label><input type="text" id="md-label-${k}" value="${esc(m.label||k)}"></div>
+          <div class="form-group"><label>${(m.categoria||'oficio')==='protocolo'?'Entidade por defeito':'Destinatário por defeito'}</label><input type="text" id="md-dest-${k}" value="${esc(m.dest||'')}"></div>
+        </div>
+        <div class="form-group"><label>${(m.categoria||'oficio')==='protocolo'?'Objeto por defeito':'Assunto por defeito'}</label><input type="text" id="md-assunto-${k}" value="${esc(m.assunto||'')}"></div>
+        <div class="form-group"><label>${(m.categoria||'oficio')==='protocolo'?'Cláusulas':'Corpo'}</label><textarea id="md-corpo-${k}" style="min-height:180px">${esc(m.corpo||'')}</textarea></div>
+      </div>
+    </details>`;}).join('');
+}
+async function guardarModelos(){
+  const novo={};
+  Object.keys(modelos).forEach(k=>{ novo[k]={categoria:catDoTipo(k), label:document.getElementById('md-label-'+k).value.trim()||k, dest:document.getElementById('md-dest-'+k).value.trim(), assunto:document.getElementById('md-assunto-'+k).value.trim(), corpo:document.getElementById('md-corpo-'+k).value}; });
+  try{ await guardarChaveConfig('oficios_modelos', JSON.stringify(novo)); modelos=novo; preencherSelectsTipo(); toast('Modelos guardados ✓'); }
+  catch(e){ toast('Erro ao guardar modelos: '+e.message.slice(0,100),false); }
+}
+async function reporModelosPadrao(){
+  if(!confirm('Repor os modelos originais? As alterações que fizeste aos textos serão perdidas.')) return;
+  try{ await guardarChaveConfig('oficios_modelos',''); modelos=JSON.parse(JSON.stringify(TIPOS_PADRAO)); preencherSelectsTipo(); renderModelos(); toast('Modelos repostos'); }
+  catch(e){ toast('Erro: '+e.message.slice(0,100),false); }
+}
+
+// ============================================================
+// CONFIG
+// ============================================================
+function renderConfig(){
+  const linhas=[['Nome',assoc.assoc_nome],['NIF',assoc.assoc_nif],['Morada',assoc.assoc_morada],['Email',assoc.assoc_email],['Telefone',assoc.assoc_tel],['Site',assoc.assoc_site]];
+  document.getElementById('cfg-assoc').innerHTML = linhas.map(([l,v])=>`<div><span style="color:var(--text-3);display:inline-block;width:80px">${l}</span> ${v?esc(v):'<span style="color:var(--coral)">— não preenchido na app de Sócios</span>'}</div>`).join('');
+  document.getElementById('cfg-assin-nome').value=assinaturaPadrao.nome; document.getElementById('cfg-assin-cargo').value=assinaturaPadrao.cargo;
+}
+function preencherAssinaturaDaDirecao(i){ if(i==='') return; const d=direcao[Number(i)]; if(!d) return; document.getElementById('cfg-assin-nome').value=d.nome; document.getElementById('cfg-assin-cargo').value=d.cargo; }
+async function guardarConfigAssinatura(){
+  const nome=document.getElementById('cfg-assin-nome').value.trim(), cargo=document.getElementById('cfg-assin-cargo').value.trim();
+  try{ await guardarChaveConfig('oficios_assinante_nome',nome); await guardarChaveConfig('oficios_assinante_cargo',cargo); assinaturaPadrao={nome,cargo}; toast('Assinatura guardada ✓'); }
+  catch(e){ toast('Erro: '+e.message.slice(0,100),false); }
+}
+
+// ============================================================
+// NAVEGAÇÃO
+// ============================================================
+function irPara(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p)?.classList.add('active');
+  document.querySelectorAll('.ml-btn[data-ml]').forEach(b=>b.classList.toggle('active', b.dataset.ml===p));
+  document.querySelectorAll('.mobile-nav .inner-tab').forEach(b=>b.classList.toggle('active', (b.getAttribute('onclick')||'').includes(`'${p}'`)));
+  if(p==='modelos') renderModelos();
+  if(p==='protocolos') renderProtocolos();
+  if(p==='config') renderConfig();
+  document.querySelector('.main').scrollTop=0;
+}
+function abrirAjuda(){ openModal('modal-ajuda'); }
+
+// arranque
+(async function(){
+  if(supaSession?.access_token){
+    try{ await iniciar(); }
+    catch(e){ if(String(e.message)!=='AUTH_EXPIRED'){ console.error(e); } }
+  } else { carregarLogo(); mostrarLogin(); }
+})();
+</script>
+</body>
+</html>
