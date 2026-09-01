@@ -304,7 +304,8 @@ body{background:#F3F5F8}
 /* Menu lateral com botões coloridos */
 .menu-lateral{width:236px;flex-shrink:0;background:#fff;border-right:0.5px solid #dfe3e8;padding:14px 12px 18px;display:flex;flex-direction:column;gap:7px;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto}
 .ml-grupo{font-size:10px;font-weight:800;color:#8a94a3;text-transform:uppercase;letter-spacing:.9px;padding:12px 4px 4px}
-.ml-grupo:first-child{padding-top:2px}
+.ml-btn{flex-shrink:0}
+.menu-lateral{gap:9px}
 .ml-btn{--c:#1B4570;display:flex;align-items:stretch;width:100%;border:none;border-radius:9px;overflow:hidden;cursor:pointer;color:#fff;font-weight:700;font-size:12px;letter-spacing:.5px;text-transform:uppercase;background:var(--c);box-shadow:0 2px 6px rgba(0,0,0,.14);transition:transform .12s,box-shadow .12s,filter .12s;text-decoration:none;padding:0;font-family:inherit;text-align:left}
 .ml-lbl{flex:1;padding:10px 12px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ml-ico{width:42px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.2);font-size:17px}
@@ -408,6 +409,7 @@ tbody tr:hover td{background:#F5F9FF}
 <div class="app-body">
 <!-- MENU LATERAL (desktop) -->
 <aside class="menu-lateral" id="menu-lateral">
+  <a class="ml-btn ml-cinza" href="../index.html" title="Menu Geral"><span class="ml-lbl">Menu Geral</span><span class="ml-ico">🏠</span></a>
   <div class="ml-grupo">Sócios</div>
   <button class="ml-btn ml-roxo active" data-ml="socios:lista" onclick="irPara('socios','lista')"><span class="ml-lbl">Lista de Sócios</span><span class="ml-ico">📋</span></button>
   <button class="ml-btn ml-azul" data-ml="socios:cartao" onclick="irPara('socios','cartao')"><span class="ml-lbl">Cartão de Sócio</span><span class="ml-ico">🪪</span></button>
@@ -424,11 +426,6 @@ tbody tr:hover td{background:#F5F9FF}
   <button class="ml-btn ml-azul" data-ml="config:email" onclick="irPara('config','email')"><span class="ml-lbl">Email</span><span class="ml-ico">📧</span></button>
   <button class="ml-btn ml-marinho" data-ml="config:associacao" onclick="irPara('config','associacao')"><span class="ml-lbl">Associação</span><span class="ml-ico">🏢</span></button>
 
-  <div class="ml-grupo">Outros</div>
-  <button class="ml-btn ml-cinza" onclick="abrirGuiaAjuda()"><span class="ml-lbl">Guia de Ajuda</span><span class="ml-ico">❓</span></button>
-  <a class="ml-btn ml-cinza" href="../index.html" title="Menu Geral"><span class="ml-lbl">Menu Geral</span><span class="ml-ico">🏠</span></a>
-  <button class="ml-btn ml-vermelho" onclick="lockApp()"><span class="ml-lbl">Bloquear</span><span class="ml-ico">🔒</span></button>
-  <button class="ml-btn ml-vermelho" onclick="if(confirm('Sair da conta da associação neste dispositivo?'))supaLogout()"><span class="ml-lbl">Sair</span><span class="ml-ico">🚪</span></button>
   <div class="ml-rodape">ARCA d'Ajuda · Gestão de Sócios</div>
 </aside>
 <!-- MAIN -->
