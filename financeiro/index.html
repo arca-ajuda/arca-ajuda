@@ -480,6 +480,7 @@ tbody tr:hover td{background:#F5F9FF}
       <div style="font-size:12px;opacity:.8" id="dash-periodo-label">Resumo do ano</div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-primary" onclick="irParaAnaliseDetalhe()" style="background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.5);color:#fff;box-shadow:none" title="Filtrar movimentos ponto por ponto e imprimir">🔎 Análise / Filtro</button>
       <button class="btn-primary" onclick="openModal('modal-lancamento')" style="background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.5);color:#fff;backdrop-filter:blur(4px)">+ Lançamento</button>
     </div>
   </div>
@@ -2140,6 +2141,10 @@ function renderFluxo(){
 }
 
 // ---- Análise ponto por ponto ----
+function irParaAnaliseDetalhe(){
+  showPage('analise', document.querySelector(`.nav-item[onclick*="'analise'"]`));
+  setTimeout(()=>{ const c=document.getElementById('ad-tabela'); if(c) c.closest('.card').scrollIntoView({behavior:'smooth',block:'start'}); }, 120);
+}
 function popularAnaliseCategorias(){
   const tipo=document.getElementById('ad-tipo').value;
   const cats = tipo==='receita' ? Object.keys(config.recCats)
