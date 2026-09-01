@@ -2150,9 +2150,9 @@ function renderFluxo(){
     {l:'Total Receitas',v:rec,fn:fmtR,cls:''},
     {l:'Total Despesas',v:desp,fn:fmtD,cls:'fluxo-desp'},
     {l:'Resultado Mensal',v:fluxo,fn:fmtF,cls:''},
-    {l:'Saldo Acumulado',v:acumArr,fn:fmtF,cls:'fluxo-total'}
+    {l:'Saldo Acumulado',v:acumArr,fn:fmtF,cls:'fluxo-total',totalFinal:true}
   ];
-  document.getElementById('fluxo-table-el').innerHTML=`<thead><tr><th>Conta</th>${MESES_S.map(m=>`<th>${m}</th>`).join('')}<th>Total</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.cls}"><td style="font-weight:500;white-space:nowrap">${r.l}</td>${r.v.map(v=>`<td>${r.fn(v)}</td>`).join('')}<td>${r.fn(r.v.reduce((a,b)=>a+b,0))}</td></tr>`).join('')}</tbody>`;
+  document.getElementById('fluxo-table-el').innerHTML=`<thead><tr><th>Conta</th>${MESES_S.map(m=>`<th>${m}</th>`).join('')}<th>Total</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.cls}"><td style="font-weight:500;white-space:nowrap">${r.l}</td>${r.v.map(v=>`<td>${r.fn(v)}</td>`).join('')}<td>${r.fn(r.totalFinal ? (Math.round((r.v[r.v.length-1]||0)*100)/100) : r.v.reduce((a,b)=>a+b,0))}</td></tr>`).join('')}</tbody>`;
   mkChart('fluxo2','chart-fluxo2',{type:'bar',data:{labels:MESES_S,datasets:[{label:'Receitas',data:rec,backgroundColor:'#1D9E7599',borderRadius:3,order:2},{label:'Despesas',data:desp,backgroundColor:'#D85A3099',borderRadius:3,order:2},{label:'Fluxo',data:fluxo,type:'line',borderColor:'#0F6E56',backgroundColor:'transparent',tension:.35,pointRadius:4,pointBackgroundColor:'#0F6E56',order:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:11}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{callback:v=>'€'+Math.round(v),font:{size:10}}}}}});
 }
 
