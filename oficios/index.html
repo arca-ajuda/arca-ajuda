@@ -245,7 +245,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!import
       </div>
     </div>
     <div class="card">
-      <div class="ajuda" style="margin-bottom:12px">Usa <b>[texto entre parênteses retos]</b> para marcar o que deve ser preenchido em cada documento, e as etiquetas <b>{associacao}</b>, <b>{ano}</b> e <b>{data}</b> (substituídas automaticamente). Podes <b>➕ criar modelos novos</b> (de ofício ou de protocolo), editar os existentes e 🗑 apagar os que não interessarem. No fim carrega em <b>💾 Guardar modelos</b>.</div>
+      <div class="ajuda" style="margin-bottom:12px">Usa <b>[texto entre parênteses retos]</b> para marcar o que deve ser preenchido em cada documento, e as etiquetas <b>{associacao}</b>, <b>{ano}</b>, <b>{data}</b> e <b>{apresentacao}</b> (parágrafo sobre a associação, editável nas Configurações), substituídas automaticamente. Podes <b>➕ criar modelos novos</b> (de ofício ou de protocolo), editar os existentes e 🗑 apagar os que não interessarem. No fim carrega em <b>💾 Guardar modelos</b>.</div>
       <div id="modelos-area"></div>
     </div>
   </div>
@@ -270,6 +270,15 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!import
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
         <button class="btn-primary" onclick="guardarConfigAssinatura()">💾 Guardar</button>
         <select class="filter-select" id="cfg-dir-sel" onchange="preencherAssinaturaDaDirecao(this.value)"><option value="">Escolher da Direção…</option></select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📣 Texto de apresentação da associação</div>
+      <div class="ajuda" style="margin-bottom:10px">Este parágrafo entra automaticamente nos modelos onde estiver a etiqueta <b>{apresentacao}</b> (Câmara, Junta, Parceiros, Patrocínio…). É o mesmo estilo de texto do QR da carrinha.</div>
+      <textarea id="cfg-apresentacao" style="width:100%;min-height:110px;padding:10px 12px;border:1.5px solid #E2D5BC;border-radius:8px;font-size:13.5px;background:#FBF8F0;line-height:1.6;resize:vertical"></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn-primary" onclick="guardarApresentacao()">💾 Guardar texto</button>
+        <button class="btn-secondary" onclick="document.getElementById('cfg-apresentacao').value=APRESENTACAO_PADRAO">↺ Repor texto original</button>
       </div>
     </div>
     <div class="card">
@@ -308,7 +317,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!import
         <div class="form-group"><label>Data</label><input type="date" id="of-data"></div>
       </div>
       <div class="form-group"><label>Assunto</label><input type="text" id="of-assunto" placeholder="Assunto do ofício"></div>
-      <div class="form-group"><label>Corpo do ofício</label><textarea id="of-corpo"></textarea><div class="ajuda">Preenche o que está entre [parênteses retos]. Linhas em branco separam parágrafos.</div></div>
+      <div class="form-group"><label>Corpo do ofício</label><textarea id="of-corpo"></textarea><div class="ajuda">Preenche o que está entre [parênteses retos]. Linhas em branco separam parágrafos. A etiqueta {apresentacao} é substituída pelo texto sobre a associação (Configurações).</div></div>
       <div class="form-row">
         <div class="form-group"><label>Assinante</label><input type="text" id="of-assinante" placeholder="Ex: João Silva — Presidente da Direção"></div>
         <div class="form-group"><label>Escolher da Direção</label><select id="of-dir-sel" onchange="if(this.value){document.getElementById('of-assinante').value=this.value;}"><option value="">—</option></select></div>
@@ -519,6 +528,8 @@ let assinaturaPadrao={nome:'',cargo:''};
 let direcao=[];            // [{nome,cargo}]
 let editingId=null;
 let modelos={};            // tipo -> {label,dest,assunto,corpo}
+const APRESENTACAO_PADRAO = "Fundada a 29 de junho de 2011, a ARCA d'Ajuda nasceu da tradição da Festa de Nossa Senhora da Ajuda, em São Martinho. É uma associação sem fins lucrativos que promove a cultura, o desporto e o lazer — das festas tradicionais ao ARCAKIDS e às modalidades desportivas — levando a Ajuda mais além.";
+let textoApresentacao = APRESENTACAO_PADRAO;
 
 const TIPOS_PADRAO = {
   camara:{label:'Câmara Municipal', dest:'Câmara Municipal do Funchal', assunto:'Pedido de apoio financeiro às atividades da {associacao}',
@@ -526,7 +537,7 @@ const TIPOS_PADRAO = {
 
 A {associacao}, com sede no Funchal, fundada a 29 de junho de 2011, vem por este meio dirigir-se a V. Exa. no sentido de solicitar apoio financeiro para o desenvolvimento das suas atividades no ano de {ano}.
 
-A ARCA d'Ajuda conta atualmente com mais de 500 sócios e desenvolve um conjunto diversificado de atividades, entre as quais se destacam modalidades desportivas federadas, o ATL ARCAKIDS destinado a crianças em idade escolar, eventos culturais e recreativos abertos à comunidade, e ações de solidariedade social.
+{apresentacao} A associação conta atualmente com mais de 500 sócios.
 
 Neste contexto, vimos respeitosamente solicitar a V. Exa. que seja ponderada a concessão de um apoio financeiro no valor de [valor solicitado] €, destinado a [descreva o fim específico do apoio: equipamento, instalações, evento, etc.].
 
@@ -538,7 +549,9 @@ Certos de merecer a melhor atenção de V. Exa., apresentamos os nossos respeito
 
 A {associacao}, sediada na freguesia de São Martinho, vem por este meio solicitar a V. Exa. o vosso precioso apoio para [descreva o pedido específico].
 
-A nossa associação desenvolve um trabalho continuado de promoção do desporto, da cultura e da coesão social na nossa comunidade, contando com a participação ativa de centenas de sócios e famílias da freguesia.
+{apresentacao}
+
+A nossa associação desenvolve um trabalho continuado junto da comunidade, contando com a participação ativa de centenas de sócios e famílias da freguesia.
 
 [Acrescente os detalhes relevantes do pedido]
 
@@ -550,7 +563,7 @@ Com os nossos melhores cumprimentos.`},
 
 A {associacao}, fundada em 2011 e sediada no Funchal, Madeira, vem por este meio propor a celebração de um protocolo de parceria mutuamente vantajoso.
 
-A ARCA d'Ajuda é uma associação sem fins lucrativos que conta com mais de 500 sócios, desenvolvendo atividades nas áreas desportiva, cultural e social, com particular impacto junto das comunidades da zona Oeste do Funchal.
+{apresentacao} Conta com mais de 500 sócios, com particular impacto junto das comunidades da zona Oeste do Funchal.
 
 A parceria que propomos contempla os seguintes termos:
 — [Descreva o que a ARCA se compromete a oferecer]
@@ -565,6 +578,8 @@ Com os melhores cumprimentos.`},
     corpo:`Exmos. Senhores,
 
 A {associacao} vem por este meio solicitar o vosso patrocínio para [nome e descrição do evento ou atividade], a realizar-se em [local e data previstos].
+
+{apresentacao}
 
 Este evento [descreva brevemente o evento e o seu impacto esperado, público estimado, âmbito, etc.].
 
@@ -688,6 +703,7 @@ function nomeAssociacao(){ return assoc.assoc_nome || "Associação Recreativa e
 function substituirEtiquetas(txt, dataISO){
   const d = dataISO ? new Date(dataISO+'T12:00:00') : new Date();
   return String(txt||'')
+    .replace(/\{apresentacao\}/g, textoApresentacao||APRESENTACAO_PADRAO)
     .replace(/\{associacao\}/g, nomeAssociacao())
     .replace(/\{ano\}/g, String(d.getFullYear()))
     .replace(/\{data\}/g, d.toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'}));
@@ -713,8 +729,9 @@ async function carregarModelos(){
   if(c.oficios_modelos){ try{ const m=JSON.parse(c.oficios_modelos); Object.keys(m).forEach(k=>{ modelos[k]=Object.assign({}, modelos[k]||{label:k}, m[k]); }); }catch(e){ console.warn('modelos:',e); } }
 }
 async function carregarAssinaturaPadrao(){
-  const c = await lerConfig(['oficios_assinante_nome','oficios_assinante_cargo']);
+  const c = await lerConfig(['oficios_assinante_nome','oficios_assinante_cargo','oficios_apresentacao']);
   assinaturaPadrao = {nome:c.oficios_assinante_nome||'', cargo:c.oficios_assinante_cargo||''};
+  if(c.oficios_apresentacao) textoApresentacao = c.oficios_apresentacao;
 }
 async function carregarDirecao(){
   direcao=[];
@@ -1226,8 +1243,14 @@ function renderConfig(){
   const linhas=[['Nome',assoc.assoc_nome],['NIF',assoc.assoc_nif],['Morada',assoc.assoc_morada],['Email',assoc.assoc_email],['Telefone',assoc.assoc_tel],['Site',assoc.assoc_site]];
   document.getElementById('cfg-assoc').innerHTML = linhas.map(([l,v])=>`<div><span style="color:var(--text-3);display:inline-block;width:80px">${l}</span> ${v?esc(v):'<span style="color:var(--coral)">— não preenchido na app de Sócios</span>'}</div>`).join('');
   document.getElementById('cfg-assin-nome').value=assinaturaPadrao.nome; document.getElementById('cfg-assin-cargo').value=assinaturaPadrao.cargo;
+  document.getElementById('cfg-apresentacao').value=textoApresentacao;
 }
 function preencherAssinaturaDaDirecao(i){ if(i==='') return; const d=direcao[Number(i)]; if(!d) return; document.getElementById('cfg-assin-nome').value=d.nome; document.getElementById('cfg-assin-cargo').value=d.cargo; }
+async function guardarApresentacao(){
+  const v=document.getElementById('cfg-apresentacao').value.trim();
+  try{ await guardarChaveConfig('oficios_apresentacao', v); textoApresentacao=v||APRESENTACAO_PADRAO; toast('Texto de apresentação guardado ✓'); }
+  catch(e){ toast('Erro: '+e.message.slice(0,100),false); }
+}
 async function guardarConfigAssinatura(){
   const nome=document.getElementById('cfg-assin-nome').value.trim(), cargo=document.getElementById('cfg-assin-cargo').value.trim();
   try{ await guardarChaveConfig('oficios_assinante_nome',nome); await guardarChaveConfig('oficios_assinante_cargo',cargo); assinaturaPadrao={nome,cargo}; toast('Assinatura guardada ✓'); }
