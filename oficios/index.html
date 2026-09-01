@@ -528,16 +528,16 @@ let assinaturaPadrao={nome:'',cargo:''};
 let direcao=[];            // [{nome,cargo}]
 let editingId=null;
 let modelos={};            // tipo -> {label,dest,assunto,corpo}
-const APRESENTACAO_PADRAO = "Fundada a 29 de junho de 2011, a ARCA d'Ajuda nasceu da tradição da Festa de Nossa Senhora da Ajuda, em São Martinho. É uma associação sem fins lucrativos que promove a cultura, o desporto e o lazer — das festas tradicionais ao ARCAKIDS e às modalidades desportivas — levando a Ajuda mais além.";
+const APRESENTACAO_PADRAO = "Fundada a 29 de junho de 2011, a ARCA d'Ajuda nasceu da tradição da Festa de Nossa Senhora da Ajuda, em São Martinho, e é uma associação sem fins lucrativos que promove a cultura, o desporto e o lazer — das festas tradicionais ao ATL ARCAKIDS e às modalidades desportivas — levando a Ajuda mais além.";
 let textoApresentacao = APRESENTACAO_PADRAO;
 
 const TIPOS_PADRAO = {
   camara:{label:'Câmara Municipal', dest:'Câmara Municipal do Funchal', assunto:'Pedido de apoio financeiro às atividades da {associacao}',
     corpo:`Exmo. Senhor Presidente da Câmara Municipal do Funchal,
 
-A {associacao}, com sede no Funchal, fundada a 29 de junho de 2011, vem por este meio dirigir-se a V. Exa. no sentido de solicitar apoio financeiro para o desenvolvimento das suas atividades no ano de {ano}.
+A {associacao}, com sede no Funchal, vem por este meio dirigir-se a V. Exa. no sentido de solicitar apoio financeiro para o desenvolvimento das suas atividades no ano de {ano}.
 
-{apresentacao} A associação conta atualmente com mais de 500 sócios.
+{apresentacao} Conta atualmente com mais de 500 sócios.
 
 Neste contexto, vimos respeitosamente solicitar a V. Exa. que seja ponderada a concessão de um apoio financeiro no valor de [valor solicitado] €, destinado a [descreva o fim específico do apoio: equipamento, instalações, evento, etc.].
 
@@ -561,9 +561,9 @@ Com os nossos melhores cumprimentos.`},
   parceiro:{label:'Parceiros', dest:'', assunto:'Proposta de protocolo de parceria com a {associacao}',
     corpo:`Exmos. Senhores,
 
-A {associacao}, fundada em 2011 e sediada no Funchal, Madeira, vem por este meio propor a celebração de um protocolo de parceria mutuamente vantajoso.
+A {associacao}, sediada no Funchal, Madeira, vem por este meio propor a celebração de um protocolo de parceria mutuamente vantajoso.
 
-{apresentacao} Conta com mais de 500 sócios, com particular impacto junto das comunidades da zona Oeste do Funchal.
+{apresentacao} Conta atualmente com mais de 500 sócios, com particular impacto junto das comunidades da zona Oeste do Funchal.
 
 A parceria que propomos contempla os seguintes termos:
 — [Descreva o que a ARCA se compromete a oferecer]
@@ -699,7 +699,12 @@ Com os melhores cumprimentos.`}
 
 function catDoTipo(t){ return (modelos[t]&&modelos[t].categoria)||'oficio'; }
 function tiposDaCategoria(c){ return Object.keys(modelos).filter(k=>catDoTipo(k)===c); }
-function nomeAssociacao(){ return assoc.assoc_nome || "Associação Recreativa e Cultural da Ajuda (ARCA d'Ajuda)"; }
+function nomeAssociacao(){
+  let n = assoc.assoc_nome || "Associação Recreativa e Cultural da Ajuda";
+  if(!/ARCA/i.test(n)) n += " (ARCA d'Ajuda)";
+  else if(!/\(/.test(n) && !/^ARCA/i.test(n)) n = n; // já contém ARCA no nome
+  return n;
+}
 function substituirEtiquetas(txt, dataISO){
   const d = dataISO ? new Date(dataISO+'T12:00:00') : new Date();
   return String(txt||'')
