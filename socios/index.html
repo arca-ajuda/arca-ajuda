@@ -390,6 +390,9 @@ tbody tr:hover td{background:#F5F9FF}
 .topbar .topbar-quick .topnav-item.nav-lock:hover{filter:brightness(1.06);transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,.22)}
 .topbar .topbar-quick .topnav-item.nav-lock svg{width:19px;height:19px;opacity:1}
 .topbar .topbar-quick{gap:8px}
+.ml-btn.ml-geral{--c:#1B4570;background:linear-gradient(135deg,#1B4570,#2E6199 60%,#2F7A8F)!important;color:#fff;font-size:13px;box-shadow:0 4px 12px rgba(27,69,112,.35);margin-bottom:4px}
+.ml-btn.ml-geral .ml-ico{background:rgba(255,255,255,.22);font-size:18px}
+.ml-btn.ml-geral:hover{filter:brightness(1.1)}
 .logo-badge,.logo-img,.logo-edit-overlay{border-radius:50%}
 .logo-img{object-fit:cover;background:#fff}
 /* Lista de sócios sem scroll horizontal: menu mais estreito e tabela mais compacta em ecrãs médios */
@@ -471,12 +474,11 @@ tbody tr:hover td{background:#F5F9FF}
 <div class="app-body">
 <!-- MENU LATERAL (desktop) -->
 <aside class="menu-lateral" id="menu-lateral">
-  <a class="ml-btn ml-cinza" href="../index.html" title="Menu Geral"><span class="ml-lbl">Menu Geral</span><span class="ml-ico">🏠</span></a>
+  <a class="ml-btn ml-geral" href="../index.html" title="Menu Geral"><span class="ml-lbl">Menu Geral</span><span class="ml-ico">🏠</span></a>
   <div class="ml-grupo">Sócios</div>
   <button class="ml-btn ml-roxo active" data-ml="socios:lista" onclick="irPara('socios','lista')"><span class="ml-lbl">Lista de Sócios</span><span class="ml-ico">📋</span></button>
   <button class="ml-btn ml-azul" data-ml="socios:cartao" onclick="irPara('socios','cartao')"><span class="ml-lbl">Cartão de Sócio</span><span class="ml-ico">🪪</span></button>
   <button class="ml-btn ml-verde" data-ml="socios:verificar" onclick="irPara('socios','verificar')"><span class="ml-lbl">Verificar QR</span><span class="ml-ico">📷</span></button>
-  <button class="ml-btn ml-laranja" data-ml="socios:importar" onclick="irPara('socios','importar')"><span class="ml-lbl">Importar</span><span class="ml-ico">⬆</span></button>
   <button class="ml-btn ml-verde-cl" data-ml="socios:parcerias" onclick="irPara('socios','parcerias')"><span class="ml-lbl">Parcerias</span><span class="ml-ico">🤝</span></button>
   <button class="ml-btn ml-marinho" onclick="openModalSocio()"><span class="ml-lbl">+ Novo Sócio</span><span class="ml-ico">➕</span></button>
 
@@ -498,7 +500,7 @@ tbody tr:hover td{background:#F5F9FF}
       </select>
       <button class="btn-secondary" onclick="copiarLinkInscricao()" title="Copiar link da ficha de inscrição">📋 Copiar Link Inscrição</button>
       <button class="btn-secondary" onclick="abrirLinkInscricao()" title="Abrir a ficha de inscrição num separador novo">📝 Abrir Ficha</button>
-      <button class="btn-secondary" onclick="showSociosTab('importar')">⬆ Importar</button>
+      <button class="btn-secondary" onclick="irPara('config','dados')" title="Importar sócios (em Configurações → Dados)">⬆ Importar</button>
       <button class="btn-secondary" onclick="exportSociosCSV()">⬇ CSV</button>
       <button class="btn-primary" onclick="openModalSocio()">+ Novo Sócio</button>
     </div>
@@ -510,7 +512,6 @@ tbody tr:hover td{background:#F5F9FF}
     <button class="inner-tab active" id="stab-lista" onclick="showSociosTab('lista',this)">📋 Lista</button>
     <button class="inner-tab" id="stab-cartao" onclick="showSociosTab('cartao',this)">🪪 Cartão</button>
     <button class="inner-tab" id="stab-verificar" onclick="showSociosTab('verificar',this)">📷 Verificar QR</button>
-    <button class="inner-tab" id="stab-importar" onclick="showSociosTab('importar',this)">⬆ Importar</button>
     <button class="inner-tab" id="stab-parcerias" onclick="showSociosTab('parcerias',this)">🤝 Parcerias</button>
   </div>
   <!-- LISTA -->
@@ -596,23 +597,6 @@ tbody tr:hover td{background:#F5F9FF}
     </div>
   </div>
   <!-- IMPORTAR -->
-  <div id="socios-panel-importar" style="display:none">
-    <div class="card" style="max-width:560px">
-      <div class="card-title">Importar sócios do Excel / CSV</div>
-      <div style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.6">
-        Importa diretamente o ficheiro Excel da associação (mesmo com as colunas originais tipo "NOME COMPLETO", "TIPO SÓCIO", etc.), ou um CSV com separador ";". A app deteta as colunas automaticamente.
-      </div>
-      <div class="logo-drop" onclick="document.getElementById('socios-csv-input').click()">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-        <p>Clica para selecionar ficheiro CSV ou Excel</p>
-      </div>
-      <input type="file" id="socios-csv-input" accept=".csv,.xlsx,.xls" style="display:none" onchange="importSociosCSV(this)">
-      <div style="margin-top:14px;display:flex;gap:8px">
-        <button class="btn-danger" onclick="if(confirm('⚠ Apagar TODOS os sócios? Isto apaga mesmo da cloud (Supabase), para todos os dispositivos. Esta ação não pode ser desfeita.\n\nTens a certeza?'))clearSocios()">🗑 Apagar todos os sócios</button>
-      </div>
-    </div>
-  </div>
-
   <div id="socios-panel-parcerias" style="display:none">
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px">
@@ -767,6 +751,21 @@ tbody tr:hover td{background:#F5F9FF}
         <button class="btn-primary" onclick="fazerBackupDrive(true)">☁️ Fazer backup agora</button>
       </div>
       <div id="drive-status" style="font-size:12px;color:var(--text-2);line-height:1.6">⚪ Google Drive não ligado</div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">📥 Importar sócios do Excel / CSV</div>
+      <div style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.6">
+        Importa diretamente o ficheiro Excel da associação (mesmo com as colunas originais tipo "NOME COMPLETO", "TIPO SÓCIO", etc.), ou um CSV com separador ";". A app deteta as colunas automaticamente.
+      </div>
+      <div class="logo-drop" onclick="document.getElementById('socios-csv-input').click()">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+        <p>Clica para selecionar ficheiro CSV ou Excel</p>
+      </div>
+      <input type="file" id="socios-csv-input" accept=".csv,.xlsx,.xls" style="display:none" onchange="importSociosCSV(this)">
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <button class="btn-danger" onclick="if(confirm('⚠ Apagar TODOS os sócios? Isto apaga mesmo da cloud (Supabase), para todos os dispositivos. Esta ação não pode ser desfeita.\n\nTens a certeza?'))clearSocios()">🗑 Apagar todos os sócios</button>
+      </div>
     </div>
 
     <div class="card" style="margin-bottom:14px">
