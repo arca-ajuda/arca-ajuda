@@ -778,6 +778,39 @@ tbody tr:hover td{background:#F5F9FF}
     <div class="card-title">Resumo por categoria — <span id="analise-ano-lbl"></span></div>
     <div class="table-wrap" id="tabela-analise"></div>
   </div>
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+      <div class="card-title" style="margin:0">🔎 Análise ponto por ponto</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-secondary" onclick="exportarAnaliseDetalheCSV()">⬇ CSV</button>
+        <button class="btn-primary" onclick="imprimirAnaliseDetalhe()">🖨 Imprimir</button>
+      </div>
+    </div>
+    <div class="filters-bar" style="margin-bottom:12px">
+      <select class="filter-select" id="ad-tipo" onchange="popularAnaliseCategorias();renderAnaliseDetalhe()">
+        <option value="">Receitas + Despesas</option>
+        <option value="receita">Só Receitas</option>
+        <option value="despesa">Só Despesas</option>
+      </select>
+      <select class="filter-select" id="ad-cat" onchange="popularAnaliseSubs();renderAnaliseDetalhe()"><option value="">Todas as categorias</option></select>
+      <select class="filter-select" id="ad-sub" onchange="renderAnaliseDetalhe()"><option value="">Todas as subcategorias</option></select>
+      <select class="filter-select" id="ad-conta" onchange="renderAnaliseDetalhe()">
+        <option value="">Todas as contas</option>
+        <option value="geral">🏛 Banco / transferências</option>
+        <option value="numerario">🏦 Numerário</option>
+        <option value="cartao">💳 Cartão pré-pago</option>
+      </select>
+      <select class="filter-select" id="ad-mes" onchange="renderAnaliseDetalhe()">
+        <option value="0">Todos os meses</option>
+        <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+        <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+        <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+        <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+      </select>
+      <span class="contador" id="ad-contagem" style="margin-left:auto;font-size:12.5px;font-weight:700;color:#1B4570;background:#E6F1FB;padding:6px 12px;border-radius:20px;white-space:nowrap">—</span>
+    </div>
+    <div class="table-wrap" id="ad-tabela"></div>
+  </div>
 </div>
 
 <!-- RELATÓRIO / IMPRESSÃO -->
@@ -2106,6 +2139,105 @@ function renderFluxo(){
   mkChart('fluxo2','chart-fluxo2',{type:'bar',data:{labels:MESES_S,datasets:[{label:'Receitas',data:rec,backgroundColor:'#1D9E7599',borderRadius:3,order:2},{label:'Despesas',data:desp,backgroundColor:'#D85A3099',borderRadius:3,order:2},{label:'Fluxo',data:fluxo,type:'line',borderColor:'#0F6E56',backgroundColor:'transparent',tension:.35,pointRadius:4,pointBackgroundColor:'#0F6E56',order:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:11}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{callback:v=>'€'+Math.round(v),font:{size:10}}}}}});
 }
 
+// ---- Análise ponto por ponto ----
+function popularAnaliseCategorias(){
+  const tipo=document.getElementById('ad-tipo').value;
+  const cats = tipo==='receita' ? Object.keys(config.recCats)
+             : tipo==='despesa' ? Object.keys(config.despCats)
+             : [...new Set([...Object.keys(config.recCats),...Object.keys(config.despCats)])];
+  const sel=document.getElementById('ad-cat'); const atual=sel.value;
+  sel.innerHTML='<option value="">Todas as categorias</option>'+cats.map(c=>`<option>${c}</option>`).join('');
+  if(cats.includes(atual)) sel.value=atual;
+  popularAnaliseSubs();
+}
+function popularAnaliseSubs(){
+  const cat=document.getElementById('ad-cat').value;
+  const subs = cat ? [...new Set([...(config.recCats[cat]||[]),...(config.despCats[cat]||[])])] : [];
+  const sel=document.getElementById('ad-sub'); const atual=sel.value;
+  sel.innerHTML='<option value="">Todas as subcategorias</option>'+subs.map(s=>`<option>${s}</option>`).join('');
+  if(subs.includes(atual)) sel.value=atual;
+}
+function contaDoMov(m){
+  return TIPMOV_CARTAO.includes(m.tipmov) ? 'cartao' : m.tipmov==='Numerário' ? 'numerario' : 'geral';
+}
+function filtrarAnaliseDetalhe(){
+  const ano=getAno();
+  const t=document.getElementById('ad-tipo').value, c=document.getElementById('ad-cat').value;
+  const s=document.getElementById('ad-sub').value, ct=document.getElementById('ad-conta').value;
+  const mes=parseInt(document.getElementById('ad-mes').value)||0;
+  return movimentos.filter(m=> m.ano===ano
+    && (!t||m.cat===t) && (!c||m.categoria===c) && (!s||m.sub===s)
+    && (!ct||contaDoMov(m)===ct) && (mes===0||m.mes===mes)
+  ).sort((a,b)=>a.mes-b.mes||(a.id||0)-(b.id||0));
+}
+function renderAnaliseDetalhe(){
+  const el=document.getElementById('ad-tabela'); if(!el) return;
+  const list=filtrarAnaliseDetalhe();
+  const rec=list.filter(m=>m.cat==='receita').reduce((x,m)=>x+m.valor,0);
+  const desp=list.filter(m=>m.cat==='despesa').reduce((x,m)=>x+m.valor,0);
+  document.getElementById('ad-contagem').textContent=`${list.length} mov. · ${fmt(rec-desp)}`;
+  if(!list.length){ el.innerHTML='<div class="empty-state"><p>Nenhum movimento com estes filtros.</p></div>'; return; }
+  const contaLbl={geral:'Banco',numerario:'Numerário',cartao:'Cartão'};
+  el.innerHTML=`<table><thead><tr><th>Mês</th><th>Tipo</th><th>Categoria</th><th>Subcategoria</th><th>Conta</th><th>Descrição</th><th style="text-align:right">Valor</th></tr></thead><tbody>
+    ${list.map(m=>`<tr><td>${MESES[m.mes-1]||m.mes}</td><td><span class="badge ${m.cat==='receita'?'badge-rec':'badge-desp'}">${m.cat==='receita'?'Receita':'Despesa'}</span></td><td style="font-size:12px">${m.categoria||'—'}</td><td style="font-size:12px">${m.sub||'—'}</td><td style="font-size:12px">${contaLbl[contaDoMov(m)]}</td><td style="font-size:12px;color:var(--text-2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(m.desc||'').replace(/"/g,'&quot;')}">${m.desc||'—'}</td><td style="text-align:right;font-weight:600;color:${m.cat==='receita'?'#085041':'#712B13'}">${m.cat==='receita'?'+':'−'}${fmt(m.valor)}</td></tr>`).join('')}
+    <tr class="fluxo-total"><td colspan="6" style="font-weight:700">Total (${list.length} movimentos) — Receitas ${fmt(rec)} · Despesas ${fmt(desp)}</td><td style="text-align:right;font-weight:700;color:${rec-desp>=0?'#085041':'#712B13'}">${fmt(rec-desp)}</td></tr>
+  </tbody></table>`;
+}
+function tituloAnaliseDetalhe(){
+  const t=document.getElementById('ad-tipo'), c=document.getElementById('ad-cat'), s=document.getElementById('ad-sub'), ct=document.getElementById('ad-conta'), mes=document.getElementById('ad-mes');
+  const partes=[];
+  partes.push(t.value ? (t.value==='receita'?'Receitas':'Despesas') : 'Receitas e Despesas');
+  if(c.value) partes.push(c.value); if(s.value) partes.push(s.value);
+  if(ct.value) partes.push(ct.options[ct.selectedIndex].text.replace(/^[^ ]+ /,''));
+  partes.push(mes.value==='0' ? ('Ano '+getAno()) : (MESES[parseInt(mes.value)-1]+' '+getAno()));
+  return partes.join(' · ');
+}
+function imprimirAnaliseDetalhe(){
+  const list=filtrarAnaliseDetalhe();
+  if(!list.length){ toast('Nenhum movimento para imprimir.',false); return; }
+  const rec=list.filter(m=>m.cat==='receita').reduce((x,m)=>x+m.valor,0);
+  const desp=list.filter(m=>m.cat==='despesa').reduce((x,m)=>x+m.valor,0);
+  const logo=currentLogoData||LS.get('arca_logo')||'';
+  const contaLbl={geral:'Banco',numerario:'Numerário',cartao:'Cartão'};
+  const html=`<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"><title>Análise — ${tituloAnaliseDetalhe()}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#111;padding:24px 28px}
+    @media print{.noprint{display:none!important}}
+    .noprint{position:fixed;top:10px;right:14px;display:flex;gap:8px}
+    .noprint button{padding:7px 16px;border:none;border-radius:20px;font-size:12px;cursor:pointer}
+    .p{background:#1a3a6b;color:#fff}.s{background:#555;color:#fff}
+    .cab{display:flex;align-items:center;gap:12px;border-bottom:2.5px solid #1a3a6b;padding-bottom:10px;margin-bottom:12px}
+    .cab img{height:52px;width:52px;object-fit:cover;border-radius:50%}
+    h1{font-size:15px;color:#1a3a6b}
+    .sub{font-size:10.5px;color:#666;margin-top:2px}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th{background:#EEF2F7;text-align:left;padding:6px 7px;font-size:9.5px;text-transform:uppercase;letter-spacing:.2px;color:#444;border-bottom:1px solid #cfd6df}
+    td{padding:5px 7px;border-bottom:0.5px solid #e5e8ec}
+    .r{text-align:right}
+    .tot td{font-weight:700;background:#F4F7FA;border-top:1.5px solid #1a3a6b}
+    .rod{margin-top:14px;font-size:9px;color:#888;text-align:center}
+  </style></head><body>
+  <div class="noprint"><button class="p" onclick="window.print()">🖨 Imprimir / PDF</button><button class="s" onclick="window.close()">✕ Fechar</button></div>
+  <div class="cab">${logo?`<img src="${logo}">`:''}<div><h1>ARCA d'Ajuda — Análise ponto por ponto</h1><div class="sub">${tituloAnaliseDetalhe()} · gerado a ${new Date().toLocaleDateString('pt-PT')}</div></div></div>
+  <table><thead><tr><th>Mês</th><th>Tipo</th><th>Categoria</th><th>Subcategoria</th><th>Conta</th><th>Descrição</th><th class="r">Valor</th></tr></thead><tbody>
+    ${list.map(m=>`<tr><td>${MESES[m.mes-1]||m.mes}</td><td>${m.cat==='receita'?'Receita':'Despesa'}</td><td>${m.categoria||'—'}</td><td>${m.sub||'—'}</td><td>${contaLbl[contaDoMov(m)]}</td><td>${(m.desc||'—')}${m.fatNum?` <span style="color:#888">(Fat. ${m.fatNum})</span>`:''}</td><td class="r" style="color:${m.cat==='receita'?'#085041':'#712B13'}">${m.cat==='receita'?'+':'−'}${fmt(m.valor)}</td></tr>`).join('')}
+    <tr class="tot"><td colspan="6">Total — ${list.length} movimentos · Receitas ${fmt(rec)} · Despesas ${fmt(desp)}</td><td class="r" style="color:${rec-desp>=0?'#085041':'#712B13'}">${fmt(rec-desp)}</td></tr>
+  </tbody></table>
+  <div class="rod">ARCA d'Ajuda — Associação Recreativa e Cultural da Ajuda · Controlo Financeiro</div>
+  </body></html>`;
+  const w=window.open('','_blank','width=980,height=1000');
+  if(w){ w.document.write(html); w.document.close(); } else toast('O browser bloqueou a janela. Permite pop-ups.',false);
+}
+function exportarAnaliseDetalheCSV(){
+  const list=filtrarAnaliseDetalhe();
+  const contaLbl={geral:'Banco',numerario:'Numerário',cartao:'Cartão'};
+  const linhas=[['Mês','Tipo','Categoria','Subcategoria','Conta','Descrição','Nota','Fatura','Valor']];
+  list.forEach(m=>linhas.push([MESES[m.mes-1]||m.mes, m.cat, m.categoria||'', m.sub||'', contaLbl[contaDoMov(m)], m.desc||'', m.nota||'', m.fatNum||'', String(m.cat==='despesa'?-m.valor:m.valor).replace('.',',')]));
+  const csv='\uFEFF'+linhas.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download='analise_arca.csv'; a.click();
+}
+
 // ============================================================
 // MODALIDADES
 // ============================================================
@@ -2166,6 +2298,8 @@ function renderViaturas(){
 // ============================================================
 function renderAnalise(){
   const ano=getAno();
+  if(document.getElementById('ad-cat') && document.getElementById('ad-cat').options.length<=1) popularAnaliseCategorias();
+  renderAnaliseDetalhe();
   document.getElementById('analise-ano-lbl').textContent='Ano '+ano+' — todos os movimentos';
 
   // Usar TODOS os movimentos do ano para análise completa
@@ -3909,6 +4043,9 @@ function showMotivPopup(forced){
       <button onclick="document.getElementById('motiv-popup').remove()"
         style="font-size:11px;padding:4px 11px;border:var(--border);border-radius:20px;background:var(--bg2);cursor:pointer;color:var(--text-2);transition:background .12s"
         onmouseover="this.style.background='var(--gray-m)'" onmouseout="this.style.background='var(--bg2)'">Fechar</button>
+      <button onclick="toggleMotivacional();document.getElementById('motiv-popup')?.remove()" title="Desligar as mensagens motivacionais e anedotas (podes voltar a ligar em Configurações → Dados)"
+        style="font-size:11px;padding:4px 11px;border:var(--border);border-radius:20px;background:var(--bg2);cursor:pointer;color:var(--coral-d);transition:background .12s"
+        onmouseover="this.style.background='var(--coral-l)'" onmouseout="this.style.background='var(--bg2)'">🔕 Desligar estas mensagens</button>
     </div>`;
   document.body.appendChild(div);
   // Auto-dismiss after 45 sec
