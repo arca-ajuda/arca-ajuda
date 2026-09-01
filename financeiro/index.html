@@ -1381,6 +1381,17 @@ const LS = {
 let movimentos = LS.get('arca_movs') || [];
 let recargas = LS.get('arca_recargas') || [];
 let config = LS.get('arca_config') || getDefaultConfig();
+// Migração (set/2026): o ATL passa a registar-se apenas por totais — as semanas/meses
+// vivem na futura app do ATL; aqui entra só "Receita Total" e "Despesa Total" por edição.
+(function(){
+  if(LS.get('arca_fix_atl_totais')) return;
+  try{
+    if(config.recCats){ if(config.recCats['ATL Páscoa']) config.recCats['ATL Páscoa']=['Receita Total']; if(config.recCats['ATL Verão']) config.recCats['ATL Verão']=['Receita Total']; }
+    if(config.despCats){ if(config.despCats['Despesas ATL Páscoa']) config.despCats['Despesas ATL Páscoa']=['Despesa Total']; if(config.despCats['Despesas ATL Verão']) config.despCats['Despesas ATL Verão']=['Despesa Total']; }
+    LS.set('arca_config', config);
+  }catch(e){ console.warn('migração ATL:', e); }
+  LS.set('arca_fix_atl_totais', true);
+})();
 let charts = {};
 let editingId = null;
 let currentTipo = 'receita';
@@ -1391,8 +1402,8 @@ function getDefaultConfig(){
     recCats: {
       'Modalidades Sala': ['Capoeira Mensalidade','Capoeira Inscrições','Ballet Mensalidade','Ballet Inscrições','Krav Maga Mensalidade','Krav Maga Inscrições','Judo Mensalidade','Judo Inscrições','Qi Gong Mensalidade','Qi Gong Inscrições','Dança Mensalidade','Dança Inscrições','Teatro Mensalidade','Teatro Inscrições','Karaté Mensalidade','Karaté Inscrições','Esgrima Mensalidade','Esgrima Inscrições','Yoga Mensalidade','Yoga Inscrições','Outra'],
       'Outras Atividades Sala': ['Aluguer Escritório','Formação','Workshop','Explicações','Aniversários','Reuniões','Condomínio','Outra'],
-      'ATL Páscoa': ['1 Semana','2 Semanas','Total Dias','Camisola Extra','Outra'],
-      'ATL Verão': ['1 Semana','2 Semanas','3 Semanas','4 Semanas','Mais de 4 Semanas','1 Mês','2 Meses','Camisola Extra','Outra'],
+      'ATL Páscoa': ['Receita Total'],
+      'ATL Verão': ['Receita Total'],
       'Quotas Sócio': ['6 Meses','Anual','2 Anos'],
       'Pagamentos Atletas': ['Pagamentos Atletas Modalidades (Sócio)','Pagamentos Atletas Provas'],
       'Donativos': ['Donativo Quotas Antigas','Donativo'],
@@ -1406,8 +1417,8 @@ function getDefaultConfig(){
       'Funcionários': ['Remuneração Administrativa','Gratificação Extra','Apoio Combustível','Honorários do Advogado','Honorários do Contabilista','Outro'],
       'Mão de Obra Reparações': ['Mestre Carlos','Paulo (Filho Paulo Andrade)','Outra 1','Outra 2'],
       'Despesas Fixas Salas ARCA': ['Renda','Telecomunicações / MEO','Luz Sala 1','Luz Sala 2','Água Sala 1','Água Sala 2','Material Informático','Material Limpeza','Empresa Limpeza','Outros Gastos'],
-      'Despesas ATL Páscoa': ['Coordenadores','Monitores','Adm. Transporte Almoço','Coord. Monitores Autocarro','Alimentação Extra','Transportes','Seguro','Empresa Alimentação','Entradas Atividades','Atividades Contratadas','Camisolas','Apoio Voluntários','Outros Gastos'],
-      'Despesas ATL Verão': ['Coordenadores','Monitores','Adm. Transporte Almoço','Coord. Monitores Autocarro','Alimentação Extra','Transportes','Seguro','Empresa Alimentação','Entradas Atividades','Atividades Contratadas','Camisolas','Apoio Voluntários','Outros Gastos'],
+      'Despesas ATL Páscoa': ['Despesa Total'],
+      'Despesas ATL Verão': ['Despesa Total'],
       'Seguros': ['Salas ARCA 1 e 2','Atividades','Viatura 1','Viatura 2','Funcionários','Outro'],
       'Reparações Viaturas': ['Seguro Viatura 1','Seguro Viatura 2','Inspeção','Pneus','Avarias','Combustível Viatura','Outra'],
       'Material Aulas': ['Material Escritório','Material Atividade Salas','Material ATL'],
