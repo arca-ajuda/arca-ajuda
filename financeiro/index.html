@@ -16,7 +16,7 @@
   --bg:#fff;--bg2:#F8F8F6;--bg3:#F1F1EE;
   --border:0.5px solid #ddd;--border-2:1px solid #ddd;
   --radius:8px;--radius-lg:12px;
-  --nav-w:220px;
+  --nav-w:252px;
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;color:var(--text);background:var(--bg2);min-height:100vh;display:flex;flex-direction:column}
 button{font-family:inherit;cursor:pointer}
@@ -301,6 +301,24 @@ tbody tr:hover td{background:#F5F9FF}
 .fin-mobile-nav button.mn-active{outline:1.5px solid color-mix(in srgb,var(--c) 55%,#0E1A26)}
 @media(max-width:768px){.fin-mobile-nav{display:flex}.main{padding:14px 12px}.topbar{height:auto}}
 /* Ecrãs baixos: menu em 2 colunas para caber tudo sem scroll */
+/* Dashboard: cartões de métricas sempre numa só linha, adaptam-se à largura */
+#dash-metrics{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:12px;overflow:hidden}
+#dash-metrics .metric-card{min-width:0;padding:13px 12px}
+#dash-metrics .metric-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:9.5px}
+#dash-metrics .metric-value{font-size:clamp(15px,1.7vw,24px);white-space:nowrap}
+#dash-metrics .metric-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px}
+@media(max-width:768px){#dash-metrics{gap:7px}#dash-metrics .metric-card{padding:10px 8px}#dash-metrics .metric-label{font-size:8px}#dash-metrics .metric-sub{display:none}}
+/* Cabeçalho: todos os elementos com o mesmo formato (altura 40px, raio 10px) */
+.topbar-right{gap:8px;align-items:center}
+.topbar-right>*{height:40px!important;border-radius:10px!important;box-sizing:border-box}
+.topbar #btn-arca-chat{display:inline-flex;align-items:center;gap:6px;padding:0 14px!important;font-size:12px!important;font-weight:700;letter-spacing:.3px;text-transform:uppercase}
+.topbar #role-badge{display:inline-flex;align-items:center;padding:0 14px!important;font-size:11px!important;font-weight:700;letter-spacing:.3px;text-transform:uppercase}
+.topbar .card-saldo{padding:4px 14px!important;gap:6px;display:inline-flex;align-items:center}
+.topbar .card-saldo>div{display:flex;flex-direction:column;justify-content:center;line-height:1.15}
+.topbar .card-saldo-label{font-size:9px;letter-spacing:.3px}
+.topbar .card-saldo-value{font-size:14.5px}
+.topbar .mes-sel,.topbar .year-sel{padding:0 10px;font-size:12.5px;font-weight:600;color:#1B4570}
+@media(max-width:1100px){.topbar .card-saldo-label{font-size:8.5px}.topbar .card-saldo-value{font-size:13px}.topbar #btn-arca-chat,.topbar #role-badge{padding:0 10px!important}}
 @media(max-height:760px){
   .sidebar-nav{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:5px;padding:4px 10px}
   .nav-item{min-width:0;overflow:hidden}
