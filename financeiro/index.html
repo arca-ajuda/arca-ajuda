@@ -1814,6 +1814,7 @@ function saveLancamento(){
   const fatFile=window._fatFilePending||null;
   const obj={cat:currentTipo,ano,mes,tipmov,categoria:cat,sub,desc,nota,valor,fatNum,fatData};
   if(fatFile) obj.fatFile=fatFile;
+  const agora=new Date();
   if(editingId){
     const idx=movimentos.findIndex(m=>m.id===editingId);
     if(idx>=0){
@@ -1821,12 +1822,16 @@ function saveLancamento(){
       const prev=movimentos[idx];
       obj.id=editingId;
       if(!fatFile && prev.fatFile) obj.fatFile=prev.fatFile;
+      // registo de auditoria: preserva sempre a data original; acrescenta a da edição
+      obj.registadoEm = prev.registadoEm || agora.toISOString();
+      obj.editadoEm = agora.toISOString();
       movimentos[idx]=obj;
     }
     editingId=null;
     toast('Lançamento atualizado!');
   } else {
     obj.id=Date.now();
+    obj.registadoEm = agora.toISOString();
     movimentos.push(obj);
     toast('Lançamento guardado!');
   }
@@ -2110,6 +2115,16 @@ function renderLancamentos(){
   if(!ms.length){el.innerHTML='<div class="empty-state"><p>Nenhum lançamento encontrado.</p></div>';return;}
   el.innerHTML=`<table><thead><tr><th>Mês</th><th>Tipo</th><th>Movimento</th><th>Categoria</th><th>Subcategoria</th><th>Descrição</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody>${ms.map(m=>{
     const isCartaoMov = TIPMOV_CARTAO.includes(m.tipmov);
+    let audit='';
+    if(m.registadoEm){
+      const reg=new Date(m.registadoEm);
+      const retro = (reg.getFullYear()>m.ano) || (reg.getFullYear()===m.ano && (reg.getMonth()+1)>m.mes);
+      const txt = `Registado a ${reg.toLocaleDateString('pt-PT')} ${reg.toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'})}`
+        + (retro?` — LANÇAMENTO RETROATIVO (referente a ${MESES[m.mes-1]} ${m.ano})`:'')
+        + (m.editadoEm?`\nÚltima edição: ${new Date(m.editadoEm).toLocaleDateString('pt-PT')} ${new Date(m.editadoEm).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'})}`:'');
+      audit = ` <span title="${txt.replace(/"/g,'&quot;')}" style="cursor:help;font-size:11px">${retro?'🕓':''}${m.editadoEm?'✏':''}</span>`;
+      if(!retro && !m.editadoEm) audit = ` <span title="${txt.replace(/"/g,'&quot;')}" style="cursor:help;font-size:10px;color:var(--text-3)">🛈</span>`;
+    }
     const rowStyle = isCartaoMov ? 'background:var(--blue-l)' : '';
     const movBadge = m.tipmov==='Cartão Pré-Pago'
       ? `<span class="badge badge-cartao">💳 ${m.tipmov}</span>`
@@ -2120,7 +2135,7 @@ function renderLancamentos(){
       : `<span class="badge badge-mov">${m.tipmov||'—'}</span>`;
     const cartaoNote = isCartaoMov ? `<span style="font-size:10px;color:var(--blue);margin-left:4px" title="Contabilizado no Cartão Pré-Pago — não duplica no fluxo geral">💳</span>` : '';
     return `<tr style="${rowStyle}">
-      <td>${MESES[m.mes-1]}</td>
+      <td>${MESES[m.mes-1]}${audit}</td>
       <td><span class="badge ${m.cat==='receita'?'badge-rec':'badge-desp'}">${m.cat==='receita'?'Receita':'Despesa'}</span>${cartaoNote}</td>
       <td>${movBadge}</td>
       <td>${m.categoria}</td>
@@ -2143,6 +2158,7 @@ function renderFluxo(){
     .forEach(m=>m.cat==='receita'?rec[m.mes-1]+=m.valor:desp[m.mes-1]+=m.valor);
   const fluxo=rec.map((r,i)=>r-desp[i]);
   let acum=0; const acumArr=fluxo.map(f=>{acum+=f;return Math.round(acum*100)/100;});
+  const hoje=new Date(); const mesLimite = (ano===hoje.getFullYear()) ? hoje.getMonth()+1 : (ano<hoje.getFullYear() ? 12 : 0);
   const fmtF=v=>v===0?'—':`<span style="color:${v>0?'#085041':'#712B13'};font-weight:600">${fmt(v)}</span>`;
   const fmtR=v=>v===0?'—':`<span style="color:#085041">${fmt(v)}</span>`;
   const fmtD=v=>v===0?'—':`<span style="color:#712B13">${fmt(v)}</span>`;
@@ -2150,9 +2166,9 @@ function renderFluxo(){
     {l:'Total Receitas',v:rec,fn:fmtR,cls:''},
     {l:'Total Despesas',v:desp,fn:fmtD,cls:'fluxo-desp'},
     {l:'Resultado Mensal',v:fluxo,fn:fmtF,cls:''},
-    {l:'Saldo Acumulado',v:acumArr,fn:fmtF,cls:'fluxo-total',totalFinal:true}
+    {l:'Saldo Acumulado',v:acumArr,fn:fmtF,cls:'fluxo-total',totalFinal:true,ateMes:mesLimite}
   ];
-  document.getElementById('fluxo-table-el').innerHTML=`<thead><tr><th>Conta</th>${MESES_S.map(m=>`<th>${m}</th>`).join('')}<th>Total</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.cls}"><td style="font-weight:500;white-space:nowrap">${r.l}</td>${r.v.map(v=>`<td>${r.fn(v)}</td>`).join('')}<td>${r.fn(r.totalFinal ? (Math.round((r.v[r.v.length-1]||0)*100)/100) : r.v.reduce((a,b)=>a+b,0))}</td></tr>`).join('')}</tbody>`;
+  document.getElementById('fluxo-table-el').innerHTML=`<thead><tr><th>Conta</th>${MESES_S.map(m=>`<th>${m}</th>`).join('')}<th>Total</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.cls}"><td style="font-weight:500;white-space:nowrap">${r.l}</td>${r.v.map((v,i)=>`<td>${(r.ateMes!==undefined && i+1>r.ateMes) ? '—' : r.fn(v)}</td>`).join('')}<td>${r.fn(r.totalFinal ? (Math.round((r.v[Math.max(0,(r.ateMes!==undefined?Math.min(r.ateMes,12):12))-1]||0)*100)/100) : r.v.reduce((a,b)=>a+b,0))}</td></tr>`).join('')}</tbody>`;
   mkChart('fluxo2','chart-fluxo2',{type:'bar',data:{labels:MESES_S,datasets:[{label:'Receitas',data:rec,backgroundColor:'#1D9E7599',borderRadius:3,order:2},{label:'Despesas',data:desp,backgroundColor:'#D85A3099',borderRadius:3,order:2},{label:'Fluxo',data:fluxo,type:'line',borderColor:'#0F6E56',backgroundColor:'transparent',tension:.35,pointRadius:4,pointBackgroundColor:'#0F6E56',order:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:11}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{callback:v=>'€'+Math.round(v),font:{size:10}}}}}});
 }
 
