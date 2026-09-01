@@ -354,6 +354,21 @@ tbody tr:hover td{background:#F5F9FF}
 .inner-tabs .inner-tab:nth-child(1){--c:#A995D2}.inner-tabs .inner-tab:nth-child(2){--c:#83BEDD}.inner-tabs .inner-tab:nth-child(3){--c:#7CCBB9}
 .inner-tabs .inner-tab:nth-child(4){--c:#E9A27A}.inner-tabs .inner-tab:nth-child(5){--c:#9DD6CD}.inner-tabs .inner-tab:nth-child(6){--c:#7F9CC4}
 .inner-tabs .inner-tab:nth-child(7){--c:#D4B27A}.inner-tabs .inner-tab:nth-child(8){--c:#D99DB7}
+/* Menu lateral sem barra de scroll: mais compacto e sem barra visível */
+.menu-lateral{gap:6px;padding:10px 12px 12px;scrollbar-width:none}
+.menu-lateral::-webkit-scrollbar{display:none}
+.ml-grupo{padding:8px 4px 3px}
+.ml-lbl{padding:8px 12px}
+.ml-ico{width:38px;font-size:15px}
+.ml-rodape{padding-top:8px}
+@media(max-height:720px){
+  .menu-lateral{gap:5px;padding:8px 10px 8px}
+  .ml-btn{font-size:11px}
+  .ml-lbl{padding:6px 10px}
+  .ml-ico{width:34px;font-size:14px}
+  .ml-grupo{padding:6px 4px 2px;font-size:9.5px}
+  .ml-rodape{display:none}
+}
 </style>
 </head>
 <body>
