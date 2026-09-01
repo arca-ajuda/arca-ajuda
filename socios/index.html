@@ -286,6 +286,66 @@ tbody tr:hover td{background:var(--bg2)}
   .table-wrap td:last-child{justify-content:flex-end}
   .table-wrap .td-actions{justify-content:flex-end;width:100%}
 }
+
+/* ===================== RENOVAÇÃO VISUAL (set/2026) ===================== */
+body{background:#F3F5F8}
+.topbar{background:linear-gradient(90deg,#1B4570 0%,#2E6199 60%,#2F7A8F 100%);border-bottom:none;box-shadow:0 3px 12px rgba(27,69,112,.28);height:64px}
+.topbar .logo-text{color:#fff;font-size:16px}
+.topbar .logo-sub{color:rgba(255,255,255,.75)}
+.topbar .logo-badge{background:#fff;color:#1B4570;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.topbar .header-greeting:hover{background:rgba(255,255,255,.12)}
+.topbar .header-greeting-name{color:#fff}
+.topbar .header-greeting-role{color:rgba(255,255,255,.75)}
+.topbar .sidebar-avatar{border-color:#fff;color:#fff;background:rgba(255,255,255,.12)}
+.topbar #role-badge.bottombar-badge{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.4)}
+.topbar .topnav-item.nav-lock{background:rgba(255,255,255,.14)!important;color:#fff!important}
+.topbar .topnav-item.nav-lock:hover{background:rgba(255,255,255,.26)!important}
+
+/* Menu lateral com botões coloridos */
+.menu-lateral{width:236px;flex-shrink:0;background:#fff;border-right:0.5px solid #dfe3e8;padding:14px 12px 18px;display:flex;flex-direction:column;gap:7px;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto}
+.ml-grupo{font-size:10px;font-weight:800;color:#8a94a3;text-transform:uppercase;letter-spacing:.9px;padding:12px 4px 4px}
+.ml-grupo:first-child{padding-top:2px}
+.ml-btn{--c:#1B4570;display:flex;align-items:stretch;width:100%;border:none;border-radius:9px;overflow:hidden;cursor:pointer;color:#fff;font-weight:700;font-size:12px;letter-spacing:.5px;text-transform:uppercase;background:var(--c);box-shadow:0 2px 6px rgba(0,0,0,.14);transition:transform .12s,box-shadow .12s,filter .12s;text-decoration:none;padding:0;font-family:inherit;text-align:left}
+.ml-lbl{flex:1;padding:10px 12px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ml-ico{width:42px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.2);font-size:17px}
+.ml-btn:hover{transform:translateX(3px);box-shadow:0 5px 14px rgba(0,0,0,.2);filter:brightness(1.06)}
+.ml-btn.active{transform:translateX(5px);box-shadow:0 0 0 2px #fff,0 0 0 4px var(--c),0 6px 14px rgba(0,0,0,.2)}
+.ml-btn.active .ml-ico{background:rgba(255,255,255,.28)}
+.ml-laranja{--c:#E9A27A}.ml-azul-esc{--c:#8AA3B8}.ml-verde{--c:#7CCBB9}.ml-azul{--c:#83BEDD}.ml-verde-cl{--c:#9DD6CD}.ml-marinho{--c:#7F9CC4}
+.ml-roxo{--c:#A995D2}.ml-dourado{--c:#D4B27A}.ml-teal{--c:#7DB5A3}.ml-vermelho{--c:#DC9A92}.ml-cinza{--c:#A6AEB6}.ml-rosa{--c:#D99DB7}
+.ml-btn{color:#2B3440;text-shadow:none;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.ml-ico{background:rgba(255,255,255,.35)}
+.ml-btn.active .ml-ico{background:rgba(255,255,255,.6)}
+.ml-btn.active{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--c),0 4px 10px rgba(0,0,0,.12)}
+.ml-rodape{margin-top:auto;padding-top:12px;font-size:10.5px;color:#9aa3ae;text-align:center;line-height:1.5}
+@media(min-width:901px){.topbar .topbar-nav{display:none}}
+@media(max-width:900px){.menu-lateral{display:none}}
+@media(max-width:640px){.topbar{height:auto;padding:10px 14px}.main{padding:16px 14px}}
+
+/* Conteúdo */
+.main{padding:24px 26px}
+.page-title{font-size:23px;letter-spacing:-.2px}
+.page-sub{font-size:12.5px}
+.card{border:none;box-shadow:0 1px 3px rgba(16,24,40,.06),0 6px 18px rgba(16,24,40,.05)}
+.card:hover{box-shadow:0 2px 6px rgba(16,24,40,.08),0 10px 24px rgba(16,24,40,.08)}
+.metric-card{border:none;box-shadow:0 1px 3px rgba(16,24,40,.06),0 6px 18px rgba(16,24,40,.05);position:relative;overflow:hidden}
+.metric-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:#1FA7DA}
+.metric-card:nth-child(2)::before{background:#12B8A4}.metric-card:nth-child(3)::before{background:#E8752E}
+.metric-card:nth-child(4)::before{background:#6C4BB6}.metric-card:nth-child(5)::before{background:#B8863B}
+.metric-card:nth-child(6)::before{background:#C2437B}.metric-card:nth-child(7)::before{background:#1B4A8F}.metric-card:nth-child(8)::before{background:#5CC9C0}
+.metric-value{font-size:24px}
+.btn-primary{background:linear-gradient(135deg,#1B4570,#2E6199);box-shadow:0 3px 10px rgba(27,69,112,.28);border-radius:9px;font-weight:600}
+.btn-primary:hover{opacity:1;filter:brightness(1.08);box-shadow:0 5px 14px rgba(27,69,112,.35)}
+.btn-secondary{border-radius:9px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.inner-tabs{flex-wrap:wrap;gap:8px}
+.inner-tab{padding:8px 16px;font-size:12.5px;font-weight:600;border:none;background:#fff;box-shadow:0 1px 3px rgba(16,24,40,.08)}
+.inner-tab.active{background:linear-gradient(135deg,#1B4570,#2E6199);color:#fff;box-shadow:0 3px 10px rgba(27,69,112,.3)}
+.filters-bar{border:none;box-shadow:0 1px 3px rgba(16,24,40,.06)}
+th{background:linear-gradient(180deg,#F7F9FC,#EEF2F7);color:#4A5568;font-weight:700;border-bottom:1px solid #E1E6ED}
+tbody tr:hover td{background:#F5F9FF}
+.filter-select,.filter-input,.year-sel,.mes-sel{border-radius:9px}
+.filter-select:focus,.filter-input:focus,input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!important;box-shadow:0 0 0 3px rgba(46,97,153,.15)}
+.chat-fab{background:linear-gradient(135deg,#1B4570,#2F7A8F)}
 </style>
 </head>
 <body>
@@ -346,6 +406,31 @@ tbody tr:hover td{background:var(--bg2)}
 </div>
 
 <div class="app-body">
+<!-- MENU LATERAL (desktop) -->
+<aside class="menu-lateral" id="menu-lateral">
+  <div class="ml-grupo">Sócios</div>
+  <button class="ml-btn ml-roxo active" data-ml="socios:lista" onclick="irPara('socios','lista')"><span class="ml-lbl">Lista de Sócios</span><span class="ml-ico">📋</span></button>
+  <button class="ml-btn ml-azul" data-ml="socios:cartao" onclick="irPara('socios','cartao')"><span class="ml-lbl">Cartão de Sócio</span><span class="ml-ico">🪪</span></button>
+  <button class="ml-btn ml-verde" data-ml="socios:verificar" onclick="irPara('socios','verificar')"><span class="ml-lbl">Verificar QR</span><span class="ml-ico">📷</span></button>
+  <button class="ml-btn ml-laranja" data-ml="socios:importar" onclick="irPara('socios','importar')"><span class="ml-lbl">Importar</span><span class="ml-ico">⬆</span></button>
+  <button class="ml-btn ml-verde-cl" data-ml="socios:parcerias" onclick="irPara('socios','parcerias')"><span class="ml-lbl">Parcerias</span><span class="ml-ico">🤝</span></button>
+  <button class="ml-btn ml-marinho" onclick="openModalSocio()"><span class="ml-lbl">+ Novo Sócio</span><span class="ml-ico">➕</span></button>
+
+  <div class="ml-grupo">Configurações</div>
+  <button class="ml-btn ml-dourado" data-ml="config:quotas" onclick="irPara('config','quotas')"><span class="ml-lbl">Quotas</span><span class="ml-ico">💶</span></button>
+  <button class="ml-btn ml-azul-esc" data-ml="config:direccao" onclick="irPara('config','direccao')"><span class="ml-lbl">Direção</span><span class="ml-ico">👥</span></button>
+  <button class="ml-btn ml-rosa" data-ml="config:acessos" onclick="irPara('config','acessos')"><span class="ml-lbl">Acessos</span><span class="ml-ico">🔐</span></button>
+  <button class="ml-btn ml-teal" data-ml="config:dados" onclick="irPara('config','dados')"><span class="ml-lbl">Dados &amp; Drive</span><span class="ml-ico">💾</span></button>
+  <button class="ml-btn ml-azul" data-ml="config:email" onclick="irPara('config','email')"><span class="ml-lbl">Email</span><span class="ml-ico">📧</span></button>
+  <button class="ml-btn ml-marinho" data-ml="config:associacao" onclick="irPara('config','associacao')"><span class="ml-lbl">Associação</span><span class="ml-ico">🏢</span></button>
+
+  <div class="ml-grupo">Outros</div>
+  <button class="ml-btn ml-cinza" onclick="abrirGuiaAjuda()"><span class="ml-lbl">Guia de Ajuda</span><span class="ml-ico">❓</span></button>
+  <a class="ml-btn ml-cinza" href="../index.html" title="Menu Geral"><span class="ml-lbl">Menu Geral</span><span class="ml-ico">🏠</span></a>
+  <button class="ml-btn ml-vermelho" onclick="lockApp()"><span class="ml-lbl">Bloquear</span><span class="ml-ico">🔒</span></button>
+  <button class="ml-btn ml-vermelho" onclick="if(confirm('Sair da conta da associação neste dispositivo?'))supaLogout()"><span class="ml-lbl">Sair</span><span class="ml-ico">🚪</span></button>
+  <div class="ml-rodape">ARCA d'Ajuda · Gestão de Sócios</div>
+</aside>
 <!-- MAIN -->
 <main class="main">
 
@@ -1485,6 +1570,33 @@ function showPage(id,btn){
   if(p) p.classList.add('active');
   if(btn) btn.classList.add('active');
   renderPage(id);
+  atualizarMenuLateral();
+}
+
+// ---- Menu lateral (desktop): navega usando as funções já existentes ----
+function irPara(pagina, sub){
+  if(pagina==='socios'){
+    showPage('socios', document.querySelector('.topnav-item.nav-socios'));
+    showSociosTab(sub||'lista');
+  } else {
+    showPage('gestao-config', document.querySelector('.topnav-item.nav-config'));
+    const tabBtn = document.querySelector(`#page-gestao-config .inner-tab[onclick*="'${sub}'"]`);
+    showInner('config', sub||'quotas', tabBtn);
+  }
+  atualizarMenuLateral();
+  const main=document.querySelector('.main'); if(main) main.scrollTop=0;
+}
+function atualizarMenuLateral(){
+  const ml=document.getElementById('menu-lateral'); if(!ml) return;
+  let chave='';
+  if(document.getElementById('page-socios')?.classList.contains('active')){
+    const t=['lista','cartao','verificar','importar','parcerias'].find(x=>{const p=document.getElementById('socios-panel-'+x);return p && p.style.display!=='none';});
+    chave='socios:'+(t||'lista');
+  } else if(document.getElementById('page-gestao-config')?.classList.contains('active')){
+    const act=document.querySelector('#page-gestao-config .inner-panel.active');
+    chave='config:'+(act ? act.id.replace('config-inner-','') : 'quotas');
+  }
+  ml.querySelectorAll('.ml-btn[data-ml]').forEach(b=>b.classList.toggle('active', b.dataset.ml===chave));
 }
 
 function showInner(group,id,btn){
@@ -1497,6 +1609,7 @@ function showInner(group,id,btn){
     btn.classList.add('active');
   }
   if(group==='config') renderConfig(id);
+  if(typeof atualizarMenuLateral==='function') atualizarMenuLateral();
 }
 
 function renderPage(id){
@@ -9769,6 +9882,7 @@ function showSociosTab(tab,btn){
   const b=btn||document.getElementById('stab-'+tab);if(b)b.classList.add('active');
   if(tab==='cartao')populateCartaoSelect();
   if(tab==='parcerias')carregarParceirosSocios();
+  if(typeof atualizarMenuLateral==='function') atualizarMenuLateral();
 }
 
 const LINK_PARCERIAS = 'https://arca-ajuda.github.io/arca-ajuda/parceiros/';
