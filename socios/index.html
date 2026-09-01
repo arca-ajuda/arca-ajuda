@@ -369,6 +369,14 @@ tbody tr:hover td{background:#F5F9FF}
   .ml-grupo{padding:6px 4px 2px;font-size:9.5px}
   .ml-rodape{display:none}
 }
+/* Distribuição pela altura disponível + destaque do botão ativo com contorno fino escuro */
+.menu-lateral{gap:clamp(6px,1.6vh,18px);justify-content:flex-start}
+.ml-grupo{padding:clamp(6px,1.6vh,16px) 4px 3px}
+.ml-lbl{padding:clamp(7px,1.5vh,14px) 12px}
+.ml-btn.active,.ml-btn.active:hover{transform:translateX(3px);box-shadow:0 2px 6px rgba(0,0,0,.10);outline:1.5px solid color-mix(in srgb,var(--c) 45%,#1E2833);outline-offset:0}
+.ml-btn.active .ml-ico{background:rgba(255,255,255,.45)}
+.inner-tab.active{box-shadow:0 2px 6px rgba(0,0,0,.10);outline:1.5px solid color-mix(in srgb,var(--c) 45%,#1E2833);outline-offset:0}
+@media(max-height:720px){.menu-lateral{gap:5px}.ml-grupo{padding:6px 4px 2px}.ml-lbl{padding:6px 10px}}
 </style>
 </head>
 <body>
