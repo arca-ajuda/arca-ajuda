@@ -377,6 +377,20 @@ tbody tr:hover td{background:#F5F9FF}
 .ml-btn.active .ml-ico{background:rgba(255,255,255,.45)}
 .inner-tab.active{box-shadow:0 2px 6px rgba(0,0,0,.10);outline:1.5px solid color-mix(in srgb,var(--c) 45%,#1E2833);outline-offset:0}
 @media(max-height:720px){.menu-lateral{gap:5px}.ml-grupo{padding:6px 4px 2px}.ml-lbl{padding:6px 10px}}
+/* Botões um pouco maiores e mais separados, sempre a caber no ecrã */
+.menu-lateral{gap:clamp(9px,1.9vh,22px);padding:12px 12px 10px}
+.ml-grupo{padding:clamp(6px,1.5vh,16px) 4px 2px}
+.ml-btn{font-size:12.5px}
+.ml-lbl{padding:clamp(9px,1.8vh,15px) 13px}
+.ml-ico{width:40px;font-size:16px}
+/* Botões do cabeçalho (ajuda / bloquear / sair) coloridos como o menu */
+.topbar .topbar-quick .topnav-item.nav-lock{--c:#83BEDD;background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 55%,#fff) 100%)!important;color:#2B3440!important;box-shadow:0 2px 6px rgba(0,0,0,.18);width:42px;height:42px;padding:0!important;justify-content:center;border-radius:12px}
+.topbar .topbar-quick .topnav-item.nav-lock:nth-child(2){--c:#D4B27A}
+.topbar .topbar-quick .topnav-item.nav-lock:nth-child(3){--c:#DC9A92}
+.topbar .topbar-quick .topnav-item.nav-lock:hover{filter:brightness(1.06);transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,.22)}
+.topbar .topbar-quick .topnav-item.nav-lock svg{width:19px;height:19px;opacity:1}
+.topbar .topbar-quick{gap:8px}
+@media(max-height:720px){.menu-lateral{gap:clamp(8px,1.9vh,22px)}.ml-grupo{padding:clamp(5px,1.5vh,16px) 4px 2px}.ml-lbl{padding:clamp(8px,1.8vh,15px) 12px}.ml-btn{font-size:12px}}
 </style>
 </head>
 <body>
