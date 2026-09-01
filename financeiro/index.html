@@ -256,6 +256,8 @@ body{background:#F3F5F8}
 .nav-item.active{background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 72%,#fff) 100%);color:#fff;font-weight:700;transform:translateX(3px);outline:1.5px solid color-mix(in srgb,var(--c) 55%,#0E1A26)}
 .nav-item.active::before{display:none}
 .nav-item.active svg{background:rgba(255,255,255,.38);color:#fff}
+.nav-item.nav-geral{--c:#1B4570;background:linear-gradient(135deg,#1B4570,#2E6199 60%,#2F7A8F)!important;font-size:12.5px}
+@media(max-height:760px){.nav-item.nav-geral{grid-column:1/-1;font-size:10px}}
 .nav-item[onclick*="'dashboard'"]{--c:#6C4BB6}
 .nav-item[onclick*="'lancamentos'"]{--c:#2F5F9E}
 .nav-item[onclick*="'fluxo'"]{--c:#1F8FC8}
@@ -297,7 +299,7 @@ tbody tr:hover td{background:#F5F9FF}
 
 /* Navegação em telemóvel (a barra lateral desaparece) */
 .fin-mobile-nav{display:none;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px;-webkit-overflow-scrolling:touch}
-.fin-mobile-nav button{--c:#1B4570;flex-shrink:0;border:none;border-radius:9px;padding:8px 12px;font-weight:700;font-size:11px;letter-spacing:.3px;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 72%,#fff) 100%);box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.fin-mobile-nav button,.fin-mobile-nav .mn-a{--c:#1B4570;flex-shrink:0;border:none;border-radius:9px;padding:8px 12px;font-weight:700;font-size:11px;letter-spacing:.3px;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 72%,#fff) 100%);box-shadow:0 2px 6px rgba(0,0,0,.15)}
 .fin-mobile-nav button.mn-active{outline:1.5px solid color-mix(in srgb,var(--c) 55%,#0E1A26)}
 @media(max-width:768px){.fin-mobile-nav{display:flex}.main{padding:14px 12px}.topbar{height:auto}}
 /* Ecrãs baixos: menu em 2 colunas para caber tudo sem scroll */
@@ -399,6 +401,8 @@ tbody tr:hover td{background:#F5F9FF}
   </div>
 
   <div class="sidebar-nav">
+  <a class="nav-item nav-geral" href="../index.html" title="Voltar ao Menu Geral das aplicações da ARCA" style="text-decoration:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Menu Geral</a>
   <div class="nav-label">Principal</div>
   <button class="nav-item active" onclick="showPage('dashboard',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard
@@ -455,6 +459,7 @@ tbody tr:hover td{background:#F5F9FF}
 <!-- MAIN -->
 <main class="main">
 <div class="fin-mobile-nav" id="fin-mobile-nav">
+  <a style="--c:#1B4570;display:inline-flex;align-items:center;text-decoration:none" class="mn-a" href="../index.html">🏠 Menu Geral</a>
   <button style="--c:#6C4BB6" onclick="navMovel('dashboard',this)">📊 Início</button>
   <button style="--c:#2F5F9E" onclick="navMovel('lancamentos',this)">➕ Lançamentos</button>
   <button style="--c:#1F8FC8" onclick="navMovel('fluxo',this)">📈 Fluxo</button>
@@ -2054,11 +2059,11 @@ function renderDashboard(){
   const saldoGlobal = fluxo + saldo + saldoCofre;
   document.getElementById('dash-periodo-label').textContent=mes?`${MESES[mes-1]} ${ano}`:`Ano ${ano}`;
   document.getElementById('dash-metrics').innerHTML=`
-    <div class="metric-card"><div class="metric-label">🏦 Receitas Gerais</div><div class="metric-value green">${fmt(totRec)}</div><div class="metric-sub">${ms.filter(m=>m.cat==='receita').length} mov.</div></div>
-    <div class="metric-card"><div class="metric-label">🏦 Despesas Gerais</div><div class="metric-value red">${fmt(totDesp)}</div><div class="metric-sub">${ms.filter(m=>m.cat==='despesa').length} mov.</div></div>
-    <div class="metric-card"><div class="metric-label">💳 Saldo Cartão MB</div><div class="metric-value blue">${fmt(saldo)}</div><div class="metric-sub">Cartão MB</div></div>
-    <div class="metric-card"><div class="metric-label">🏦 Cofre Numerário</div><div class="metric-value" style="color:var(--amber)">${fmt(saldoCofre)}</div><div class="metric-sub">Numerário</div></div>
-    <div class="metric-card"><div class="metric-label">📊 Saldo Global</div><div class="metric-value ${saldoGlobal>=0?'green':'red'}">${fmt(saldoGlobal)}</div><div class="metric-sub">Geral + Cartão + Cofre</div></div>
+    <div class="metric-card" title="Dinheiro que entrou na conta geral (banco, transferências, MBWAY) no período escolhido. Não inclui numerário nem cartão pré-pago — esses contam no Cofre e no Cartão."><div class="metric-label">🏦 Receitas Gerais</div><div class="metric-value green">${fmt(totRec)}</div><div class="metric-sub">${ms.filter(m=>m.cat==='receita').length} mov.</div></div>
+    <div class="metric-card" title="Dinheiro que saiu da conta geral (banco, transferências, MBWAY) no período escolhido. Não inclui numerário nem cartão pré-pago."><div class="metric-label">🏦 Despesas Gerais</div><div class="metric-value red">${fmt(totDesp)}</div><div class="metric-sub">${ms.filter(m=>m.cat==='despesa').length} mov.</div></div>
+    <div class="metric-card" title="Saldo atual do Cartão Pré-Pago MB: recargas feitas menos despesas pagas com o cartão. Clica em Cartão Pré-Pago no menu para gerir."><div class="metric-label">💳 Saldo Cartão MB</div><div class="metric-value blue">${fmt(saldo)}</div><div class="metric-sub">Cartão MB</div></div>
+    <div class="metric-card" title="Dinheiro vivo guardado no cofre: receitas em numerário e entradas/saídas manuais do cofre. Clica em Cofre / Numerário no menu para gerir."><div class="metric-label">🏦 Cofre Numerário</div><div class="metric-value" style="color:var(--amber)">${fmt(saldoCofre)}</div><div class="metric-sub">Numerário</div></div>
+    <div class="metric-card" title="Todo o dinheiro da associação: conta geral + cartão pré-pago + cofre, sem contar nada duas vezes."><div class="metric-label">📊 Saldo Global</div><div class="metric-value ${saldoGlobal>=0?'green':'red'}">${fmt(saldoGlobal)}</div><div class="metric-sub">Geral + Cartão + Cofre</div></div>
   `;
   // Usar apenas movimentos gerais (sem numerário nem cartão) para evitar duplicação
   const movGeral=movimentos.filter(m=>m.ano===ano&&!TIPMOV_EXCLUIDOS_GERAL.includes(m.tipmov));
