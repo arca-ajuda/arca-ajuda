@@ -392,6 +392,22 @@ tbody tr:hover td{background:#F5F9FF}
 .topbar .topbar-quick{gap:8px}
 .logo-badge,.logo-img,.logo-edit-overlay{border-radius:50%}
 .logo-img{object-fit:cover;background:#fff}
+/* Lista de sócios sem scroll horizontal: menu mais estreito e tabela mais compacta em ecrãs médios */
+@media(min-width:901px) and (max-width:1300px){
+  .menu-lateral{width:200px;padding:10px 9px 8px}
+  .ml-btn{font-size:11px;letter-spacing:.3px}
+  .ml-lbl{padding:clamp(7px,1.5vh,12px) 10px}
+  .ml-ico{width:34px;font-size:14px}
+  .main{padding:16px 16px}
+  .card{padding:14px}
+  #socios-panel-lista th{padding:8px 7px;letter-spacing:0;font-size:10px}
+  #socios-panel-lista td{padding:7px 7px;font-size:12px}
+  #socios-panel-lista td[data-label="Email"]{word-break:break-all;font-size:10.5px}
+  #socios-panel-lista td[data-label="Telemóvel"]{font-size:11px;white-space:nowrap}
+  #socios-panel-lista td[data-label="Obs."]{max-width:80px}
+  #socios-panel-lista .badge{padding:2px 6px;font-size:10px}
+  #socios-panel-lista .td-actions{gap:2px}
+}
 @media(max-height:720px){.menu-lateral{gap:clamp(8px,1.9vh,22px)}.ml-grupo{padding:clamp(5px,1.5vh,16px) 4px 2px}.ml-lbl{padding:clamp(8px,1.8vh,15px) 12px}.ml-btn{font-size:12px}}
 </style>
 </head>
