@@ -240,11 +240,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!import
       <div><div class="page-title">📑 Modelos de ofício</div><div class="page-sub">Textos base por tipo. Ao criar um ofício, o modelo é preenchido e podes alterá-lo à vontade.</div></div>
       <div class="header-actions">
         <button class="btn-secondary" onclick="reporModelosPadrao()">↺ Repor modelos originais</button>
+        <button class="btn-secondary" onclick="novoModelo()">➕ Novo modelo</button>
         <button class="btn-primary" onclick="guardarModelos()">💾 Guardar modelos</button>
       </div>
     </div>
     <div class="card">
-      <div class="ajuda" style="margin-bottom:12px">Usa <b>[texto entre parênteses retos]</b> para marcar o que deve ser preenchido em cada ofício. Podes ainda usar as etiquetas <b>{associacao}</b>, <b>{ano}</b> e <b>{data}</b>, substituídas automaticamente.</div>
+      <div class="ajuda" style="margin-bottom:12px">Usa <b>[texto entre parênteses retos]</b> para marcar o que deve ser preenchido em cada documento, e as etiquetas <b>{associacao}</b>, <b>{ano}</b> e <b>{data}</b> (substituídas automaticamente). Podes <b>➕ criar modelos novos</b> (de ofício ou de protocolo), editar os existentes e 🗑 apagar os que não interessarem. No fim carrega em <b>💾 Guardar modelos</b>.</div>
       <div id="modelos-area"></div>
     </div>
   </div>
@@ -1159,7 +1160,7 @@ function imprimirProtocolo(o){
 function renderModelos(){
   const area=document.getElementById('modelos-area');
   area.innerHTML = Object.keys(modelos).map(k=>{const m=modelos[k]; return `
-    <details style="border:0.5px solid #E1E6ED;border-radius:10px;padding:10px 14px;margin-bottom:10px;background:#fff">
+    <details id="md-det-${k}" style="border:0.5px solid #E1E6ED;border-radius:10px;padding:10px 14px;margin-bottom:10px;background:#fff">
       <summary style="cursor:pointer;font-weight:700;font-size:13.5px;color:var(--navy)">${(m.categoria||'oficio')==='protocolo'?'🤝':'📝'} ${esc(m.label||k)} <span style="font-size:11px;color:var(--text-3);font-weight:500">· ${(m.categoria||'oficio')==='protocolo'?'protocolo':'ofício'}</span></summary>
       <div class="form-grid" style="margin-top:12px">
         <div class="form-row">
@@ -1168,14 +1169,49 @@ function renderModelos(){
         </div>
         <div class="form-group"><label>${(m.categoria||'oficio')==='protocolo'?'Objeto por defeito':'Assunto por defeito'}</label><input type="text" id="md-assunto-${k}" value="${esc(m.assunto||'')}"></div>
         <div class="form-group"><label>${(m.categoria||'oficio')==='protocolo'?'Cláusulas':'Corpo'}</label><textarea id="md-corpo-${k}" style="min-height:180px">${esc(m.corpo||'')}</textarea></div>
+        <div><button class="btn-danger" onclick="apagarModelo('${k}')">🗑 Apagar este modelo</button></div>
       </div>
     </details>`;}).join('');
 }
 async function guardarModelos(){
-  const novo={};
-  Object.keys(modelos).forEach(k=>{ novo[k]={categoria:catDoTipo(k), label:document.getElementById('md-label-'+k).value.trim()||k, dest:document.getElementById('md-dest-'+k).value.trim(), assunto:document.getElementById('md-assunto-'+k).value.trim(), corpo:document.getElementById('md-corpo-'+k).value}; });
-  try{ await guardarChaveConfig('oficios_modelos', JSON.stringify(novo)); modelos=novo; preencherSelectsTipo(); toast('Modelos guardados ✓'); }
+  recolherModelosDoEcra();
+  try{ await guardarChaveConfig('oficios_modelos', JSON.stringify(modelos)); preencherSelectsTipo(); toast('Modelos guardados ✓'); }
   catch(e){ toast('Erro ao guardar modelos: '+e.message.slice(0,100),false); }
+}
+function chaveDeNome(nome){
+  let base = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'modelo';
+  let k=base, i=2; while(modelos[k]){ k=base+'_'+i; i++; }
+  return k;
+}
+async function novoModelo(){
+  const nome = prompt('Nome do novo modelo (ex: "Pedido à Secretaria Regional"):');
+  if(!nome || !nome.trim()) return;
+  const eProt = confirm('É um modelo de PROTOCOLO?\n\nOK = Protocolo (cláusulas, duas partes)\nCancelar = Ofício (carta)');
+  // guarda primeiro o que está no ecrã, para não perder edições
+  recolherModelosDoEcra();
+  const k = chaveDeNome(nome.trim());
+  modelos[k] = eProt
+    ? {categoria:'protocolo', label:nome.trim(), dest:'', assunto:'', corpo:'Cláusula 1.ª — Objeto\n[Descreva o objeto do protocolo]\n\nCláusula 2.ª — Vigência\n[Descreva a vigência]'}
+    : {categoria:'oficio', label:nome.trim(), dest:'', assunto:'', corpo:'Exmos. Senhores,\n\n[Escreva aqui o texto do ofício]\n\nCom os melhores cumprimentos.'};
+  try{ await guardarChaveConfig('oficios_modelos', JSON.stringify(modelos)); }catch(e){ toast('Erro ao guardar: '+e.message.slice(0,100),false); return; }
+  preencherSelectsTipo(); renderModelos();
+  const det=document.getElementById('md-det-'+k); if(det){ det.open=true; det.scrollIntoView({behavior:'smooth',block:'center'}); }
+  toast('Modelo "'+nome.trim()+'" criado ✓ — edita o texto e carrega em Guardar modelos');
+}
+async function apagarModelo(k){
+  const m=modelos[k]; if(!m) return;
+  const usados = oficios.filter(o=>o.tipo===k).length;
+  if(!confirm(`Apagar o modelo "${m.label||k}"?`+(usados?`\n\nAtenção: há ${usados} documento(s) criados com este tipo — não são apagados, apenas deixam de ter modelo associado.`:'')) ) return;
+  recolherModelosDoEcra();
+  delete modelos[k];
+  try{ await guardarChaveConfig('oficios_modelos', JSON.stringify(modelos)); }catch(e){ toast('Erro ao guardar: '+e.message.slice(0,100),false); return; }
+  preencherSelectsTipo(); renderModelos(); toast('Modelo apagado');
+}
+function recolherModelosDoEcra(){
+  Object.keys(modelos).forEach(k=>{
+    const l=document.getElementById('md-label-'+k); if(!l) return;
+    modelos[k]={categoria:catDoTipo(k), label:l.value.trim()||k, dest:document.getElementById('md-dest-'+k).value.trim(), assunto:document.getElementById('md-assunto-'+k).value.trim(), corpo:document.getElementById('md-corpo-'+k).value};
+  });
 }
 async function reporModelosPadrao(){
   if(!confirm('Repor os modelos originais? As alterações que fizeste aos textos serão perdidas.')) return;
