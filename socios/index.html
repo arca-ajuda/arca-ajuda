@@ -616,11 +616,18 @@ tbody tr:hover td{background:var(--bg2)}
         (pasta "ARCA d'Ajuda/Backups"), em <strong>JSON e Excel</strong>, para além do Supabase.
         Assim, mesmo que algo corra mal, tens sempre uma cópia acessível e fácil de abrir.
       </p>
+      <label style="display:block;font-size:12.5px;font-weight:600;color:var(--text-2);margin:6px 0 4px">Conta Google onde a Drive deve ficar ligada</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <input type="email" id="cfg-drive-email" placeholder="ex: arcadesporto@gmail.com" style="flex:1;min-width:220px;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;font-size:14px;background:var(--card)">
+        <button class="btn-secondary" onclick="guardarConfigDrive()">💾 Guardar</button>
+      </div>
+      <div style="font-size:11.5px;color:var(--text-2);margin-bottom:12px;line-height:1.5">Se quiseres que os backups passem a ir para outra conta Google, escreve aqui o novo email, guarda e carrega em <b>Mudar de conta</b>. A app pede-te para escolheres essa conta no Google.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
         <button class="btn-secondary" onclick="gdriveConnectInteractive()">🔗 Ligar Google Drive</button>
+        <button class="btn-secondary" onclick="gdriveMudarConta()">🔁 Mudar de conta</button>
         <button class="btn-primary" onclick="fazerBackupDrive(true)">☁️ Fazer backup agora</button>
       </div>
-      <div id="drive-status" style="font-size:12px;color:var(--text-2)">⚪ Google Drive não ligado</div>
+      <div id="drive-status" style="font-size:12px;color:var(--text-2);line-height:1.6">⚪ Google Drive não ligado</div>
     </div>
 
     <div class="card" style="margin-bottom:14px">
@@ -905,8 +912,67 @@ let gdriveToken = null;
 let gdriveTokenExpiry = 0;
 let gdriveClient = null;
 let gdrivePending = [];
+let driveEmailPreferido = '';   // conta Google desejada (config_app: drive_email)
+let gdriveContaLigada = '';     // conta Google realmente ligada (lida do Drive)
 
 function gdriveValid(){ return gdriveToken && Date.now()<gdriveTokenExpiry; }
+
+// Descobre qual a conta Google que está ligada e atualiza o estado
+async function gdriveLerContaLigada(){
+  if(!gdriveValid()) { gdriveContaLigada=''; return ''; }
+  try{
+    const r = await fetch('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)', {headers:{Authorization:'Bearer '+gdriveToken}});
+    if(r.ok){ const j = await r.json(); gdriveContaLigada = (j.user && j.user.emailAddress || '').toLowerCase(); }
+  }catch(e){ console.warn('Não foi possível ler a conta da Drive:', e); }
+  try{ localStorage.setItem('arca_gdrive_conta', gdriveContaLigada); }catch(e){}
+  atualizarEstadoDrive();
+  return gdriveContaLigada;
+}
+
+// Lê/guarda a conta Google preferida (Configurações)
+async function carregarConfigDrive(){
+  try{
+    const rows = await supaFetch('config_app?chave=eq.drive_email&select=valor');
+    driveEmailPreferido = (rows && rows.length ? rows[0].valor : '' ) || '';
+    driveEmailPreferido = driveEmailPreferido.trim().toLowerCase();
+  }catch(e){ console.warn('Falha a ler drive_email:', e); }
+  const inp = document.getElementById('cfg-drive-email');
+  if(inp) inp.value = driveEmailPreferido;
+  atualizarEstadoDrive();
+}
+async function guardarConfigDrive(){
+  const v = (document.getElementById('cfg-drive-email')?.value||'').trim().toLowerCase();
+  if(v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){ toast('Email inválido', false); return; }
+  try{
+    await guardarChaveConfig('drive_email', v);
+    driveEmailPreferido = v;
+    toast('Conta Google da Drive guardada');
+    atualizarEstadoDrive();
+  }catch(e){ console.error(e); toast('Erro ao guardar', false); }
+}
+
+// Muda a conta Google ligada: revoga a atual e pede para escolher outra
+function gdriveMudarConta(){
+  const tokenAntigo = gdriveToken;
+  const continuar = ()=>{
+    gdriveToken = null; gdriveTokenExpiry = 0; gdriveContaLigada = '';
+    try{ localStorage.removeItem('arca_gdrive_tok'); localStorage.removeItem('arca_gdrive_conta'); }catch(e){}
+    atualizarEstadoDrive();
+    gdriveInit();
+    if(!gdriveClient){ toast('Google ainda não carregou. Tenta de novo daqui a instantes.', false); return; }
+    gdrivePending.push({
+      ok:()=>{ toast('Google Drive ligado noutra conta ✓'); gdriveLerContaLigada().then(()=>fazerBackupDrive(true)); },
+      err:()=>toast('Não foi possível ligar ao Google Drive.', false)
+    });
+    const opts = {prompt:'select_account'};
+    if(driveEmailPreferido) opts.hint = driveEmailPreferido;
+    try{ gdriveClient.requestAccessToken(opts); }catch(e){ toast('Não foi possível ligar ao Google Drive.', false); }
+  };
+  if(tokenAntigo && window.google && google.accounts && google.accounts.oauth2 && google.accounts.oauth2.revoke){
+    try{ google.accounts.oauth2.revoke(tokenAntigo, continuar); setTimeout(()=>{ if(gdriveToken===tokenAntigo) continuar(); }, 1500); }
+    catch(e){ continuar(); }
+  } else continuar();
+}
 
 function gdriveInit(){
   if(gdriveClient) return gdriveClient;
@@ -921,6 +987,7 @@ function gdriveInit(){
           gdriveToken=resp.access_token;
           gdriveTokenExpiry=Date.now()+((resp.expires_in?resp.expires_in*1000:3600000))-60000;
           try{localStorage.setItem('arca_gdrive_tok',JSON.stringify({t:gdriveToken,e:gdriveTokenExpiry}));}catch(e){}
+          gdriveLerContaLigada();
           fila.forEach(p=>{try{p.ok&&p.ok();}catch(e){console.error(e);}});
         }else{
           fila.forEach(p=>{try{p.err&&p.err(resp);}catch(e){console.error(e);}});
@@ -937,8 +1004,9 @@ function gdriveAuth(callback, onFail, silent){
   if(!gdriveClient){ onFail&&onFail(); return; }
   gdrivePending.push({ok:callback, err:onFail});
   try{
-    if(silent) gdriveClient.requestAccessToken({prompt:''});
-    else gdriveClient.requestAccessToken();
+    const opts = silent ? {prompt:''} : {};
+    if(driveEmailPreferido) opts.hint = driveEmailPreferido;
+    gdriveClient.requestAccessToken(opts);
   }catch(e){ onFail&&onFail(e); }
 }
 
@@ -953,8 +1021,9 @@ function gdriveAutoConnect(){
   try{
     const raw=localStorage.getItem('arca_gdrive_tok');
     if(raw){ const o=JSON.parse(raw); if(o&&o.t&&o.e&&Date.now()<o.e){ gdriveToken=o.t; gdriveTokenExpiry=o.e; } }
+    gdriveContaLigada = localStorage.getItem('arca_gdrive_conta')||'';
   }catch(e){}
-  if(gdriveValid()){ atualizarEstadoDrive(); return; }
+  if(gdriveValid()){ atualizarEstadoDrive(); if(!gdriveContaLigada) gdriveLerContaLigada(); return; }
   let tries=0;
   const tryConnect=()=>{
     if(gdriveInit()){ gdriveAuth(()=>atualizarEstadoDrive(), ()=>{}, true); return; }
@@ -1116,9 +1185,12 @@ function atualizarEstadoDrive(){
   if(!el) return;
   const ultimo = LS.get('arca_ultimo_backup_drive');
   if(gdriveValid()){
-    el.innerHTML = `🟢 Ligado ao Google Drive` + (ultimo?` — último backup: ${new Date(ultimo).toLocaleString('pt-PT')}`:' — ainda sem backup feito');
+    el.innerHTML = `🟢 Ligado ao Google Drive` + (gdriveContaLigada?` (<b>${gdriveContaLigada}</b>)`:'') + (ultimo?` — último backup: ${new Date(ultimo).toLocaleString('pt-PT')}`:' — ainda sem backup feito');
+    if(driveEmailPreferido && gdriveContaLigada && gdriveContaLigada!==driveEmailPreferido){
+      el.innerHTML += `<br><span style="color:#B9770E">⚠️ A conta ligada é diferente da configurada (<b>${driveEmailPreferido}</b>). Usa <b>🔁 Mudar de conta</b> para trocar.</span>`;
+    }
   } else {
-    el.textContent = '⚪ Google Drive não ligado';
+    el.textContent = '⚪ Google Drive não ligado' + (driveEmailPreferido?` — conta configurada: ${driveEmailPreferido}`:'');
   }
 }
 
@@ -2548,8 +2620,9 @@ async function renderConfigEmail(){
     <div class="card" style="margin-bottom:14px">
       <div class="card-title">📧 Endereços de Email</div>
       <div style="font-size:13px;color:var(--text-2);margin-bottom:14px;line-height:1.6">Define os emails usados pelo sistema. Podes mudá-los a qualquer momento.</div>
-      <label style="display:block;font-size:12.5px;font-weight:600;color:var(--text-2);margin:10px 0 4px">Email de receção (recebe avisos de novos sócios)</label>
-      <input type="email" id="cfg-email-recepcao" value="${(cfg.email_recepcao||'').replace(/"/g,'&quot;')}" placeholder="ex: geral@arcadajuda.pt" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;font-size:14px;background:var(--card)">
+      <label style="display:block;font-size:12.5px;font-weight:600;color:var(--text-2);margin:10px 0 4px">Emails para receber notificações (1 ou mais — um por linha)</label>
+      <textarea id="cfg-email-recepcao" rows="3" placeholder="ex: geral@arcadajuda.pt&#10;direcao@arcadajuda.pt" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;font-size:14px;background:var(--card);font-family:inherit;resize:vertical">${esc(normalizarListaEmails(cfg.email_recepcao).join('\n'))}</textarea>
+      <div style="font-size:11.5px;color:var(--text-2);margin-top:4px;line-height:1.5">Estes endereços recebem uma <b>cópia (Bcc)</b> de todos os emails enviados aos sócios a partir da app. Podes pôr só um ou vários (um por linha ou separados por vírgula).</div>
       <label style="display:block;font-size:12.5px;font-weight:600;color:var(--text-2);margin:14px 0 4px">Email remetente (aparece como "de")</label>
       <input type="email" id="cfg-email-remetente" value="${(cfg.email_remetente||'').replace(/"/g,'&quot;')}" placeholder="ex: avisos@arcadajuda.pt" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;font-size:14px;background:var(--card)">
     </div>
@@ -2590,7 +2663,8 @@ async function renderConfigEmail(){
 }
 
 async function guardarConfigEmail(){
-  const recepcao = (document.getElementById('cfg-email-recepcao')?.value||'').trim();
+  const recepcao = normalizarListaEmails(document.getElementById('cfg-email-recepcao')?.value||'').join(', ');
+  _emailsNotifCache = normalizarListaEmails(recepcao);
   const remetente = (document.getElementById('cfg-email-remetente')?.value||'').trim();
   const auto = document.getElementById('cfg-envio-auto')?.checked ? 'true' : 'false';
   const mBoas = (document.getElementById('cfg-modelo-boasvindas')?.value||'').trim();
@@ -2745,6 +2819,25 @@ async function guardarTextoPreview(chave, idModelo){
     await guardarChaveConfig(chave, novoTexto.trim());
     toast('Mensagem guardada!');
   }catch(e){ console.error(e); toast('Erro ao guardar', false); }
+}
+
+// --- Emails de notificação (cópia Bcc dos emails enviados aos sócios) ---
+let _emailsNotifCache = null;
+function normalizarListaEmails(texto){
+  return String(texto||'').split(/[\n,;]+/).map(e=>e.trim().toLowerCase()).filter(e=>e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))
+    .filter((e,i,a)=>a.indexOf(e)===i);
+}
+async function carregarEmailsNotificacao(){
+  try{
+    const rows = await supaFetch('config_app?chave=eq.email_recepcao&select=valor');
+    _emailsNotifCache = normalizarListaEmails(rows && rows.length ? rows[0].valor : '');
+  }catch(e){ console.warn('Falha a ler emails de notificação:', e); _emailsNotifCache = _emailsNotifCache||[]; }
+  return _emailsNotifCache;
+}
+// Devolve "&bcc=a@x.pt,b@y.pt" (ou "" se não houver emails configurados)
+function bccNotificacao(){
+  const lista = _emailsNotifCache||[];
+  return lista.length ? '&bcc='+encodeURIComponent(lista.join(',')) : '';
 }
 
 async function guardarChaveConfig(chave, valor){
@@ -3308,7 +3401,7 @@ Esta app trata da gestão de sócios. Funcionalidades:
 
 **Configurações → Associação**: dados da associação (nome, NIF, email, telefone, morada), formas de pagamento (IBAN, MB WAY, Entidade+Referência Multibanco — este só aceita valores inteiros sem cêntimos) e redes sociais/site (Facebook, Instagram, YouTube, site, outras). Estes dados entram automaticamente nos emails/SMS.
 
-**Configurações → Email**: email de receção e email remetente (editável). 3 modelos de mensagem editáveis (Boas-vindas, Quota a vencer, Quota vencida). Botão Pré-visualizar mostra o email final — a mensagem é editável, e a parte automática (contactos, pagamentos, redes, parceiros) monta-se sozinha a partir dos dados da Associação.
+**Configurações → Email**: emails de notificação (1 ou vários, recebem cópia Bcc dos emails enviados) e email remetente (editável). 3 modelos de mensagem editáveis (Boas-vindas, Quota a vencer, Quota vencida). Botão Pré-visualizar mostra o email final — a mensagem é editável, e a parte automática (contactos, pagamentos, redes, parceiros) monta-se sozinha a partir dos dados da Associação.
 
 **Configurações → Quotas**: tipos de sócio e preço da quota por tipo e período (1 mês, 3, 6, 9 meses, 1 ano). Editáveis. Tipos isentos não pagam.
 
@@ -3540,7 +3633,7 @@ function gerarMsgRenovacao(ids){
       <div>
         <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;margin-bottom:4px">Email</div>
         <div style="font-size:12px;background:#fff;padding:8px;border-radius:var(--radius);border:var(--border);white-space:pre-wrap">${emailMsg}</div>
-        ${s.email?`<a href="mailto:${s.email}?subject=Renovação de Quota — ARCA d'Ajuda&body=${encodeURIComponent(emailMsg)}" style="display:inline-block;margin-top:4px;font-size:11px;color:var(--blue);text-decoration:none">✉ Enviar Email</a>`:''}
+        ${s.email?`<a href="mailto:${s.email}?subject=Renovação de Quota — ARCA d'Ajuda${bccNotificacao()}&body=${encodeURIComponent(emailMsg)}" style="display:inline-block;margin-top:4px;font-size:11px;color:var(--blue);text-decoration:none">✉ Enviar Email</a>`:''}
       </div>
     </div>`;
   });
@@ -9665,7 +9758,8 @@ async function enviarEmailSocio(id, tipo){
   const corpo = textoModelo + '\n\n' + baseTexto;
 
   // Abrir o programa de email (mailto)
-  const mailto = `mailto:${encodeURIComponent(s.email)}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
+  if(_emailsNotifCache===null) await carregarEmailsNotificacao();
+  const mailto = `mailto:${encodeURIComponent(s.email)}?subject=${encodeURIComponent(assunto)}${bccNotificacao()}&body=${encodeURIComponent(corpo)}`;
   window.location.href = mailto;
 }
 
@@ -10464,7 +10558,7 @@ function conteudoGuia(){
     </ul>
     <h3 style="color:#1B4164;margin-top:16px">Email</h3>
     <ul>
-      <li><b>Endereços:</b> email de receção (recebe avisos) e email remetente (editável — muda quando quiseres, sem tocar no código).</li>
+      <li><b>Endereços:</b> emails de notificação (1 ou vários — recebem cópia Bcc de todos os emails enviados aos sócios) e email remetente (editável — muda quando quiseres, sem tocar no código).</li>
       <li><b>3 Modelos de mensagem:</b> Boas-vindas, Quota a vencer e Quota vencida. Já vêm escritos; edita o texto e Guarda.</li>
       <li><b>Pré-visualizar:</b> mostra como o email fica. A tua mensagem é editável; a parte automática (contactos, pagamentos, redes, parceiros) monta-se sozinha e atualiza quando mudas os dados da Associação.</li>
     </ul>
@@ -10485,6 +10579,7 @@ function conteudoGuia(){
       <li>Além disso, é guardada uma cópia em <b>Excel + JSON</b> na Google Drive (pasta "Backups"), automaticamente após cada alteração.</li>
       <li>A ligação à Drive pode expirar — ao entrar, se estiver desligada, aparece um <b>aviso</b> para a ligares. Basta um clique.</li>
       <li>Recomenda-se ligar a Drive sempre que entras, para garantir a cópia de segurança.</li>
+      <li>Em <b>Configurações → Dados</b> podes definir a <b>conta Google</b> onde a Drive deve ficar ligada. O estado mostra qual a conta realmente ligada e avisa se for diferente. Para trocar de conta, escreve o novo email, guarda e carrega em <b>🔁 Mudar de conta</b>.</li>
     </ul>
     <h2 style="color:#1B6E8A;font-size:17px;border-bottom:2px solid #37A7C8;padding-bottom:4px;margin-top:26px">8. Inscrição pública</h2>
     <ul>
@@ -10512,6 +10607,8 @@ async function iniciarAppSocios(){
   try{ startMotivacional(); }catch(e){ console.warn('init:',e); }
   try{ checkRoleLogin(); }catch(e){ console.warn('init:',e); }
   try{ gdriveAutoConnect(); }catch(e){ console.warn('init:',e); }
+  carregarEmailsNotificacao().catch(e=>console.warn('init:',e));
+  carregarConfigDrive().catch(e=>console.warn('init:',e));
   // Aviso se a Drive não estiver ligada (backups de segurança não são feitos)
   setTimeout(()=>{ try{ avisarDriveDesligada(); }catch(e){ console.warn(e); } }, 3500);
   (function(){
