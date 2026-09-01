@@ -1426,6 +1426,10 @@ const TIPMOV_COFRE_IN   = 'Numerário';                  // entrada no cofre (re
 // - Numerário → contabilizado no Cofre
 const TIPMOV_EXCLUIDOS_GERAL = [...TIPMOV_CARTAO, 'Numerário'];
 
+function movsDoPeriodo(){
+  const ano=getAno(), mes=getMes();
+  return movimentos.filter(m=> m.ano===ano && (mes===0||m.mes===mes) );
+}
 function filteredMovs(){
   const ano=getAno(), mes=getMes();
   return movimentos.filter(m=>
@@ -2083,10 +2087,9 @@ function renderLancamentos(){
 // ============================================================
 function renderFluxo(){
   const ano=getAno();
-  document.getElementById('fluxo-ano-lbl').textContent=ano;
+  document.getElementById('fluxo-ano-lbl').textContent=ano+' — todas as contas (banco, numerário e cartão)';
   const rec=Array(12).fill(0), desp=Array(12).fill(0);
-  // Exclude cartão AND numerário — they are tracked in Cartão and Cofre separately
-  movimentos.filter(m=>m.ano===ano&&!TIPMOV_EXCLUIDOS_GERAL.includes(m.tipmov))
+  movimentos.filter(m=>m.ano===ano)
     .forEach(m=>m.cat==='receita'?rec[m.mes-1]+=m.valor:desp[m.mes-1]+=m.valor);
   const fluxo=rec.map((r,i)=>r-desp[i]);
   let acum=0; const acumArr=fluxo.map(f=>{acum+=f;return Math.round(acum*100)/100;});
@@ -2107,7 +2110,7 @@ function renderFluxo(){
 // MODALIDADES
 // ============================================================
 function renderModalidades(){
-  const ms=filteredMovs().filter(m=>m.cat==='receita'&&m.categoria==='Modalidades Sala');
+  const ms=movsDoPeriodo().filter(m=>m.cat==='receita'&&m.categoria==='Modalidades Sala');
   const g={};ms.forEach(m=>{const k=m.sub.split(' ').slice(0,-1).join(' ')||m.sub;g[k]=(g[k]||0)+m.valor;});
   mkChart('mod','chart-mod',{type:'bar',data:{labels:Object.keys(g).length?Object.keys(g):['Sem dados'],datasets:[{label:'Receitas',data:Object.values(g).length?Object.values(g):[0],backgroundColor:CORES,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{callback:v=>'€'+Math.round(v),font:{size:10}}}}}});
   const el=document.getElementById('tabela-modalidades');
@@ -2122,7 +2125,7 @@ function renderModalidades(){
 // EVENTOS
 // ============================================================
 function renderEventos(){
-  const todos=filteredMovs().filter(m=>m.categoria==='Eventos');
+  const todos=movsDoPeriodo().filter(m=>m.categoria==='Eventos');
   const por={};config.eventos.forEach(e=>por[e]={rec:0,desp:0});
   todos.forEach(m=>{if(!por[m.sub])por[m.sub]={rec:0,desp:0};if(m.cat==='receita')por[m.sub].rec+=m.valor;else por[m.sub].desp+=m.valor;});
   document.getElementById('eventos-grid').innerHTML=config.eventos.map(e=>{const v=por[e]||{rec:0,desp:0};return `<div class="metric-card"><div class="metric-label" style="font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e}</div><div style="font-size:15px;font-weight:600;color:#085041">${fmt(v.rec)}</div><div style="font-size:11px;color:#712B13">Desp: ${fmt(v.desp)}</div></div>`;}).join('');
@@ -2135,7 +2138,7 @@ function renderEventos(){
 // FUNCIONÁRIOS
 // ============================================================
 function renderFuncionarios(){
-  const ms=filteredMovs().filter(m=>m.cat==='despesa'&&m.categoria==='Funcionários');
+  const ms=movsDoPeriodo().filter(m=>m.cat==='despesa'&&m.categoria==='Funcionários');
   const total=ms.reduce((s,m)=>s+m.valor,0);
   const por={};ms.forEach(m=>{por[m.sub]=(por[m.sub]||0)+m.valor;});
   document.getElementById('func-metrics').innerHTML=`<div class="metric-card"><div class="metric-label">Total Pago</div><div class="metric-value red">${fmt(total)}</div><div class="metric-sub">${ms.length} pagamentos</div></div><div class="metric-card"><div class="metric-label">Média Mensal</div><div class="metric-value">${fmt(total/12)}</div></div><div class="metric-card"><div class="metric-label">Sub-tipos</div><div class="metric-value">${Object.keys(por).length}</div></div>`;
@@ -2150,7 +2153,7 @@ function renderFuncionarios(){
 // VIATURAS
 // ============================================================
 function renderViaturas(){
-  const ms=filteredMovs().filter(m=>m.cat==='despesa'&&m.categoria==='Reparações Viaturas');
+  const ms=movsDoPeriodo().filter(m=>m.cat==='despesa'&&m.categoria==='Reparações Viaturas');
   const p={};ms.forEach(m=>{p[m.sub]=(p[m.sub]||0)+m.valor;});
   mkChart('viaturas','chart-viaturas',{type:'bar',data:{labels:Object.keys(p).length?Object.keys(p):['Sem dados'],datasets:[{label:'Despesas',data:Object.values(p).length?Object.values(p):[0],backgroundColor:CORES,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},maxRotation:30}},y:{ticks:{callback:v=>'€'+Math.round(v),font:{size:10}}}}}});
   const el=document.getElementById('tabela-viaturas');
