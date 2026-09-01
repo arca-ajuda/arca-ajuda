@@ -390,6 +390,8 @@ tbody tr:hover td{background:#F5F9FF}
 .topbar .topbar-quick .topnav-item.nav-lock:hover{filter:brightness(1.06);transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,.22)}
 .topbar .topbar-quick .topnav-item.nav-lock svg{width:19px;height:19px;opacity:1}
 .topbar .topbar-quick{gap:8px}
+.logo-badge,.logo-img,.logo-edit-overlay{border-radius:50%}
+.logo-img{object-fit:cover;background:#fff}
 @media(max-height:720px){.menu-lateral{gap:clamp(8px,1.9vh,22px)}.ml-grupo{padding:clamp(5px,1.5vh,16px) 4px 2px}.ml-lbl{padding:clamp(8px,1.8vh,15px) 12px}.ml-btn{font-size:12px}}
 </style>
 </head>
@@ -10136,8 +10138,8 @@ function renderCartaoSocio(){
   const logoEl=document.getElementById('cartao-logo-area');
   if(logoEl){
     const imgPart = logo
-      ? `<img src="${logo}" style="width:60px;height:60px;object-fit:contain;flex-shrink:0;display:block;background:#fff;border-radius:10px;padding:4px">`
-      : `<div style="width:56px;height:56px;border-radius:10px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700;color:#fff">ARCA</div>`;
+      ? `<img src="${logo}" style="width:60px;height:60px;object-fit:cover;flex-shrink:0;display:block;background:#fff;border-radius:50%;padding:0">`
+      : `<div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700;color:#fff">ARCA</div>`;
     logoEl.innerHTML = `<div style="display:flex;align-items:center;gap:12px">
       ${imgPart}
       <div style="display:flex;flex-direction:column;justify-content:center">
@@ -10182,8 +10184,8 @@ function imprimirCartao(){
   const s=socios.find(x=>x.id==id);if(!s)return;
   const logo=currentLogoData||LS.get('arca_logo')||'';
   const logoImg=logo
-    ?`<img src="${logo}" style="width:60px;height:60px;object-fit:contain;flex-shrink:0;display:block;background:#fff;border-radius:10px;padding:4px">`
-    :`<div style="width:56px;height:56px;border-radius:10px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700;color:#fff">ARCA</div>`;
+    ?`<img src="${logo}" style="width:60px;height:60px;object-fit:cover;flex-shrink:0;display:block;background:#fff;border-radius:50%;padding:0">`
+    :`<div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700;color:#fff">ARCA</div>`;
   const logoHtml=`<div style="display:flex;align-items:center;gap:12px">${logoImg}<div style="display:flex;flex-direction:column;justify-content:center"><div style="font-size:17px;font-weight:800;color:#fff;letter-spacing:.4px;line-height:1.1">ARCA d'Ajuda</div><div style="font-size:8px;color:#9FB4CC;letter-spacing:.4px;margin-top:4px;line-height:1.4">Associação Recreativa e Cultural da Ajuda</div></div></div>`;
   let validStr='—';
   const situacao=getSituacaoSocio(s);
