@@ -393,6 +393,16 @@ tbody tr:hover td{background:#F5F9FF}
 .ml-btn.ml-geral{--c:#1B4570;background:linear-gradient(135deg,#1B4570,#2E6199 60%,#2F7A8F)!important;color:#fff;font-size:13px;box-shadow:0 4px 12px rgba(27,69,112,.35);margin-bottom:4px}
 .ml-btn.ml-geral .ml-ico{background:rgba(255,255,255,.22);font-size:18px}
 .ml-btn.ml-geral:hover{filter:brightness(1.1)}
+/* Todos os botões do menu no formato do Menu Geral (cores fortes, texto branco) */
+.menu-lateral .ml-btn{color:#fff;background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 72%,#fff) 100%);box-shadow:0 3px 9px color-mix(in srgb,var(--c) 45%,transparent)}
+.menu-lateral .ml-btn .ml-ico{background:rgba(255,255,255,.22)}
+.menu-lateral .ml-btn:hover{filter:brightness(1.08)}
+.menu-lateral .ml-btn.active,.menu-lateral .ml-btn.active:hover{outline:1.5px solid color-mix(in srgb,var(--c) 55%,#0E1A26);box-shadow:0 3px 9px color-mix(in srgb,var(--c) 45%,transparent)}
+.menu-lateral .ml-btn.active .ml-ico{background:rgba(255,255,255,.38)}
+.menu-lateral .ml-roxo{--c:#6C4BB6}.menu-lateral .ml-azul{--c:#1F8FC8}.menu-lateral .ml-verde{--c:#15A38F}.menu-lateral .ml-verde-cl{--c:#2FA89B}
+.menu-lateral .ml-marinho{--c:#2F5F9E}.menu-lateral .ml-dourado{--c:#B8863B}.menu-lateral .ml-laranja{--c:#E0703A}
+.menu-lateral .ml-btn.ml-geral .ml-lbl{padding-top:clamp(13px,2.4vh,20px);padding-bottom:clamp(13px,2.4vh,20px);font-size:13.5px}
+.menu-lateral .ml-btn.ml-geral .ml-ico{font-size:20px}
 .logo-badge,.logo-img,.logo-edit-overlay{border-radius:50%}
 .logo-img{object-fit:cover;background:#fff}
 /* Lista de sócios sem scroll horizontal: menu mais estreito e tabela mais compacta em ecrãs médios */
