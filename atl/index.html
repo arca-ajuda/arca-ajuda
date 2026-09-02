@@ -1373,12 +1373,15 @@ function fichaPublicaCamposHTML(){
     <div id="c-blocos"></div>
     <div class="subt">Descontos</div>
     <div class="info" style="background:#FFF3D6;border-color:#E6B800;color:#6b4e00">
-      ⚠️ <b>Assinala apenas se</b> uma destas situações se aplicar: o teu educando é <b>atleta da ARCA</b>, ou tem um(a) <b>irmão(ã) que já frequenta o ATL</b>, ou que <b>vai frequentar no mesmo período</b>.<br>
-      Nesse caso há um desconto de <b>${descIrmaoTxt}</b> (aplicado na inscrição de cada irmão). Os descontos <b>não são acumuláveis</b> (aplica-se o mais vantajoso) e ficam <b>sujeitos a confirmação da coordenação</b>.
+      ⚠️ <b>Assinala apenas uma</b> das situações, e só se realmente se aplicar: o teu educando é <b>atleta da ARCA d'Ajuda</b>, ou tem um(a) <b>irmão(ã) a frequentar o ATL no mesmo período</b>.<br>
+      Nesse caso há um desconto de <b>${descIrmaoTxt}</b> (por cada irmão). Os descontos <b>não são acumuláveis</b> — aplica-se apenas <b>um</b> (o mais vantajoso).
     </div>
-    <label class="sem-check"><input type="radio" name="c-desc" value="nenhum" checked onchange="setDescontoOpcao('nenhum')"> ✅ Não se aplica — o meu educando <b>não é atleta da ARCA</b> e <b>não tem irmão(ã)</b> a frequentar (ou que vá frequentar) o ATL no mesmo período</label>
-    <label class="sem-check"><input type="radio" name="c-desc" value="atleta" onchange="setDescontoOpcao('atleta')"> 🏅 É <b>atleta da ARCA</b></label>
-    <label class="sem-check"><input type="radio" name="c-desc" value="irmao" onchange="setDescontoOpcao('irmao')"> 👧👦 Tem <b>irmão(ã)</b> que já frequenta ou vai frequentar o ATL no mesmo período</label>
+    <label class="sem-check"><input type="radio" name="c-desc" value="nenhum" checked onchange="setDescontoOpcao('nenhum')"> ✅ Não se aplica — o meu educando <b>não é atleta da ARCA d'Ajuda</b> e <b>não tem irmão(ã)</b> a frequentar o ATL no mesmo período</label>
+    <label class="sem-check"><input type="radio" name="c-desc" value="atleta" onchange="setDescontoOpcao('atleta')"> 🏅 É <b>atleta da ARCA d'Ajuda</b></label>
+    <label class="sem-check"><input type="radio" name="c-desc" value="irmao" onchange="setDescontoOpcao('irmao')"> 👧👦 Tem <b>irmão(ã) a frequentar o ATL no mesmo período</b></label>
+    <div class="info" style="background:#FDECEA;border-color:#F0855F;color:#7a2e12;margin-top:8px">
+      <b>Importante:</b> qualquer desconto assinalado é <b>avaliado pela administração</b>. Se não corresponder à realidade, será <b>solicitado o pagamento do valor do desconto</b> e a <b>inscrição só fica concluída após esse pagamento</b>.
+    </div>
     <div class="card" style="background:var(--teal-l);border-color:#c9dcf3;margin-top:12px">
       <div style="font-size:13px;color:var(--teal-d)">Valor a pagar</div>
       <div style="font-size:26px;font-weight:800;color:var(--teal-d)" id="c-valor-pub">€ 0,00</div>
@@ -1755,10 +1758,10 @@ function abrirModalCrianca(id){ if(guardaModoAno()) return;
     <div class="muted" style="margin-bottom:8px">Trabalhamos por semanas: escolhe as semanas inteiras e, se precisar, junta dias avulso (ex.: 1 semana + 2 dias).</div>
     <div id="c-blocos"></div>
     <div class="subt">Descontos</div>
-    <div class="info">Os descontos <b>não são acumuláveis</b> (aplica-se o mais vantajoso) e ficam <b>sujeitos a confirmação da administração</b> (atleta, ou irmão a frequentar o ATL no mesmo período).</div>
+    <div class="info">Os descontos <b>não são acumuláveis</b> — aplica-se apenas <b>um</b> (o mais vantajoso). Válidos só para <b>atleta da ARCA d'Ajuda</b> ou <b>irmão(ã) a frequentar o ATL no mesmo período</b>. O desconto é <b>avaliado pela administração</b>; se não corresponder à realidade, é solicitado o pagamento do valor do desconto e a <b>inscrição só fica concluída após esse pagamento</b>.</div>
     <label class="sem-check"><input type="radio" name="c-desc" value="nenhum" ${!c.atleta&&!c.temIrmao?'checked':''} onchange="setDescontoOpcao('nenhum')"> ✅ Não se aplica (sem desconto)</label>
-    <label class="sem-check"><input type="radio" name="c-desc" value="atleta" ${c.atleta?'checked':''} onchange="setDescontoOpcao('atleta')"> 🏅 Atleta da ARCA</label>
-    <label class="sem-check"><input type="radio" name="c-desc" value="irmao" ${c.temIrmao?'checked':''} onchange="setDescontoOpcao('irmao')"> 👧👦 Tem irmão a frequentar o ATL no mesmo período</label>
+    <label class="sem-check"><input type="radio" name="c-desc" value="atleta" ${c.atleta?'checked':''} onchange="setDescontoOpcao('atleta')"> 🏅 Atleta da ARCA d'Ajuda</label>
+    <label class="sem-check"><input type="radio" name="c-desc" value="irmao" ${c.temIrmao?'checked':''} onchange="setDescontoOpcao('irmao')"> 👧👦 Tem irmão(ã) a frequentar o ATL no mesmo período</label>
     <div class="subt">Pagamento</div>
     <div class="grid3">
       <div class="fg"><label>Valor a pagar (€) <span class="muted">— calculado automaticamente</span></label><input id="c-valor" type="number" step="0.01" value="${esc(c.valor)}" oninput="_valorManual=true"><div class="muted" id="c-sugestao" style="margin-top:3px"></div></div>
