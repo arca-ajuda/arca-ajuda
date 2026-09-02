@@ -22,6 +22,16 @@
   .hidden{display:none!important}
 
   #login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0F6E56,#085041);display:flex;align-items:center;justify-content:center;padding:20px;z-index:1000}
+  /* ---- PÁGINA PÚBLICA (pais) ---- */
+  #pub{display:none;min-height:100vh;background:linear-gradient(160deg,#0F6E56,#0a4a39)}
+  #pub .pub-wrap{max-width:720px;margin:0 auto;padding:22px 16px 50px}
+  #pub .pub-hero{color:#fff;text-align:center;font-weight:800;font-size:26px;letter-spacing:.4px;padding:14px 0 18px;display:flex;flex-direction:column;align-items:center;gap:4px}
+  #pub .pub-hero .pub-sub{font-size:14px;font-weight:600;opacity:.92}
+  #pub .pub-card{background:var(--card);border-radius:16px;padding:20px 18px;box-shadow:0 12px 40px rgba(0,0,0,.28)}
+  #pub .pub-card h2{margin:6px 0 8px;color:var(--teal-d)}
+  #pub .pub-foot{text-align:center;color:var(--muted);font-size:12px;margin-top:18px;padding-top:12px;border-top:var(--border)}
+  #pub .btn-primary{background:var(--teal);color:#fff;border:none;border-radius:10px;font-weight:800;cursor:pointer;font-size:15px}
+  #pub .btn-primary:hover{background:var(--teal-d)}
   #login-card{background:#fff;border-radius:18px;padding:30px 26px;width:100%;max-width:400px;box-shadow:0 24px 60px rgba(0,0,0,.28)}
   #login-card h1{font-size:20px;color:var(--teal-d);text-align:center;margin-bottom:2px}
   #login-card .sub{text-align:center;color:var(--text-2);font-size:12.5px;margin-bottom:20px}
@@ -34,20 +44,24 @@
   .btn-link{background:none;border:none;color:var(--text-2);font-size:12.5px;text-decoration:underline;margin-top:14px;width:100%}
   #login-msg{margin-top:12px;font-size:12.5px;text-align:center;min-height:16px}
 
-  #app{display:none}
-  header#top{background:linear-gradient(135deg,var(--teal),var(--teal-d));color:#fff;padding:12px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
-  header#top .brand{font-weight:800;font-size:16px;letter-spacing:.3px;display:flex;align-items:center;gap:8px}
-  header#top select{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:7px 10px;font-weight:600;max-width:240px}
-  header#top select option{color:#111}
-  header#top .spacer{flex:1}
-  .top-btn{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:7px 11px;font-size:12.5px;font-weight:600}
-  .top-btn:hover{background:rgba(255,255,255,.28)}
-  #cloud-pill{font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;background:rgba(255,255,255,.16)}
-
-  nav#tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;background:var(--card);border-bottom:var(--border);padding:11px 12px;position:sticky;top:53px;z-index:40}
-  nav#tabs button{--c:#0F6E56;border:1.5px solid transparent;border-radius:22px;padding:8px 15px;font-size:13px;font-weight:700;white-space:nowrap;cursor:pointer;transition:all .15s ease;background:color-mix(in srgb, var(--c) 13%, #fff);color:var(--c)}
-  nav#tabs button:hover{background:color-mix(in srgb, var(--c) 24%, #fff);transform:translateY(-1px)}
-  nav#tabs button.active{background:var(--c);color:#fff;box-shadow:0 4px 10px color-mix(in srgb, var(--c) 45%, transparent)}
+  #app{display:none;min-height:100vh}
+  /* ---- MENU LATERAL ---- */
+  aside#side{width:238px;flex-shrink:0;background:linear-gradient(160deg,var(--teal),var(--teal-d));color:#fff;display:flex;flex-direction:column;gap:10px;padding:14px 12px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;z-index:50}
+  aside#side .brand{font-weight:800;font-size:16px;letter-spacing:.3px;display:flex;align-items:center;gap:8px;justify-content:center}
+  .side-geral{display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,.18);color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.34);border-radius:9px;padding:9px 10px;font-weight:800;font-size:13px}
+  .side-geral:hover{background:rgba(255,255,255,.30)}
+  .side-period{display:flex;flex-direction:column;gap:6px;border-top:1px solid rgba(255,255,255,.2);border-bottom:1px solid rgba(255,255,255,.2);padding:10px 0}
+  aside#side select{width:100%;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:7px 10px;font-weight:600}
+  aside#side select option{color:#111}
+  .side-period-btns{display:flex;gap:6px}
+  .side-mini{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:7px 9px;font-size:12px;font-weight:700;cursor:pointer}
+  .side-mini:hover{background:rgba(255,255,255,.28)}
+  .side-period-btns .side-mini{flex:1}
+  #cloud-pill{font-size:11px;font-weight:700;padding:5px 9px;border-radius:20px;background:rgba(255,255,255,.18)}
+  nav#tabs{display:flex;flex-direction:column;gap:5px;overflow-y:auto;padding:2px 0}
+  nav#tabs button{--c:#fff;text-align:left;border:none;border-left:3px solid rgba(255,255,255,.35);border-radius:9px;padding:9px 12px;font-size:13.5px;font-weight:700;white-space:nowrap;cursor:pointer;transition:all .12s ease;background:rgba(255,255,255,.10);color:#fff}
+  nav#tabs button:hover{background:rgba(255,255,255,.22)}
+  nav#tabs button.active{background:#fff;color:var(--teal-d);border-left-color:var(--c);box-shadow:0 3px 8px rgba(0,0,0,.2)}
   nav#tabs button:nth-child(1){--c:#0F6E56}
   nav#tabs button:nth-child(2){--c:#185FA5}
   nav#tabs button:nth-child(3){--c:#B8791C}
@@ -59,8 +73,21 @@
   nav#tabs button:nth-child(9){--c:#C77A0A}
   nav#tabs button:nth-child(10){--c:#556074}
   nav#tabs button:nth-child(11){--c:#6B7A70}
-
+  .side-foot{margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px;border-top:1px solid rgba(255,255,255,.2);padding-top:10px}
+  .side-foot .side-mini{flex:1}
+  #content{flex:1;min-width:0}
   main{max-width:1080px;margin:0 auto;padding:18px 16px 60px}
+  @media(max-width:820px){
+    #app{flex-direction:column}
+    aside#side{width:auto;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px;position:sticky;top:0}
+    aside#side .brand{justify-content:flex-start}
+    .side-geral{order:-1;padding:7px 10px}
+    .side-period{flex-direction:row;border:none;padding:0;align-items:center;gap:6px;flex-wrap:wrap}
+    aside#side select{width:auto;max-width:220px}
+    nav#tabs{flex-direction:row;flex-wrap:wrap;width:100%;order:5}
+    nav#tabs button{border-left:none;border:1px solid rgba(255,255,255,.3)}
+    .side-foot{margin:0;border:none;padding:0;width:auto}
+  }
   .section{display:none}
   .section.active{display:block}
 
@@ -180,31 +207,38 @@
 </div>
 
 <div id="app">
-  <header id="top">
+  <aside id="side">
     <div class="brand">☀️ ATL ARCAKIDS</div>
-    <select id="ed-sel" onchange="onEdicaoChange(this.value)"></select>
-    <button class="top-btn" onclick="abrirModalEdicao()">+ Período</button>
-    <div class="spacer"></div>
-    <span id="cloud-pill">•</span>
-    <button class="top-btn" onclick="showTab('definicoes')">⚙️ Definições</button>
-    <button class="top-btn" onclick="sair()">Sair</button>
-  </header>
+    <a class="side-geral" href="../" title="Voltar ao menu geral da ARCA d'Ajuda">⬅️ Menu Geral</a>
+    <div class="side-period">
+      <select id="ed-sel" onchange="onEdicaoChange(this.value)"></select>
+      <div class="side-period-btns">
+        <button class="side-mini" title="Editar nome/datas ou eliminar este período" onclick="editarPeriodoAtual()">✏️ Editar</button>
+        <button class="side-mini" onclick="abrirModalEdicao()">+ Período</button>
+      </div>
+    </div>
+    <nav id="tabs">
+      <button data-tab="dashboard" class="active" onclick="showTab('dashboard')">📊 Painel</button>
+      <button data-tab="criancas" onclick="showTab('criancas')">🧒 Inscrições</button>
+      <button data-tab="semanas" onclick="showTab('semanas')">📅 Semanas</button>
+      <button data-tab="mapa" onclick="showTab('mapa')">📆 Mapa</button>
+      <button data-tab="despesas" onclick="showTab('despesas')">💸 Despesas</button>
+      <button data-tab="receitas" onclick="showTab('receitas')">💰 Receitas</button>
+      <button data-tab="equipa" onclick="showTab('equipa')">👥 Funcionários</button>
+      <button data-tab="atividades" onclick="showTab('atividades')">🎟️ Atividades</button>
+      <button data-tab="precos" onclick="showTab('precos')">🏷️ Valores</button>
+      <button data-tab="documentos" onclick="showTab('documentos')">📄 Documentos</button>
+    </nav>
+    <div class="side-foot">
+      <span id="cloud-pill">•</span>
+      <button class="side-mini" onclick="showTab('definicoes')">⚙️ Definições</button>
+      <button class="side-mini" onclick="sair()">Sair</button>
+    </div>
+  </aside>
 
-  <nav id="tabs">
-    <button data-tab="dashboard" class="active" onclick="showTab('dashboard')">📊 Painel</button>
-    <button data-tab="criancas" onclick="showTab('criancas')">🧒 Inscrições</button>
-    <button data-tab="semanas" onclick="showTab('semanas')">📅 Semanas</button>
-    <button data-tab="mapa" onclick="showTab('mapa')">📆 Mapa</button>
-    <button data-tab="despesas" onclick="showTab('despesas')">💸 Despesas</button>
-    <button data-tab="receitas" onclick="showTab('receitas')">💰 Receitas</button>
-    <button data-tab="equipa" onclick="showTab('equipa')">👥 Funcionários</button>
-    <button data-tab="atividades" onclick="showTab('atividades')">🎟️ Atividades</button>
-    <button data-tab="precos" onclick="showTab('precos')">🏷️ Valores</button>
-    <button data-tab="documentos" onclick="showTab('documentos')">📄 Documentos</button>
-  </nav>
-
+  <div id="content">
   <main>
-    <div id="ano-banner" class="hidden" style="background:#FFF3D6;border:1.5px solid #E6B800;color:#6b4e00;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;font-weight:600">📅 <b>Vista anual</b> — soma de todos os períodos do ano. Só para consulta (receitas, despesas e inscrições de todo o ATL). Para <b>editar</b>, escolhe um período específico no seletor do topo.</div>
+    <div id="ano-banner" class="hidden" style="background:#FFF3D6;border:1.5px solid #E6B800;color:#6b4e00;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;font-weight:600">📅 <b>Vista anual</b> — soma de todos os períodos do ano. Só para consulta (receitas, despesas e inscrições de todo o ATL). Para <b>editar</b>, escolhe um período específico no seletor de períodos (menu lateral).</div>
     <div id="sec-dashboard" class="section active"></div>
     <div id="sec-criancas" class="section"></div>
     <div id="sec-semanas" class="section"></div>
@@ -217,8 +251,11 @@
     <div id="sec-documentos" class="section"></div>
     <div id="sec-definicoes" class="section"></div>
   </main>
+  </div>
   <button id="ajuda-fab" title="Ajuda — arrasta para mover">❓ Ajuda</button>
 </div>
+
+<div id="pub"></div>
 
 <div class="overlay" id="ov">
   <div class="modal">
@@ -451,7 +488,21 @@ function imprimirFicha(id){
       <tr><th>Valor a pagar</th><td>${fmt(c.valor)}</td></tr>
       <tr><th>Já pago</th><td>${fmt(c.pago)}</td></tr>
       <tr><th>Forma de pagamento</th><td>${esc(c.pagamento||'')}</td></tr></table>
-    <div style="margin-top:36px;font-size:13px">Assinatura do Encarregado de Educação: ______________________________&nbsp;&nbsp;&nbsp;Data: ____/____/________</div>`;
+    <div class="sec">Pessoas autorizadas a entregar / levantar a criança</div>
+    <table><thead><tr><th>Nome</th><th>Parentesco</th><th>Nº documento</th><th style="width:32%">Assinatura</th></tr></thead><tbody>
+      ${(c.autorizados||[]).filter(a=>a.nome||a.doc||a.parentesco).map(a=>`<tr><td>${esc(a.nome||'')}</td><td>${esc(a.parentesco||'')}</td><td>${esc(a.doc||'')}</td><td></td></tr>`).join('')}
+      <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
+      <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
+    </tbody></table>
+    <div style="font-size:11px;color:#555;margin-top:3px">Além do(a) encarregado(a) de educação, estas pessoas ficam autorizadas a entregar/levantar a criança. As linhas em branco podem ser preenchidas e assinadas à mão no 1.º dia.</div>
+    <div style="margin-top:30px;font-size:13px;line-height:2.5">
+      <div>O(A) Encarregado(a) de Educação: ______________________________&nbsp;&nbsp;Data: ____/____/________</div>
+      <div>Quem entrega/levanta a criança (pessoa autorizada): ______________________________&nbsp;&nbsp;Data: ____/____/________</div>
+    </div>
+    <div style="margin-top:24px;font-size:13px;line-height:2.5;border-top:1px solid #ccc;padding-top:12px">
+      <div style="font-size:12px;color:#555;margin-bottom:4px">A preencher pela ARCA d'Ajuda — declara-se que foi dado conhecimento ao(à) encarregado(a) de educação das condições e normas do ATL:</div>
+      <div>Coordenação / Administração — Nome: ____________________&nbsp;&nbsp;Assinatura: __________________&nbsp;&nbsp;Data: ____/____/________</div>
+    </div>`;
   abrirImpressao('Ficha de Inscrição N.º '+(c.numero||''), body);
 }
 function abrirImprimir(id){
@@ -503,6 +554,7 @@ function mesesPeriodo(){ return mesesDe(getEdicao()); }
    ARRANQUE / LOGIN
    ============================================================ */
 window.addEventListener('DOMContentLoaded', ()=>{
+  if(location.hash.indexOf('inscricao')>=0){ arrancarPublico(); return; }   // link dos pais → página pública autónoma
   if((supaSession && supaSession.access_token) || modoLocal){ entrarApp(); }
 });
 async function fazerLogin(){
@@ -525,14 +577,14 @@ function usarLocal(){ modoLocal=true; LS.set('atl_modo_local', true); entrarApp(
 function loginMsg(m, ok){ const el=$('login-msg'); el.textContent=m||''; el.style.color = ok===false?'#C0392B':(ok===true?'#0F6E56':'#5C6B70'); }
 
 async function entrarApp(){
-  $('login-screen').style.display='none'; $('app').style.display='block';
+  $('login-screen').style.display='none'; $('app').style.display='flex';
   marcaCloud(null); await hidratarCloud();
   if(LS.get('atl_documentos')===null) setDocs(docsDefault());
   edicoes = LS.get('atl_edicoes') || []; edicaoAtiva = LS.get('atl_edicao_ativa') || null;
   if(!edicaoAtiva && edicoes.length) edicaoAtiva = edicoes[0].id;
   popularEdicoes(); showTab('dashboard'); initAjudaFab();
-  if(location.hash.indexOf('inscricao')>=0){ setTimeout(()=>{ showTab('criancas'); abrirFichaPublica(); }, 300); }
-  else verificarFimMes();
+  carregarPreInscricoesCloud();
+  verificarFimMes();
 }
 /* ---------- Botão de Ajuda flutuante e móvel ---------- */
 let _ajudaInit=false;
@@ -553,7 +605,7 @@ function abrirAjuda(){
     <div class="muted" style="margin-bottom:10px">Guia rápido de cada secção. (Podes arrastar este botão de ajuda para onde quiseres.)</div>
     <div class="subt">Antes de começar</div>
     <ul style="margin:0 0 8px 18px;font-size:13px;line-height:1.6">
-      <li><b>+ Período</b> (topo): cria cada ATL por <b>datas</b> — semanas e dias úteis geram-se sozinhos. Troca de período no seletor do topo; <b>📅 Todo o ano</b> soma tudo.</li>
+      <li><b>+ Período</b> (menu lateral): cria cada ATL por <b>datas</b> — semanas e dias úteis geram-se sozinhos. Troca de período no seletor de períodos (menu lateral); <b>📅 Todo o ano</b> soma tudo.</li>
       <li><b>🏷️ Valores</b>: preços das inscrições, alimentação diária (almoço + 2 lanches), descontos (atleta / irmão, editáveis), campanhas, atividades, seguros. Tudo editável.</li>
     </ul>
     <div class="subt">No dia a dia</div>
@@ -585,6 +637,11 @@ function popularEdicoes(){
   const oa=document.createElement('option'); oa.value=ANO; oa.textContent='📅 Todo o ano (todos os períodos)'; if(edicaoAtiva===ANO)oa.selected=true; sel.appendChild(oa);
 }
 function onEdicaoChange(id){ edicaoAtiva=id; save('atl_edicao_ativa', id); renderAtual(); }
+function editarPeriodoAtual(){
+  if(!edicaoAtiva || modoAno()){ toast('Escolhe primeiro um período específico (não “Todo o ano”) para editar ou eliminar.',false); return; }
+  const ed=getEdicao(); if(!ed){ toast('Não há período selecionado.',false); return; }
+  abrirModalEdicao(ed);
+}
 
 function abrirModalEdicao(ed){
   if(ed && ed.id===ANO) ed=null; // não se edita a vista anual
@@ -609,8 +666,9 @@ function guardarEdicao(id){
   const obj={ id:id||uid(), nome, ano:parseInt($('e-ano').value)||'', dataInicio:ini, dataFim:fim };
   if(id){ const i=edicoes.findIndex(e=>e.id===id); if(i>=0) edicoes[i]=obj; } else edicoes.push(obj);
   edicaoAtiva = obj.id; save('atl_edicoes', edicoes); save('atl_edicao_ativa', edicaoAtiva);
-  if(!id) setD(dadosVazios());
-  fecharModal(); popularEdicoes(); renderAtual(); toast('Período guardado.');
+  if(!id){ const dd=dadosVazios(); if(obj.dataInicio&&obj.dataFim){ dd.precos.inscricoes=escaloesDoPeriodo(obj, dd.precos.inscricoes); } setD(dd); }
+  publicarConfigPublica(true);
+  fecharModal(); popularEdicoes(); renderAtual(); toast('Período guardado.'+((!id&&obj.dataInicio)?' Escalões (1 dia, semanas e Total) criados — define os preços em 🏷️ Valores.':''));
 }
 function eliminarEdicao(id){
   const e=edicoes.find(x=>x.id===id); const nome=e?e.nome:'';
@@ -633,12 +691,13 @@ function showTab(t){
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===t));
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   $('sec-'+t).classList.add('active'); renderAtual();
+  if(t==='criancas') carregarPreInscricoesCloud();
 }
 const TABS_SO_PERIODO=['semanas','mapa','precos']; // não fazem sentido na vista anual (datas/preços variam por período)
 function renderAtual(){
   const banner=$('ano-banner'); if(banner) banner.classList.toggle('hidden', !modoAno());
   if(modoAno() && TABS_SO_PERIODO.includes(tabAtual)){
-    const el=$('sec-'+tabAtual); if(el) el.innerHTML=`<div class="card"><div class="empty">Este ecrã é por período (as datas e os valores variam de período para período).<br><br>Escolhe um período específico no seletor do topo para o ver.</div></div>`;
+    const el=$('sec-'+tabAtual); if(el) el.innerHTML=`<div class="card"><div class="empty">Este ecrã é por período (as datas e os valores variam de período para período).<br><br>Escolhe um período específico no seletor de períodos (menu lateral) para o ver.</div></div>`;
     popularEdicoes(); return;
   }
   const r={dashboard:renderDashboard,criancas:renderCriancas,semanas:renderSemanas,mapa:renderMapa,despesas:renderDespesas,receitas:renderReceitas,equipa:renderEquipa,atividades:renderAtividades,precos:renderPrecos,documentos:renderDocumentos,definicoes:renderDefinicoes}[tabAtual];
@@ -688,10 +747,7 @@ function renderDashboard(){
     </div>
     <div class="card"><div class="card-title" style="margin-bottom:8px">Atalhos</div>
       <div class="seg">
-        <button onclick="showTab('criancas')">🧒 Inscrições</button>
-        <button onclick="showTab('despesas')">💸 Despesas</button>
-        <button onclick="showTab('precos')">🏷️ Valores</button>
-        <button onclick="abrirModalEdicao(getEdicao())">✏️ Editar período</button>
+        <button onclick="editarPeriodoAtual()">✏️ Editar período</button>
       </div>
     </div>`;
   try{ if(chartRV) chartRV.destroy();
@@ -709,8 +765,8 @@ function renderPrecos(){
     <div class="info">Todos os valores são deste período e <b>totalmente editáveis</b> — muda-os de ano para ano à vontade. O que definires aqui é usado para calcular automaticamente o valor de cada inscrição.</div>
 
     <div class="card">
-      <div class="card-head"><div class="card-title">🎫 Inscrições</div><button class="btn-sm btn-add" onclick="addPacote()">+ Escalão</button></div>
-      <div class="muted" style="margin-bottom:10px">Trabalhamos <b>por semanas</b>: define o preço de cada escalão (1, 2, 3… semanas) e o preço do <b>dia avulso</b>. Quem quer, por exemplo, uma semana + 2 dias paga o escalão da semana + 2 dias avulso — o valor exato, sem erros. Podes renomear, acrescentar ou apagar escalões.</div>
+      <div class="card-head"><div class="card-title">🎫 Inscrições</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn-sm btn-neutral" title="Cria os escalões certos para as datas deste período" onclick="gerarEscaloesPeriodo()">🔄 Gerar para este período</button><button class="btn-sm btn-add" onclick="addPacote()">+ Escalão</button></div></div>
+      <div class="muted" style="margin-bottom:10px">Escalões <b>deste período</b>: <b>1 dia (avulso)</b> — está sempre —, <b>1, 2, 3… semanas</b> (conforme as semanas inteiras do período) e o <b>Total</b> (tudo: as semanas + os dias soltos). Só defines os preços. Quem escolhe os dias paga sempre pelo melhor encaixe: 5 dias de uma semana contam como <b>1 semana</b> (nunca 5 avulso) e quem leva tudo paga o <b>Total</b>. Usa <b>🔄 Gerar para este período</b> para (re)criar os escalões conforme as datas.</div>
       <div class="table-wrap"><table><thead><tr><th>Descrição</th><th class="right">Preço (€)</th><th class="right">Desc. atleta ARCA (€)</th><th></th></tr></thead><tbody id="pk-body">
       ${p.inscricoes.map(pk=>`<tr>
         <td><input data-pk="${pk.id}" data-f="label" value="${esc(pk.label)}" style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px">${pk.avulso?'<div class="muted" style="margin-top:2px">preço × nº de dias escolhidos</div>':''}</td>
@@ -791,18 +847,39 @@ function lerValoresDoDOM(){
   const aa=$('al-almoco'), alm=$('al-lm'), alt=$('al-lt'); if(aa) p.alimentacaoDiaria={almoco:parseFloat(aa.value)||0, lancheManha:parseFloat(alm.value)||0, lancheTarde:parseFloat(alt.value)||0};
   return d;
 }
-function guardarValores(){ const d=lerValoresDoDOM(); setD(d); toast('Valores guardados.'); }
+function guardarValores(){ const d=lerValoresDoDOM(); setD(d); publicarConfigPublica(true); toast('Valores guardados.'); }
 function addPacote(){ const d=lerValoresDoDOM(); d.precos.inscricoes.push({id:uid(),label:'Novo escalão',semanas:0,avulso:false,preco:0,descontoArca:0}); setD(d); renderPrecos(); }
+function gerarEscaloesPeriodo(){ if(guardaModoAno()) return; const ed=getEdicao(); if(!ed||!ed.dataInicio||!ed.dataFim){ toast('Define primeiro as datas do período (✏️ Editar).',false); return; }
+  const W=semanasDe(ed).length; const nDiasTot=diasUteisDe(ed).length;
+  if(!confirm('Gerar os escalões para este período?\n\n• 1 dia (avulso)\n• 1 a '+W+' semana(s)\n• Total (o período todo)\n\nOs preços já definidos são mantidos pelos nomes iguais. Continuar?')) return;
+  const d=lerValoresDoDOM(); d.precos.inscricoes=escaloesDoPeriodo(ed, d.precos.inscricoes); setD(d); renderPrecos(); publicarConfigPublica(true); toast('Escalões criados para este período ('+W+' semana(s), '+nDiasTot+' dias úteis).'); }
 function delPacote(id){ const d=lerValoresDoDOM(); d.precos.inscricoes=d.precos.inscricoes.filter(x=>x.id!==id); setD(d); renderPrecos(); }
 function addCampanha(){ const d=lerValoresDoDOM(); d.precos.campanhas.push({id:uid(),nome:'Campanha',semanas:'',descontoPct:10,dataLimite:''}); setD(d); renderPrecos(); }
 function delCampanha(id){ const d=lerValoresDoDOM(); d.precos.campanhas=d.precos.campanhas.filter(x=>x.id!==id); setD(d); renderPrecos(); }
 function addExtra(grupo){ const d=lerValoresDoDOM(); d.precos[grupo].push({id:uid(),nome:'',preco:0}); setD(d); renderPrecos(); }
 function delExtra(grupo,id){ const d=lerValoresDoDOM(); d.precos[grupo]=d.precos[grupo].filter(x=>x.id!==id); setD(d); renderPrecos(); }
 
+// gera os escalões que fazem sentido para as datas do período: 1 dia avulso (sempre) + 1..N semanas + Total
+function escaloesDoPeriodo(ed, existentes){
+  existentes = existentes||[];
+  const semanas = semanasDe(ed); const W = semanas.length;
+  const totalDias = diasUteisDe(ed).length; const weekDias = semanas.reduce((s,x)=>s+x.dias.length,0);
+  const leftover = totalDias - weekDias;
+  const prev = (lbl)=>{ const e=existentes.find(x=>x.label===lbl); return e?{preco:+e.preco||0, descontoArca:+e.descontoArca||0, id:e.id}:{preco:0, descontoArca:0, id:uid()}; };
+  const out=[];
+  { const v=prev('1 dia (avulso)'); out.push({id:v.id, label:'1 dia (avulso)', semanas:0, avulso:true, total:false, preco:v.preco, descontoArca:v.descontoArca}); }
+  for(let k=1;k<=W;k++){ const lbl=k+(k===1?' semana':' semanas'); const v=prev(lbl); out.push({id:v.id, label:lbl, semanas:k, avulso:false, total:false, preco:v.preco, descontoArca:v.descontoArca}); }
+  if(leftover>0){ const lbl = W>=1 ? ('Total ('+W+(W===1?' semana':' semanas')+' + '+leftover+(leftover===1?' dia':' dias')+')') : ('Total ('+leftover+(leftover===1?' dia':' dias')+')');
+    // tenta reaproveitar o preço de um "Total" anterior mesmo que o texto tenha mudado
+    let v=prev(lbl); if(!existentes.find(x=>x.label===lbl)){ const antTotal=existentes.find(x=>x.total); if(antTotal){ v={preco:+antTotal.preco||0, descontoArca:+antTotal.descontoArca||0, id:antTotal.id}; } }
+    out.push({id:v.id, label:lbl, semanas:W, avulso:false, total:true, preco:v.preco, descontoArca:v.descontoArca}); }
+  return out;
+}
 // preços por unidade
 function precoDiaAvulso(){ const a=(getD().precos.inscricoes||[]).find(x=>x.avulso); return a?(+a.preco||0):0; }
 function precoSemanas(n){ if(n<=0)return 0; const insc=getD().precos.inscricoes||[]; const e=insc.find(x=>!x.avulso&&+x.semanas===n); if(e)return +e.preco||0; const one=insc.find(x=>!x.avulso&&+x.semanas===1); return n*((one?+one.preco:0)||0); }
-function descArcaSemanas(n){ if(n<=0)return 0; const e=(getD().precos.inscricoes||[]).find(x=>!x.avulso&&+x.semanas===n); return e?(+e.descontoArca||0):0; }
+function descArcaSemanas(n){ if(n<=0)return 0; const insc=getD().precos.inscricoes||[]; const e=insc.find(x=>!x.avulso&&+x.semanas===n); if(e)return +e.descontoArca||0; const one=insc.find(x=>!x.avulso&&+x.semanas===1); return n*((one?+one.descontoArca:0)||0); }
+function descArcaAvulso(){ const a=(getD().precos.inscricoes||[]).find(x=>x.avulso); return a?(+a.descontoArca||0):0; }
 // campanha aplicável (pela contagem de semanas marcadas)
 function campanhaAplicavel(c, ctx){
   const p=getD().precos; const dins = c.dataInscricao || hoje(); const nSem = ctx?ctx.semanas:(c.semanasSel||[]).length;
@@ -815,10 +892,21 @@ function campanhaAplicavel(c, ctx){
 // decomposição do valor
 function breakdown(c){
   const p=getD().precos;
-  const nDias=(c.avulsoDias||[]).length, nSem=(c.semanasSel||[]).length, nMes=(c.mesesSel||[]).length;
-  const subtotal = nDias*precoDiaAvulso() + precoSemanas(nSem) + nMes*(+p.precoMes||0);
+  // decompõe SEMPRE em semanas inteiras + dias soltos (5 dias de uma semana = 1 semana, mais barato que 5 avulso)
+  const dec=decomporDiasCrianca(c);
+  const nSem=dec.fullWeeks, nDias=dec.avulsoDays;
+  const periodDias=diasUteisPeriodo().length;
+  const totalEsc=(p.inscricoes||[]).find(x=>x.total);
+  let subtotal, dAtletaBase;
+  if(totalEsc && dec.totalDias>0 && dec.totalDias===periodDias){
+    // frequenta o período TODO → usa o preço do escalão "Total"
+    subtotal = +totalEsc.preco||0; dAtletaBase = +totalEsc.descontoArca||0;
+  } else {
+    subtotal = precoSemanas(nSem) + nDias*precoDiaAvulso();
+    dAtletaBase = descArcaSemanas(nSem) + nDias*descArcaAvulso();
+  }
   // candidatos a desconto (não acumuláveis)
-  const dAtleta = c.atleta ? (descArcaSemanas(nSem) + nMes*(+p.descontoArcaMes||0)) : 0;
+  const dAtleta = c.atleta ? dAtletaBase : 0;
   const di=p.descontoIrmao||{};
   const dIrmao = c.temIrmao ? (di.tipo==='%'? subtotal*((+di.valor||0)/100) : di.tipo==='€/semana'? (+di.valor||0)*nSem : (+di.valor||0)) : 0;
   let desconto=0, descontoLabel='';
@@ -842,6 +930,16 @@ function diasDaCriancaEm(c, semanas, diasUteis){
   return set;
 }
 function diasDaCrianca(c){ return diasDaCriancaEm(c, semanasPeriodo(), diasUteisPeriodo()); }
+// decompõe os dias frequentados em SEMANAS INTEIRAS + dias soltos (avulso),
+// mesmo que os dias tenham sido escolhidos um a um — 5 dias de uma semana contam como 1 semana (mais barato)
+function decomporDiasCriancaEm(c, semanas){
+  const attended = diasDaCriancaEm(c, semanas, diasUteisPeriodo());
+  const usados=new Set(); let fullWeeks=0;
+  (semanas||[]).forEach(s=>{ if(s.dias.length && s.dias.every(d=>attended.has(d))){ fullWeeks++; s.dias.forEach(d=>usados.add(d)); } });
+  let avulsoDays=0; attended.forEach(d=>{ if(!usados.has(d)) avulsoDays++; });
+  return {fullWeeks, avulsoDays, totalDias:attended.size};
+}
+function decomporDiasCrianca(c){ return decomporDiasCriancaEm(c, semanasPeriodo()); }
 // ---------- custos automáticos: alimentação e atividades ----------
 function precoDiaAlimentacaoDe(p){ const a=(p&&p.alimentacaoDiaria)||{}; return (+a.almoco||0)+(+a.lancheManha||0)+(+a.lancheTarde||0); }
 function precoDiaAlimentacao(){ return precoDiaAlimentacaoDe(getD().precos); }
@@ -1036,7 +1134,10 @@ function filtraCri(){
 }
 function renderCriancas(){
   const el=$('sec-criancas'); if(precisaEdicao(el)) return;
-  const d=getD(); const pend=(d.preInscricoes||[]);
+  const d=getD(); const ed=getEdicao();
+  const cloudPend=(_preCloud||[]).filter(r=>!r.edicao_id||!ed||!ed.id||r.edicao_id===ed.id).map(r=>Object.assign({__src:'cloud', __rowId:r.id}, r.dados||{}));
+  const localPend=(d.preInscricoes||[]).map(p=>Object.assign({__src:'local'}, p));
+  const pend=cloudPend.concat(localPend);
   const est=estadoLink(d); const cfg=getInscOnline(d); const vagas=cfg.max>0?Math.max(0,cfg.max-nInscricoesAtuais(d)):null;
   const cardLink = modoAno()? '' : `<div class="card">
     <div class="card-head"><div class="card-title">🔗 Inscrições online (link para os pais)</div><span class="chip ${est.aberto?'green':'red'}">${est.aberto?'ABERTO':'ENCERRADO'}</span></div>
@@ -1046,8 +1147,10 @@ function renderCriancas(){
       <div class="fg"><label>Prazo limite <span class="muted">(fecha depois desta data)</span></label><input id="io-prazo" type="date" value="${esc(cfg.prazo)}"></div>
       <div class="fg"><label>Nº máximo de inscrições <span class="muted">(0 = sem limite)</span></label><input id="io-max" type="number" min="0" step="1" value="${esc(cfg.max)}"></div>
     </div>
+    <div class="muted" style="margin-bottom:8px;font-size:12px">${CLOUD_ON()?'A página pública mostra <b>este período</b>. Depois de mudares valores, datas ou definições do link, carrega em <b>Publicar página pública</b> para os pais verem a versão atualizada.':'⚠️ Estás em <b>modo local</b> — o link dos pais só funciona com sessão iniciada (cloud).'}</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
       <button class="btn-sm btn-add" onclick="guardarInscOnline()">💾 Guardar definições do link</button>
+      <button class="btn-sm btn-add" onclick="publicarConfigPublica(false)">🌐 Publicar página pública</button>
       <button class="btn-sm btn-neutral" onclick="copiarLinkInscricao()">🔗 Copiar link p/ pais</button>
       <button class="btn-sm btn-neutral" onclick="abrirFichaPublica()">👪 Pré-visualizar ficha</button>
     </div></div>`;
@@ -1055,15 +1158,18 @@ function renderCriancas(){
     <div class="card-head"><div class="card-title">📥 Pré-inscrições online · ${pend.length} por aprovar</div></div>
     <div class="muted" style="margin-bottom:10px">Inscrições feitas pelos pais. Confirma os dados, atribui o grupo depois de aprovar e valida os descontos.</div>
     <div class="table-wrap"><table><thead><tr><th>Criança</th><th>Responsável</th><th>Inscrição</th><th>Pedidos</th><th>Anexos</th><th class="right">Valor</th><th></th></tr></thead><tbody>
-    ${pend.map(p=>{ const ax=p.anexos||{}; const anexTag=(k,l)=> (ax[k]&&ax[k].dataUrl)?`<span class="chip green" style="cursor:pointer" onclick="verAnexo('${p.id}','${k}',true)" title="Abrir">✓ ${l}</span> `:`<span class="chip red">✗ ${l}</span> `;
+    ${pend.map(p=>{ const ax=p.anexos||{}; const isCloud=p.__src==='cloud'; const ref=isCloud?p.__rowId:p.id;
+      const anexTag=(k,l)=> (ax[k]&&ax[k].dataUrl)?(isCloud?`<span class="chip green" style="cursor:pointer" onclick="verAnexoPreCloud('${ref}','${k}')" title="Abrir">✓ ${l}</span> `:`<span class="chip green" style="cursor:pointer" onclick="verAnexo('${ref}','${k}',true)" title="Abrir">✓ ${l}</span> `):`<span class="chip red">✗ ${l}</span> `;
+      const aprovar=isCloud?`aprovarPreCloud('${ref}')`:`aprovarPreInscricao('${ref}')`;
+      const rejeitar=isCloud?`rejeitarPreCloud('${ref}')`:`rejeitarPreInscricao('${ref}')`;
       return `<tr>
-      <td><b>${esc(p.nome)}</b>${p.nasc?`<div class="muted">${idade(p.nasc)}</div>`:''}</td>
+      <td><b>${esc(p.nome)}</b> ${isCloud?'<span class="chip blue" style="font-size:9.5px">🌐 online</span>':''}${p.nasc?`<div class="muted">${idade(p.nasc)}</div>`:''}</td>
       <td>${esc(p.resp||'')}${p.tel?`<div class="muted">${esc(p.tel)}</div>`:''}</td>
       <td class="muted">${esc(detalheInsc(p))}</td>
       <td>${p.atleta?'<span class="chip blue">🏅 atleta</span> ':''}${p.temIrmao?'<span class="chip amber">👧👦 irmão</span>':''}${!p.atleta&&!p.temIrmao?'<span class="muted">—</span>':''}</td>
       <td style="font-size:10.5px">${anexTag('comprovativo','compr.')}${anexTag('ccFrente','CC F')}${anexTag('ccVerso','CC V')}</td>
       <td class="right">${fmt(p.valor)}</td>
-      <td class="right" style="white-space:nowrap"><button class="btn-sm btn-add" onclick="aprovarPreInscricao('${p.id}')">✔️ Aprovar</button> <button class="btn-sm btn-del" onclick="rejeitarPreInscricao('${p.id}')">✕</button></td>
+      <td class="right" style="white-space:nowrap"><button class="btn-sm btn-add" onclick="${aprovar}">✔️ Aprovar</button> <button class="btn-sm btn-del" onclick="${rejeitar}">✕</button></td>
     </tr>`; }).join('')}
     </tbody></table></div>
   </div>`:'';
@@ -1079,16 +1185,11 @@ function renderCriancas(){
   renderCriancasTabela();
 }
 /* ---------- Ficha pública (pré-visualização) ---------- */
-function abrirFichaPublica(){
+// corpo da ficha (partilhado entre a pré-visualização da coordenação e a página pública dos pais)
+function fichaPublicaCamposHTML(){
   const lim=limitesNasc(); const di=getD().precos.descontoIrmao||{};
   const descIrmaoTxt = di.tipo==='€/semana'? `${fmt(di.valor)} por irmão, por cada semana inscrita` : di.tipo==='%'? `${di.valor}% por irmão` : `${fmt(di.valor)} por irmão`;
-  _cCur={avulsoDias:[],semanasSel:[],mesesSel:[],atleta:false,temIrmao:false,dataInscricao:hoje()};
-  _valorManual=false; _modalCriancaNovo=false;
-  const c=_cCur;
-  const _estL=estadoLink();
-  modal('👪 Ficha de Inscrição — ATL ARCAKIDS', `
-    ${_estL.aberto?'':`<div class="info" style="background:#FDECEA;border-color:#F0855F;color:#7a2e12"><b>⛔ Inscrições encerradas.</b> ${esc(_estL.motivo)}<br><span class="muted">(Pré-visualização — o botão de envio está desativado enquanto estiver encerrado.)</span></div>`}
-    <div class="info">Pré-visualização da ficha que os pais vão preencher. Idade permitida: <b>6 a 12 anos</b>. O valor é calculado automaticamente.</div>
+  return `
     <div class="subt">Dados da criança</div>
     <div class="grid2">
       <div class="fg"><label>Nome completo *</label><input id="c-nome"></div>
@@ -1112,6 +1213,7 @@ function abrirFichaPublica(){
       <div class="fg"><label>Email</label><input id="c-email" type="email"></div>
       <div class="fg"><label>Contacto de emergência (nome + tel) *</label><input id="c-emerg"></div>
     </div>
+    ${autorizadosHTML()}
     <div class="subt">Inscrição</div>
     <div class="muted" style="margin-bottom:8px">Escolhe as semanas inteiras e, se precisares, junta dias avulso (ex.: 1 semana + 2 dias).</div>
     <div id="c-blocos"></div>
@@ -1138,9 +1240,124 @@ function abrirFichaPublica(){
     <div class="grid2">
       <div class="fg"><label>🪪 CC da criança — frente *</label><input id="c-anexo-ccf" type="file" accept="image/*,application/pdf"></div>
       <div class="fg"><label>🪪 CC da criança — verso *</label><input id="c-anexo-ccv" type="file" accept="image/*,application/pdf"></div>
-    </div>`,
+    </div>`;
+}
+function abrirFichaPublica(){
+  _cCur={avulsoDias:[],semanasSel:[],mesesSel:[],atleta:false,temIrmao:false,dataInscricao:hoje()};
+  _valorManual=false; _modalCriancaNovo=false;
+  const _estL=estadoLink();
+  modal('👪 Ficha de Inscrição — ATL ARCAKIDS', `
+    ${_estL.aberto?'':`<div class="info" style="background:#FDECEA;border-color:#F0855F;color:#7a2e12"><b>⛔ Inscrições encerradas.</b> ${esc(_estL.motivo)}<br><span class="muted">(Pré-visualização — o botão de envio está desativado enquanto estiver encerrado.)</span></div>`}
+    <div class="info">Pré-visualização da ficha que os pais vão preencher. Idade permitida: <b>6 a 12 anos</b>. O valor é calculado automaticamente.</div>
+    ${fichaPublicaCamposHTML()}`,
     [ {txt:'Enviar inscrição', cls:'btn-add', fn:guardarPreInscricao} ]);
   renderBlocosInsc(); verIdade(); refDescontoRadio(); atualizaSugestaoPublica();
+}
+/* ============================================================
+   PÁGINA PÚBLICA DOS PAIS (link #inscricao, sem login)
+   ============================================================ */
+let _cfgPublico=null;
+function estadoLinkPublico(link){ link=link||{};
+  if(link.aberto===false) return {aberto:false, motivo:'As inscrições estão encerradas.'};
+  if(link.prazo && hoje()>link.prazo) return {aberto:false, motivo:'O prazo de inscrição terminou ('+fmtData(link.prazo)+').'};
+  if(link.max>0 && (link.atuais||0)>=link.max) return {aberto:false, motivo:'Foi atingido o número máximo de inscrições ('+link.max+').'};
+  return {aberto:true, vagas: link.max>0?Math.max(0,link.max-(link.atuais||0)):null};
+}
+function pubHero(sub){ return `<div class="pub-hero">☀️ ATL ARCAKIDS${sub?`<span class="pub-sub">${esc(sub)}</span>`:''}</div>`; }
+async function arrancarPublico(){
+  const ls=$('login-screen'); if(ls) ls.style.display='none';
+  const app=$('app'); if(app) app.style.display='none';
+  const pub=$('pub'); pub.style.display='block';
+  pub.innerHTML=`<div class="pub-wrap">${pubHero('')}<div class="pub-card"><div class="empty">A carregar as inscrições…</div></div></div>`;
+  let cfg=null;
+  try{ const rows=await supaFetch('atl_publico?chave=eq.config&select=valor'); if(rows&&rows[0]) cfg=rows[0].valor; }
+  catch(e){ console.warn('config pública',e); }
+  if(!cfg){ pub.innerHTML=`<div class="pub-wrap">${pubHero('')}<div class="pub-card"><h2>Inscrições indisponíveis</h2><p>De momento não há um período de inscrições aberto online. Tenta novamente mais tarde ou contacta a ARCA d'Ajuda.</p></div></div>`; return; }
+  _cfgPublico=cfg;
+  // monta um período/dados temporários (na chave __PUB__, para não mexer nos dados reais) para os cálculos funcionarem
+  edicoes=[{id:'__PUB__', nome:cfg.nome||'ATL', ano:'', dataInicio:cfg.dataInicio||'', dataFim:cfg.dataFim||''}];
+  edicaoAtiva='__PUB__';
+  const dd=dadosVazios(); dd.precos=normalizaPrecos(cfg.precos||{}); dd.inscricaoOnline=cfg.link||{aberto:true};
+  LS.set('atl_ed___PUB__', dd);
+  renderPaginaPublica(cfg);
+}
+function renderPaginaPublica(cfg){
+  const pub=$('pub'); const est=estadoLinkPublico(cfg.link);
+  if(!est.aberto){
+    pub.innerHTML=`<div class="pub-wrap">${pubHero(cfg.nome||'')}<div class="pub-card"><div class="info" style="background:#FDECEA;border-color:#F0855F;color:#7a2e12"><b>⛔ Inscrições encerradas.</b> ${esc(est.motivo)}</div><p class="muted">Para mais informações contacta a ARCA d'Ajuda.</p></div></div>`;
+    return;
+  }
+  _cCur={avulsoDias:[],semanasSel:[],mesesSel:[],atleta:false,temIrmao:false,dataInscricao:hoje()};
+  _valorManual=false; _modalCriancaNovo=false;
+  pub.innerHTML=`<div class="pub-wrap">${pubHero('Ficha de Inscrição · '+(cfg.nome||''))}
+    <div class="pub-card">
+      <div class="info">Preenche a ficha do teu educando. Idade permitida: <b>6 a 12 anos</b>. O valor é calculado automaticamente.${est.vagas!=null?` <b>Vagas disponíveis: ${est.vagas}.</b>`:''}</div>
+      ${fichaPublicaCamposHTML()}
+      <div style="margin-top:16px"><button class="btn btn-primary" style="width:100%;padding:13px" onclick="enviarInscricaoPublica()">📨 Enviar inscrição</button></div>
+      <div class="pub-foot">ARCA d'Ajuda · ATL ARCAKIDS</div>
+    </div></div>`;
+  renderBlocosInsc(); verIdade(); refDescontoRadio(); atualizaSugestaoPublica();
+}
+async function enviarInscricaoPublica(){
+  const est=estadoLinkPublico(_cfgPublico&&_cfgPublico.link); if(!est.aberto){ toast('Inscrições encerradas: '+est.motivo,false); return; }
+  const nome=$('c-nome').value.trim(); if(!nome){ toast('Indica o nome da criança.',false); return; }
+  const resp=$('c-resp').value.trim(); const tel=$('c-tel').value.trim();
+  if(!resp||!tel){ toast('Indica o nome e o telemóvel do encarregado.',false); return; }
+  const nascV=$('c-nasc').value;
+  if(nascV){ const a=idadeEm(nascV, refIdadeISO()); if(a==null||a<6||a>12){ toast('Idade fora do limite (6 a 12 anos à data de início do ATL).',false); return; } }
+  _cCur.semanasSel=[...document.querySelectorAll('.ck-sem:checked')].map(x=>x.value);
+  _cCur.mesesSel=[];
+  const fComp=$('c-anexo-comp').files[0], fCcf=$('c-anexo-ccf').files[0], fCcv=$('c-anexo-ccv').files[0];
+  if(!fComp||!fCcf||!fCcv){ toast('Anexa os 3 documentos: comprovativo de pagamento e CC da criança (frente e verso). São obrigatórios.',false); return; }
+  toast('A enviar… aguarda um momento.');
+  const [comprovativo,ccFrente,ccVerso]=await Promise.all([ comprimirFicheiro(fComp), comprimirFicheiro(fCcf), comprimirFicheiro(fCcv) ]);
+  if(!comprovativo||!ccFrente||!ccVerso){ toast('Não consegui ler um dos anexos. Tenta com uma foto (JPG/PNG).',false); return; }
+  const obj={ submetido:hoje(), nome, nasc:nascV, ccTipo:$('c-cctipo').value, cc:$('c-cc').value.trim(), nif:$('c-nif').value.trim(), ccVal:$('c-ccval').value,
+    alergias:$('c-alergias').value.trim(), obs:$('c-obs').value.trim(),
+    resp, parentesco:$('c-parent').value, tel, email:$('c-email').value.trim(), emergencia:$('c-emerg').value.trim(),
+    dataInscricao:hoje(), avulsoDias:_cCur.avulsoDias||[], semanasSel:_cCur.semanasSel||[], mesesSel:[], autorizados:lerAutorizados(),
+    atleta:!!_cCur.atleta, temIrmao:!!_cCur.temIrmao, valor:calcValor(_cCur), anexos:{comprovativo,ccFrente,ccVerso} };
+  try{ await supaFetch('atl_preinscricoes','POST',{ edicao_id:(_cfgPublico&&_cfgPublico.edicaoId)||'', dados:obj, estado:'pendente' }); }
+  catch(e){ console.warn('enviar pré',e); toast('Falha ao enviar. Verifica a ligação à internet e tenta novamente.',false); return; }
+  $('pub').innerHTML=`<div class="pub-wrap">${pubHero('')}<div class="pub-card" style="text-align:center"><div style="font-size:52px;line-height:1">✅</div><h2>Inscrição enviada!</h2><p>Recebemos a inscrição de <b>${esc(nome)}</b>. A coordenação vai validar os dados e os descontos e entrará em contacto.</p><p class="muted">Obrigado! Já podes fechar esta página.</p></div></div>`;
+}
+/* ---------- coordenação: publicar a página pública e ler pré-inscrições da cloud ---------- */
+let _preCloud=[];
+async function publicarConfigPublica(silent){
+  if(!CLOUD_ON()){ if(!silent) toast('Para o link dos pais funcionar tens de entrar com a conta (não em modo local).',false); return false; }
+  if(modoAno()){ if(!silent) toast('Escolhe um período específico para publicar a página pública.',false); return false; }
+  const ed=getEdicao(); const d=getD();
+  if(!ed||!ed.dataInicio){ if(!silent) toast('Define as datas do período antes de publicar a página pública.',false); return false; }
+  const link=getInscOnline(d); link.atuais=nInscricoesAtuais(d);
+  const cfg={ edicaoId:ed.id, nome:ed.nome, dataInicio:ed.dataInicio, dataFim:ed.dataFim,
+    precos:{ inscricoes:d.precos.inscricoes, descontoIrmao:d.precos.descontoIrmao, campanhas:d.precos.campanhas, alimentacaoDiaria:d.precos.alimentacaoDiaria },
+    link, atualizado:new Date().toISOString() };
+  try{ await supaFetch('atl_publico','POST',{chave:'config', valor:cfg, atualizado_em:new Date().toISOString()},{'Prefer':'resolution=merge-duplicates'}); if(!silent) toast('Página pública atualizada. ✅'); return true; }
+  catch(e){ console.warn('publicar config',e); if(!silent) toast('Não consegui atualizar a página pública. Tenta de novo.',false); return false; }
+}
+async function carregarPreInscricoesCloud(){
+  if(!CLOUD_ON()){ _preCloud=[]; return; }
+  try{ const rows=await supaFetch('atl_preinscricoes?select=id,criado_em,edicao_id,dados,estado&estado=eq.pendente&order=criado_em.asc'); _preCloud=rows||[]; }
+  catch(e){ console.warn('ler pré-inscrições',e); _preCloud=[]; return; }
+  if(tabAtual==='criancas') renderCriancas();
+}
+function verAnexoPreCloud(rowId,key){ const r=(_preCloud||[]).find(x=>x.id===rowId); const ax=r&&r.dados&&r.dados.anexos&&r.dados.anexos[key]; verAnexoData(key, ax, (r&&r.dados&&r.dados.nome)||''); }
+async function aprovarPreCloud(rowId){ if(guardaModoAno()) return;
+  const row=(_preCloud||[]).find(r=>r.id===rowId); if(!row){ toast('Pré-inscrição não encontrada.',false); return; }
+  const p=row.dados||{}; const numero=proximoNumero();
+  const c=Object.assign({}, p, {id:uid(), numero, grupo:'', descontoVerificado:false, pago:0, pagamento:'', notaInscricao:'Inscrição feita online — validar dados e descontos.', lembrete:''});
+  delete c.submetido;
+  const d=getD(); d.criancas.push(c); setD(d);
+  try{ await supaFetch('atl_preinscricoes?id=eq.'+encodeURIComponent(rowId),'DELETE'); }catch(e){ console.warn(e); }
+  _preCloud=(_preCloud||[]).filter(r=>r.id!==rowId);
+  publicarConfigPublica(true);
+  renderCriancas(); toast('Pré-inscrição aprovada (Nº '+numero+'). Atribui o grupo e confirma os descontos.');
+}
+async function rejeitarPreCloud(rowId){ if(!confirm('Rejeitar/eliminar esta pré-inscrição online?')) return;
+  try{ await supaFetch('atl_preinscricoes?id=eq.'+encodeURIComponent(rowId),'DELETE'); }catch(e){ console.warn(e); }
+  _preCloud=(_preCloud||[]).filter(r=>r.id!==rowId);
+  publicarConfigPublica(true);
+  renderCriancas(); toast('Pré-inscrição removida.');
 }
 function atualizaSugestaoPublica(){ atualizaSugestao(false); const v=calcValor(_cCur); const el=$('c-valor-pub'); if(el) el.textContent=fmt(v); }
 async function guardarPreInscricao(){
@@ -1162,7 +1379,7 @@ async function guardarPreInscricao(){
     nasc:nascV, ccTipo:$('c-cctipo').value, cc:$('c-cc').value.trim(), nif:$('c-nif').value.trim(), ccVal:$('c-ccval').value,
     alergias:$('c-alergias').value.trim(), obs:$('c-obs').value.trim(),
     resp, parentesco:$('c-parent').value, tel, email:$('c-email').value.trim(), emergencia:$('c-emerg').value.trim(),
-    dataInscricao:hoje(), avulsoDias:_cCur.avulsoDias||[], semanasSel:_cCur.semanasSel||[], mesesSel:_cCur.mesesSel||[],
+    dataInscricao:hoje(), avulsoDias:_cCur.avulsoDias||[], semanasSel:_cCur.semanasSel||[], mesesSel:_cCur.mesesSel||[], autorizados:lerAutorizados(),
     atleta:!!_cCur.atleta, temIrmao:!!_cCur.temIrmao, valor:calcValor(_cCur),
     anexos:{ comprovativo, ccFrente, ccVerso } };
   d.preInscricoes=d.preInscricoes||[]; d.preInscricoes.push(obj); setD(d);
@@ -1180,8 +1397,8 @@ function rejeitarPreInscricao(id){ if(!confirm('Rejeitar/eliminar esta pré-insc
 /* ---------- descontos: escolha única (nenhum / atleta / irmão) ---------- */
 function setDescontoOpcao(v){ _cCur.atleta=(v==='atleta'); _cCur.temIrmao=(v==='irmao'); atualizaSugestao(true); }
 function refDescontoRadio(){ const v=_cCur.atleta?'atleta':_cCur.temIrmao?'irmao':'nenhum'; const el=document.querySelector('input[name="c-desc"][value="'+v+'"]'); if(el) el.checked=true; }
-function guardarInscOnline(){ if(guardaModoAno()) return; const d=getD(); d.inscricaoOnline={ aberto: $('io-aberto').value==='1', prazo: $('io-prazo').value||'', max: parseInt($('io-max').value)||0 }; setD(d); renderCriancas(); toast('Definições do link guardadas.'); }
-function copiarLinkInscricao(){ const url=location.href.split('#')[0]+'#inscricao'; if(navigator.clipboard){ navigator.clipboard.writeText(url).then(()=>toast('🔗 Link copiado! Envia aos pais.')).catch(()=>prompt('Copia o link da inscrição:', url)); } else prompt('Copia o link da inscrição:', url); }
+function guardarInscOnline(){ if(guardaModoAno()) return; const d=getD(); d.inscricaoOnline={ aberto: $('io-aberto').value==='1', prazo: $('io-prazo').value||'', max: parseInt($('io-max').value)||0 }; setD(d); publicarConfigPublica(true); renderCriancas(); toast('Definições do link guardadas.'); }
+function copiarLinkInscricao(){ publicarConfigPublica(true); const url=location.href.split('#')[0]+'#inscricao'; if(navigator.clipboard){ navigator.clipboard.writeText(url).then(()=>toast('🔗 Link copiado! Envia aos pais.')).catch(()=>prompt('Copia o link da inscrição:', url)); } else prompt('Copia o link da inscrição:', url); }
 /* ---------- anexos: comprimir imagem (baixa qualidade) e ver ---------- */
 function comprimirFicheiro(file){
   return new Promise(res=>{
@@ -1234,11 +1451,14 @@ function anexosEstadoEdit(){
 function verAnexoCur(key){ const ax=(_cCur&&_cCur.anexos&&_cCur.anexos[key]); verAnexoData(key, ax, (_cCur&&_cCur.nome)||''); }
 function removerAnexoCur(key){ if(_cCur&&_cCur.anexos){ delete _cCur.anexos[key]; } const el=$('c-docs-estado'); if(el) el.innerHTML=anexosEstadoEdit(); toast('Documento removido — guarda a ficha para confirmar.'); }
 function detalheInsc(c){
+  let nSem=0, nDias=0, total=false;
+  try{ const dec=decomporDiasCrianca(c); nSem=dec.fullWeeks; nDias=dec.avulsoDays; const pd=diasUteisPeriodo().length; total=dec.totalDias>0 && dec.totalDias===pd; }catch(e){}
+  if(!nSem && !nDias){ nSem=(c.semanasSel||[]).length; nDias=(c.avulsoDias||[]).length; }
   const parts=[];
-  if((c.avulsoDias||[]).length) parts.push(c.avulsoDias.length+' dia(s)');
-  if((c.semanasSel||[]).length) parts.push(c.semanasSel.length+' semana(s)');
-  if((c.mesesSel||[]).length) parts.push(c.mesesSel.length+' mês(es)');
+  if(nSem) parts.push(nSem+(nSem===1?' semana':' semanas'));
+  if(nDias) parts.push(nDias+(nDias===1?' dia':' dias'));
   let s = parts.join(' + ')||'—';
+  if(total && (nSem||nDias)) s='Total (todos os dias)';
   const m=[]; if(c.atleta)m.push('🏅atleta'); if(c.temIrmao)m.push('👧👦irmão');
   return s + (m.length?' · '+m.join(', '):'');
 }
@@ -1314,7 +1534,7 @@ function aplicarRascunho(r){
 }
 function abrirModalCrianca(id){ if(guardaModoAno()) return;
   const d=getD(); const p=d.precos;
-  const base = {avulsoDias:[],semanasSel:[],mesesSel:[],atleta:false,temIrmao:false,grupo:'',descontoVerificado:false,dataInscricao:hoje(),notaInscricao:'',lembrete:'',valor:'',pago:''};
+  const base = {avulsoDias:[],semanasSel:[],mesesSel:[],autorizados:[],atleta:false,temIrmao:false,grupo:'',descontoVerificado:false,dataInscricao:hoje(),notaInscricao:'',lembrete:'',valor:'',pago:''};
   _cCur = id? Object.assign(base, d.criancas.find(x=>x.id===id)) : base;
   const c=_cCur; const lim=limitesNasc();
   modal(id?'Editar inscrição':'Nova inscrição', `
@@ -1341,6 +1561,7 @@ function abrirModalCrianca(id){ if(guardaModoAno()) return;
       <div class="fg"><label>Email</label><input id="c-email" type="email" value="${esc(c.email||'')}"></div>
       <div class="fg"><label>Contacto emergência (nome + tel)</label><input id="c-emerg" value="${esc(c.emergencia||'')}"></div>
     </div>
+    ${autorizadosHTML()}
     <div class="subt">Inscrição</div>
     <div class="fg" style="max-width:220px"><label>Data da inscrição</label><input id="c-datains" type="date" value="${esc(c.dataInscricao||hoje())}" onchange="_cCur.dataInscricao=this.value;atualizaSugestao(true)"></div>
     <div class="muted" style="margin-bottom:8px">Trabalhamos por semanas: escolhe as semanas inteiras e, se precisar, junta dias avulso (ex.: 1 semana + 2 dias).</div>
@@ -1423,6 +1644,27 @@ function campoNota(idBase, label, valor){
   </div>`;
 }
 function toggleNota(idBase, sim){ const t=$(idBase); if(!t) return; t.style.display=sim?'':'none'; if(sim){ t.focus(); } else { t.value=''; } }
+/* ---------- pessoas autorizadas a entregar/levantar a criança ---------- */
+function linhaAutorizado(a,i){ a=a||{};
+  return `<div class="grid3 au-row" data-i="${i}" style="margin-bottom:6px">
+    <div class="fg"><input class="au-nome" placeholder="Nome" value="${esc(a.nome||'')}"></div>
+    <div class="fg"><input class="au-parent" placeholder="Parentesco / relação" value="${esc(a.parentesco||'')}"></div>
+    <div class="fg" style="display:flex;gap:6px"><input class="au-doc" placeholder="Nº doc. identificação" value="${esc(a.doc||'')}"><button type="button" class="btn-sm btn-del" title="Remover" onclick="removeAutorizado(${i})">✕</button></div>
+  </div>`;
+}
+function autorizadosHTML(){
+  const arr=(_cCur&&_cCur.autorizados)||[];
+  return `<div class="subt">Pessoas autorizadas a entregar / levantar a criança</div>
+    <div class="muted" style="margin-bottom:6px;font-size:12px">Quem, <b>além do encarregado de educação</b>, pode entregar ou levantar a criança (ex.: avó, tio, vizinho). Estas pessoas ficam autorizadas e assinam no documento. Acrescenta as que precisares.</div>
+    <div id="c-autorizados">${arr.length?arr.map((a,i)=>linhaAutorizado(a,i)).join(''):'<div class="muted" style="font-size:12px">Sem pessoas autorizadas adicionadas.</div>'}</div>
+    <button type="button" class="btn-sm btn-add" style="margin-top:6px" onclick="addAutorizado()">+ Pessoa autorizada</button>`;
+}
+function lerAutorizados(){
+  return [...document.querySelectorAll('#c-autorizados .au-row')].map(r=>({ nome:(r.querySelector('.au-nome')||{}).value?.trim()||'', parentesco:(r.querySelector('.au-parent')||{}).value?.trim()||'', doc:(r.querySelector('.au-doc')||{}).value?.trim()||'' })).filter(a=>a.nome||a.parentesco||a.doc);
+}
+function pintarAutorizados(){ const el=$('c-autorizados'); if(!el) return; const arr=_cCur.autorizados||[]; el.innerHTML=arr.length?arr.map((a,i)=>linhaAutorizado(a,i)).join(''):'<div class="muted" style="font-size:12px">Sem pessoas autorizadas adicionadas.</div>'; }
+function addAutorizado(){ _cCur.autorizados=lerAutorizados(); _cCur.autorizados.push({nome:'',parentesco:'',doc:''}); pintarAutorizados(); }
+function removeAutorizado(i){ _cCur.autorizados=lerAutorizados(); _cCur.autorizados.splice(i,1); pintarAutorizados(); }
 function atualizaSugestao(preencher){
   const s=$('c-sugestao'); const vi=$('c-valor'); if(!s) return;
   const b=breakdown(_cCur);
@@ -1458,6 +1700,7 @@ async function guardarCrianca(id){
     alergias:$('c-alergias').value.trim(), obs:$('c-obs').value.trim(),
     resp:$('c-resp').value.trim(), parentesco:$('c-parent').value, tel:$('c-tel').value.trim(), email:$('c-email').value.trim(), emergencia:$('c-emerg').value.trim(),
     dataInscricao:$('c-datains').value||hoje(), avulsoDias:_cCur.avulsoDias||[], semanasSel:_cCur.semanasSel||[], mesesSel:_cCur.mesesSel||[],
+    autorizados:lerAutorizados(),
     atleta:!!_cCur.atleta, temIrmao:!!_cCur.temIrmao, grupo:_cCur.grupo||'',
     descontoVerificado:!!_cCur.descontoVerificado, notaInscricao:_cCur.notaInscricao||'', lembrete:_cCur.lembrete||'',
     cancelada:!!_cCur.cancelada, dataCancel:_cCur.dataCancel||'', motivoCancel:_cCur.motivoCancel||'',
@@ -1523,7 +1766,7 @@ function renderDespesasLista(){
 }
 function renderDespesasAlimentacao(){
   const d=getD(); const p=d.precos.alimentacaoDiaria||{}; const pd=precoDiaAlimentacao();
-  if(modoAno()) return `<div class="card"><div class="empty">A alimentação por dia é por período (as datas variam). Escolhe um período específico no seletor do topo.</div></div>`;
+  if(modoAno()) return `<div class="card"><div class="empty">A alimentação por dia é por período (as datas variam). Escolhe um período específico no seletor de períodos (menu lateral).</div></div>`;
   const dias=diasUteisPeriodo();
   if(!dias.length) return `<div class="card"><div class="empty">Este período não tem datas. Define-as no período.</div></div>`;
   const att=criancasAtivas(d).map(diasDaCrianca);
@@ -1867,7 +2110,7 @@ function verificarFimMes(){
 }
 function lembreteFimMes(key, alvo){
   modal('📅 Fecho do mês — '+MESES[alvo.m]+' '+alvo.y, `
-    <div class="info">Chegou o fim do mês. Convém <b>imprimir todos os movimentos de ${MESES[alvo.m]} ${alvo.y}</b> (receitas, despesas e conta) para arquivo.</div>
+    <div class="info">Chegou o fim do mês. Convém <b>imprimir todos os movimentos de ${MESES[alvo.m]} ${alvo.y}</b> (receitas e despesas) para arquivo.</div>
     <button class="btn btn-primary" style="width:auto;padding:11px 20px" onclick="imprimirMovimentosMes('${key}')">🖨️ Imprimir movimentos do mês</button>`,
     [ {txt:'✔️ Já tratei (não mostrar até ao próximo mês)',cls:'btn-neutral',fn:()=>{ save('atl_lembreteMes',key); fecharModal(); toast('Ok, até ao próximo mês.'); }} ]);
 }
