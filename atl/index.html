@@ -69,6 +69,8 @@
   .side-mini{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:7px 9px;font-size:12px;font-weight:700;cursor:pointer}
   .side-mini:hover{background:rgba(255,255,255,.28)}
   .side-period-btns .side-mini{flex:1}
+  .btn-sm.piscar{animation:piscaBtn 1s ease-in-out infinite;box-shadow:0 0 0 0 rgba(216,90,48,.6)}
+  @keyframes piscaBtn{0%,100%{background:#FDECEA;box-shadow:0 0 0 0 rgba(216,90,48,.55)}50%{background:#F7B199;box-shadow:0 0 0 5px rgba(216,90,48,0)}}
   .side-drive-aviso{width:100%;margin-top:6px;background:#FFE9A8;color:#6b4e00;border:1px solid #E6B800;border-radius:8px;padding:7px 9px;font-size:11.5px;font-weight:800;cursor:pointer;line-height:1.25;text-align:center}
   .side-drive-aviso:hover{background:#FFDF85}
   #cloud-pill{font-size:11px;font-weight:700;padding:5px 9px;border-radius:20px;background:rgba(255,255,255,.18)}
@@ -476,7 +478,7 @@ function precosDefault(){
   const packs = [1,2,3,4,5,6,7,8,9].map(n=>({id:uid(), label:n+(n===1?' semana':' semanas'), semanas:n, avulso:false, preco:0, descontoArca:0}));
   return {
     inscricoes:[ {id:uid(), label:'1 dia (avulso)', semanas:0, avulso:true, preco:0, descontoArca:0}, ...packs ],
-    precoMes:0, descontoArcaMes:0,
+    precoMes:0, descontoArcaMes:0, descontoAtletaSemana:0,
     descontoIrmao:{tipo:'€', valor:0},
     campanhas:[],
     atividades:['Piscina','IlhaPark','Museu','Canoagem'].map(n=>({id:uid(),nome:n,preco:0})),
@@ -489,6 +491,7 @@ function normalizaPrecos(p){
   if(!Array.isArray(p.inscricoes)||!p.inscricoes.length) p.inscricoes = precosDefault().inscricoes;
   p.inscricoes.forEach(x=>{ if(!x.id) x.id=uid(); if(x.descontoArca==null) x.descontoArca=0; });
   if(p.precoMes==null) p.precoMes=0; if(p.descontoArcaMes==null) p.descontoArcaMes=0;
+  if(p.descontoAtletaSemana==null){ const one=(p.inscricoes||[]).find(x=>!x.avulso&&+x.semanas===1); p.descontoAtletaSemana = one?(+one.descontoArca||0):0; }
   if(!p.descontoIrmao||typeof p.descontoIrmao!=='object') p.descontoIrmao={tipo:'€', valor:(p.descontoIrmaos||0)};
   if(!Array.isArray(p.campanhas)) p.campanhas=[];
   if(!Array.isArray(p.atividades)) p.atividades=precosDefault().atividades;
@@ -911,14 +914,15 @@ function renderPrecos(){
     <div class="card">
       <div class="card-head"><div class="card-title">🎫 Inscrições</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn-sm btn-neutral" title="Cria os escalões certos para as datas deste período" onclick="gerarEscaloesPeriodo()">🔄 Gerar para este período</button><button class="btn-sm btn-add" onclick="addPacote()">+ Escalão</button></div></div>
       <div class="muted" style="margin-bottom:10px">Escalões <b>deste período</b>: <b>1 dia (avulso)</b> — está sempre —, <b>1, 2, 3… semanas</b> (conforme as semanas inteiras do período) e o <b>Total</b> (tudo: as semanas + os dias soltos). Só defines os preços. Quem escolhe os dias paga sempre pelo melhor encaixe: 5 dias de uma semana contam como <b>1 semana</b> (nunca 5 avulso) e quem leva tudo paga o <b>Total</b>. Usa <b>🔄 Gerar para este período</b> para (re)criar os escalões conforme as datas.</div>
-      <div class="table-wrap"><table><thead><tr><th>Descrição</th><th class="right">Preço (€)</th><th class="right">Desc. atleta ARCA (€)</th><th></th></tr></thead><tbody id="pk-body">
+      <div class="table-wrap"><table><thead><tr><th>Descrição</th><th class="right">Preço (€)</th><th></th></tr></thead><tbody id="pk-body">
       ${p.inscricoes.map(pk=>`<tr>
         <td><input data-pk="${pk.id}" data-f="label" value="${esc(pk.label)}" style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px">${pk.avulso?'<div class="muted" style="margin-top:2px">preço × nº de dias escolhidos</div>':''}</td>
-        <td class="right"><input data-pk="${pk.id}" data-f="preco" type="number" step="0.01" value="${esc(pk.preco)}" style="width:100px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;text-align:right"></td>
-        <td class="right"><input data-pk="${pk.id}" data-f="descontoArca" type="number" step="0.01" value="${esc(pk.descontoArca)}" style="width:100px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;text-align:right"></td>
+        <td class="right"><input data-pk="${pk.id}" data-f="preco" type="number" step="0.01" value="${esc(pk.preco)}" style="width:110px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;text-align:right"></td>
         <td class="right"><button class="btn-sm btn-del" onclick="delPacote('${pk.id}')">✕</button></td>
       </tr>`).join('')}
       </tbody></table></div>
+      <div class="fg" style="max-width:380px;margin-top:12px"><label>🏅 Desconto atleta da ARCA d'Ajuda <span class="muted">(€ por cada semana completa)</span></label><input id="pk-atleta" type="number" step="0.01" value="${esc(p.descontoAtletaSemana)}"></div>
+      <div class="muted" style="font-size:12px">Só se aplica a <b>semanas inteiras</b>: 1 semana = este valor, 2 semanas = a dobrar, 3 semanas = o triplo… <b>Dias avulso ou semanas incompletas não têm desconto.</b></div>
     </div>
 
     <div class="card">
@@ -988,6 +992,7 @@ function lerValoresDoDOM(){
   document.querySelectorAll('[data-cm]').forEach(inp=>{ const cm=p.campanhas.find(x=>x.id===inp.dataset.cm); if(!cm) return; const f=inp.dataset.f; if(f==='descontoPct')cm[f]=parseFloat(inp.value)||0; else if(f==='semanas')cm[f]=inp.value===''?'':(+inp.value); else cm[f]=inp.value; });
   document.querySelectorAll('[data-ex]').forEach(inp=>{ const grp=inp.dataset.ex; const a=p[grp].find(x=>x.id===inp.dataset.id); if(!a) return; a[inp.dataset.f]= inp.dataset.f==='preco'?(parseFloat(inp.value)||0):inp.value; });
   const dt=$('di-tipo'), dv=$('di-valor'); if(dt&&dv) p.descontoIrmao={tipo:dt.value, valor:parseFloat(dv.value)||0};
+  const pa=$('pk-atleta'); if(pa) p.descontoAtletaSemana=parseFloat(pa.value)||0;
   const aa=$('al-almoco'), alm=$('al-lm'), alt=$('al-lt'); if(aa) p.alimentacaoDiaria={almoco:parseFloat(aa.value)||0, lancheManha:parseFloat(alm.value)||0, lancheTarde:parseFloat(alt.value)||0};
   return d;
 }
@@ -1041,16 +1046,14 @@ function breakdown(c){
   const nSem=dec.fullWeeks, nDias=dec.avulsoDays;
   const periodDias=diasUteisPeriodo().length;
   const totalEsc=(p.inscricoes||[]).find(x=>x.total);
-  let subtotal, dAtletaBase;
+  let subtotal;
   if(totalEsc && dec.totalDias>0 && dec.totalDias===periodDias){
-    // frequenta o período TODO → usa o preço do escalão "Total"
-    subtotal = +totalEsc.preco||0; dAtletaBase = +totalEsc.descontoArca||0;
+    subtotal = +totalEsc.preco||0; // frequenta o período TODO → preço do escalão "Total"
   } else {
     subtotal = precoSemanas(nSem) + nDias*precoDiaAvulso();
-    dAtletaBase = descArcaSemanas(nSem) + nDias*descArcaAvulso();
   }
-  // candidatos a desconto (não acumuláveis)
-  const dAtleta = c.atleta ? dAtletaBase : 0;
+  // desconto de atleta: SÓ por semanas completas (2,5/semana × nº de semanas). Avulso ou semana incompleta = 0.
+  const dAtleta = c.atleta ? nSem*(+p.descontoAtletaSemana||0) : 0;
   const di=p.descontoIrmao||{};
   const dIrmao = c.temIrmao ? (di.tipo==='%'? subtotal*((+di.valor||0)/100) : di.tipo==='€/semana'? (+di.valor||0)*nSem : (+di.valor||0)) : 0;
   let desconto=0, descontoLabel='';
@@ -1674,7 +1677,7 @@ function renderCriancasTabela(){
         <td class="right">${fmt(val)}</td>
         <td class="right">${fmt(pg)}</td>
         <td>${canc?'<span class="chip red">Cancelada</span>':estado}${c.notaInscricao?` <span class="tag-nota" title="${esc(c.notaInscricao)}">📝 Nota</span>`:''}${c.lembrete?` <span class="tag-lembrete" title="${esc(c.lembrete)}">🔔 Lembrete</span>`:''}</td>
-        <td class="right" style="white-space:nowrap"><button class="btn-sm btn-neutral" title="Imprimir ficha e declarações" onclick="abrirImprimir('${c.id}')">🖨️</button>${modoAno()?'':` <button class="btn-sm btn-neutral" title="Gestão administrativa (verificação e notas)" onclick="abrirAdminInscricao('${c.id}')">🗂️</button> <button class="btn-sm btn-edit" onclick="abrirModalCrianca('${c.id}')">✏️</button> ${canc?`<button class="btn-sm btn-add" title="Reativar inscrição" onclick="reativarInscricao('${c.id}')">↩️ Reativar</button>`:`<button class="btn-sm btn-neutral" title="Cancelar inscrição (mantém o registo)" onclick="cancelarInscricao('${c.id}')">🚫</button>`} <button class="btn-sm btn-del" title="Eliminar definitivamente" onclick="eliminarCrianca('${c.id}')">🗑️</button>`}</td>
+        <td class="right" style="white-space:nowrap"><button class="btn-sm btn-neutral" title="Imprimir ficha e declarações" onclick="abrirImprimir('${c.id}')">🖨️</button>${modoAno()?'':` <button class="btn-sm btn-neutral${(!canc&&!c.verificado)?' piscar':''}" title="${(!canc&&!c.verificado)?('⚠️ POR VERIFICAR pela administração'+((c.atleta||c.temIrmao)?' — inclui desconto a confirmar':'')):'Gestão administrativa (verificada)'}" onclick="abrirAdminInscricao('${c.id}')">🗂️</button> <button class="btn-sm btn-edit" onclick="abrirModalCrianca('${c.id}')">✏️</button> ${canc?`<button class="btn-sm btn-add" title="Reativar inscrição" onclick="reativarInscricao('${c.id}')">↩️ Reativar</button>`:`<button class="btn-sm btn-neutral" title="Cancelar inscrição (mantém o registo)" onclick="cancelarInscricao('${c.id}')">🚫</button>`} <button class="btn-sm btn-del" title="Eliminar definitivamente" onclick="eliminarCrianca('${c.id}')">🗑️</button>`}</td>
       </tr>`; }).join('')}
     </tbody></table></div>`;
 }
@@ -1777,9 +1780,9 @@ function abrirModalCrianca(id){ if(guardaModoAno()) return;
       <div class="fg"><label>🪪 CC da criança — verso</label><input id="c-anexo-ccv" type="file" accept="image/*,application/pdf"></div>
     </div>`,
     [ {txt:'Guardar', cls:'btn-add', fn:()=>guardarCrianca(id)} ]);
-  _valorManual=false; _modalCriancaNovo=!id;
+  _valorManual = !!_cCur.valorManual; _modalCriancaNovo=!id;
   if(!_listenersRascunho){ $('ov-body').addEventListener('input', capturarRascunhoInsc); $('ov-body').addEventListener('change', capturarRascunhoInsc); _listenersRascunho=true; }
-  renderBlocosInsc(); verIdade(); refDescontoRadio(); atualizaSugestao(false);
+  renderBlocosInsc(); verIdade(); refDescontoRadio(); atualizaSugestao(true); // auto-preenche o valor calculado (a não ser que tenha sido alterado à mão)
   if(!id) verificarRascunho();
 }
 function renderBlocosInsc(){
@@ -1893,10 +1896,10 @@ async function guardarCrianca(id){
     dataInscricao:$('c-datains').value||hoje(), avulsoDias:_cCur.avulsoDias||[], semanasSel:_cCur.semanasSel||[], mesesSel:_cCur.mesesSel||[],
     autorizados:lerAutorizados(),
     atleta:!!_cCur.atleta, temIrmao:!!_cCur.temIrmao, grupo:_cCur.grupo||'',
-    descontoVerificado:!!_cCur.descontoVerificado, notaInscricao:_cCur.notaInscricao||'', lembrete:_cCur.lembrete||'',
+    descontoVerificado:!!_cCur.descontoVerificado, verificado:!!_cCur.verificado, notaInscricao:_cCur.notaInscricao||'', lembrete:_cCur.lembrete||'',
     cancelada:!!_cCur.cancelada, dataCancel:_cCur.dataCancel||'', motivoCancel:_cCur.motivoCancel||'',
     anexos,
-    valor:parseFloat($('c-valor').value)||0, pago:parseFloat($('c-pago').value)||0, pagamento:$('c-pag').value };
+    valor:parseFloat($('c-valor').value)||0, valorManual:!!_valorManual, pago:parseFloat($('c-pago').value)||0, pagamento:$('c-pag').value };
   if(id){ const i=d.criancas.findIndex(x=>x.id===id); if(i>=0) d.criancas[i]=obj; } else d.criancas.push(obj);
   setD(d); LS.del('atl_rascunho_insc'); _modalCriancaNovo=false; fecharModal(); renderCriancas(); toast('Inscrição guardada.');
 }
@@ -1913,14 +1916,18 @@ function reativarInscricao(id){ if(bloqAnual()) return; const d=getD(); const c=
 // gestão administrativa da inscrição (só a admin) — verificação + notas
 function abrirAdminInscricao(id){ if(guardaModoAno()) return;
   const d=getD(); const c=d.criancas.find(x=>x.id===id); if(!c) return;
-  const b=breakdown(c); const pend=(c.atleta||c.temIrmao)&&!c.descontoVerificado;
+  const b=breakdown(c); const temDesc=(c.atleta||c.temIrmao); const pendDesc=temDesc&&!c.descontoVerificado;
   modal('🗂️ Gestão administrativa — '+esc(c.nome), `
-    <div class="muted" style="margin-bottom:10px">Área só para a administração. Não aparece na ficha de inscrição.</div>
-    ${(c.atleta||c.temIrmao)?`<div class="info">Desconto pedido: ${c.atleta?'🏅 atleta ':''}${c.temIrmao?'👧👦 irmão ':''}— ${pend?'<b>por confirmar</b>':'confirmado'}. Valor calculado atual: <b>${fmt(b.total)}</b>${b.desconto>0?' (desconto '+fmt(b.desconto)+')':''}.</div>`:'<div class="muted" style="margin-bottom:8px">Sem desconto pedido nesta inscrição.</div>'}
-    <label class="sem-check" style="border-color:var(--amber)"><input type="checkbox" id="ai-verif" ${c.descontoVerificado?'checked':''}> ✅ Desconto <b>verificado / confirmado</b> pela administração</label>
+    <div class="muted" style="margin-bottom:10px">Área só para a administração. Não aparece na ficha de inscrição. <b>Todas as inscrições devem ser verificadas.</b></div>
+    ${temDesc?`<div class="info" style="background:#FDECEA;border-color:#F0855F;color:#7a2e12">⚠️ <b>Esta inscrição pede desconto:</b> ${c.atleta?`🏅 atleta da ARCA d'Ajuda `:''}${c.temIrmao?`👧👦 irmão no mesmo período `:''}— ${pendDesc?'<b>POR CONFIRMAR</b>':'confirmado'}. Confirma que corresponde à realidade. Valor calculado: <b>${fmt(b.total)}</b>${b.desconto>0?' (desconto '+fmt(b.desconto)+')':''}.</div>
+    <label class="sem-check" style="border-color:var(--coral)"><input type="checkbox" id="ai-verif" ${c.descontoVerificado?'checked':''}> ✅ <b>Desconto confirmado</b> — corresponde à realidade</label>`:'<div class="muted" style="margin-bottom:8px">Sem desconto pedido nesta inscrição.</div>'}
+    <label class="sem-check" style="border-color:var(--amber);background:#FFF8E6"><input type="checkbox" id="ai-verifgeral" ${c.verificado?'checked':''}> ☑️ <b>Inscrição verificada / conferida</b> pela administração</label>
     <div class="fg" style="margin-top:10px"><label>📝 Nota da inscrição <span class="muted">(ex.: pagou só os 40€ de pré-inscrição / pago na totalidade)</span></label><textarea id="ai-nota" rows="3">${esc(c.notaInscricao||'')}</textarea></div>
     <div class="fg"><label>🔔 Lembrete administrativo <span class="muted">(situação a ter em conta — editável a qualquer altura)</span></label><textarea id="ai-lembrete" rows="3">${esc(c.lembrete||'')}</textarea></div>`,
-    [ {txt:'Guardar', cls:'btn-add', fn:()=>{ const dd=getD(); const cc=dd.criancas.find(x=>x.id===id); if(cc){ cc.descontoVerificado=$('ai-verif').checked; cc.notaInscricao=$('ai-nota').value.trim(); cc.lembrete=$('ai-lembrete').value.trim(); setD(dd); } fecharModal(); renderCriancas(); toast('Gestão administrativa guardada.'); }} ]);
+    [ {txt:'Guardar', cls:'btn-add', fn:()=>{ const dd=getD(); const cc=dd.criancas.find(x=>x.id===id); if(!cc){ fecharModal(); return; }
+        const verGeral=$('ai-verifgeral').checked; const verDesc=$('ai-verif')?$('ai-verif').checked:false;
+        if(verGeral && temDesc && !verDesc){ if(!confirm('Vais marcar a inscrição como verificada, mas o DESCONTO ainda não está confirmado.\n\nConfirmas que o desconto corresponde à realidade? (Se sim, marca também "Desconto confirmado".)')) return; }
+        cc.verificado=verGeral; if($('ai-verif')) cc.descontoVerificado=verDesc; cc.notaInscricao=$('ai-nota').value.trim(); cc.lembrete=$('ai-lembrete').value.trim(); setD(dd); fecharModal(); renderCriancas(); toast('Gestão administrativa guardada.'); }} ]);
 }
 
 /* ============================================================
