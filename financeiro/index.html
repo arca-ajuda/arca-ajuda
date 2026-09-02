@@ -335,6 +335,21 @@ tbody tr:hover td{background:#F5F9FF}
 </style>
 </head>
 <body>
+<!-- LOGIN CLOUD (mesma conta das outras apps) -->
+<div id="fin-login-overlay" style="position:fixed;inset:0;background:linear-gradient(135deg,#12314F,#1B4570);z-index:10000;display:none;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:16px;padding:28px 26px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.35)">
+    <div id="fin-login-logo" style="display:flex;justify-content:center;margin-bottom:10px"></div>
+    <div style="text-align:center;font-size:13px;font-weight:700;color:#1B4570;letter-spacing:.5px;text-transform:uppercase">ARCA d'Ajuda</div>
+    <div style="text-align:center;font-size:19px;font-weight:700;margin:4px 0 18px">Controlo Financeiro</div>
+    <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:5px">Email</div>
+    <input type="email" id="fin-login-email" autocomplete="username" placeholder="email da associação" style="width:100%;padding:9px 11px;border:1.5px solid #ddd;border-radius:8px;font-size:13.5px">
+    <div style="font-size:12px;font-weight:600;color:#555;margin:12px 0 5px">Password</div>
+    <input type="password" id="fin-login-pass" autocomplete="current-password" placeholder="••••••••" style="width:100%;padding:9px 11px;border:1.5px solid #ddd;border-radius:8px;font-size:13.5px" onkeydown="if(event.key==='Enter')finFazerLogin()">
+    <div id="fin-login-erro" style="color:#A23B2E;font-size:12.5px;margin-top:10px;text-align:center;display:none"></div>
+    <button id="fin-login-btn" class="btn-primary" style="width:100%;justify-content:center;margin-top:16px" onclick="finFazerLogin()">Entrar</button>
+    <div style="font-size:11.5px;color:#888;text-align:center;margin-top:12px;line-height:1.5">Mesmo email e password das apps de Sócios e Ofícios.<br>Os dados ficam na cloud e aparecem em todos os PCs.</div>
+  </div>
+</div>
 
 <!-- TOPBAR -->
 <div class="topbar">
@@ -350,6 +365,7 @@ tbody tr:hover td{background:#F5F9FF}
     </div>
   </div>
   <div class="topbar-right">
+  <span id="cloud-estado" title="Estado da sincronização com a cloud" style="display:inline-flex;align-items:center;gap:6px;padding:0 12px;background:rgba(255,255,255,.15);color:#fff;font-size:11px;font-weight:700;letter-spacing:.3px;cursor:default;white-space:nowrap">☁️ …</span>
   <button onclick="toggleArcaChat()" id="btn-arca-chat" style="padding:6px 14px;border-radius:20px;border:0.5px solid var(--teal-m);background:var(--teal-l);color:var(--teal-d);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px" title="Assistente ARCA — ajuda de utilização">
     🤖 Ajuda
   </button>
@@ -1385,6 +1401,123 @@ const LS = {
 
 let movimentos = LS.get('arca_movs') || [];
 let recargas = LS.get('arca_recargas') || [];
+// ============================================================
+// CLOUD (Supabase) — dados partilhados entre todos os PCs
+// ============================================================
+const SUPA_URL = 'https://yfsyifypsrqnwkqkfrnm.supabase.co';
+const SUPA_KEY = 'sb_publishable_AkzlMeHlYHDyl0HzeC7_qg__j_Y6C9W';
+let supaSession = LS.get('arca_supa_session');
+let cloudPronto = false;
+const CLOUD_KEYS = ['arca_movs','arca_cofre','arca_recargas','arca_config','arca_lembretes','arca_faturas','arca_direccao','arca_admin_info','arca_pin_hash','arca_role_codes','arca_drive_url','arca_logo'];
+const _cloudTimers = {};
+
+function cloudEstado(txt, cor){
+  const el=document.getElementById('cloud-estado'); if(!el) return;
+  el.textContent=txt; el.style.color=cor||'#fff';
+}
+async function supaAuthLogin(email, password){
+  const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {method:'POST', headers:{'Content-Type':'application/json','apikey':SUPA_KEY}, body: JSON.stringify({email,password})});
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.error_description||data.msg||'Email ou password incorretos.');
+  supaSession = data; LS.set('arca_supa_session', supaSession); return data;
+}
+async function supaRefreshSession(){
+  if(!supaSession?.refresh_token) return false;
+  try{
+    const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`, {method:'POST', headers:{'Content-Type':'application/json','apikey':SUPA_KEY}, body: JSON.stringify({refresh_token: supaSession.refresh_token})});
+    const data = await res.json(); if(!res.ok) return false;
+    supaSession = data; LS.set('arca_supa_session', supaSession); return true;
+  }catch(e){ return false; }
+}
+async function supaFetch(path, method='GET', body=null, _t=0){
+  const headers = {'apikey':SUPA_KEY,'Content-Type':'application/json','Authorization':'Bearer '+(supaSession?.access_token||SUPA_KEY)};
+  if(method!=='GET') headers['Prefer']='resolution=merge-duplicates,return=minimal';
+  const opts={method,headers}; if(body) opts.body=JSON.stringify(body);
+  const res = await fetch(`${SUPA_URL}/rest/v1/${path}`, opts);
+  if(res.status===401){
+    if(_t===0 && await supaRefreshSession()) return supaFetch(path, method, body, 1);
+    supaSession=null; LS.set('arca_supa_session',null); finMostrarLogin('A tua sessão expirou. Entra novamente.'); throw new Error('AUTH_EXPIRED');
+  }
+  const text = await res.text();
+  if(!res.ok) throw new Error(text||('Erro '+res.status));
+  return text ? JSON.parse(text) : null;
+}
+function finMostrarLogin(msg){
+  const ov=document.getElementById('fin-login-overlay'); if(!ov) return;
+  ov.style.display='flex';
+  const logo=LS.get('arca_logo'); const la=document.getElementById('fin-login-logo');
+  if(la&&logo) la.innerHTML=`<img src="${logo}" style="height:64px;width:64px;border-radius:50%;object-fit:cover">`;
+  if(msg){ const e=document.getElementById('fin-login-erro'); e.textContent=msg; e.style.display='block'; }
+  cloudEstado('☁️ sem sessão','#FFD9A0');
+}
+async function finFazerLogin(){
+  const email=document.getElementById('fin-login-email').value.trim(), pass=document.getElementById('fin-login-pass').value;
+  const erro=document.getElementById('fin-login-erro'); erro.style.display='none';
+  const btn=document.getElementById('fin-login-btn'); btn.disabled=true; btn.textContent='A entrar…';
+  try{ await supaAuthLogin(email,pass); document.getElementById('fin-login-overlay').style.display='none'; await cloudArrancar(); }
+  catch(e){ erro.textContent=e.message; erro.style.display='block'; }
+  finally{ btn.disabled=false; btn.textContent='Entrar'; }
+}
+function fundirPorId(cloudArr, localArr){
+  const a=Array.isArray(cloudArr)?cloudArr:[], b=Array.isArray(localArr)?localArr:[];
+  const ids=new Set(a.map(x=>x&&x.id)); const extra=b.filter(x=>x&&x.id!=null&&!ids.has(x.id));
+  return [...a, ...extra];
+}
+async function cloudArrancar(){
+  cloudEstado('☁️ a ligar…');
+  let rows;
+  try{ rows = await supaFetch('fin_dados?select=chave,valor'); }
+  catch(e){
+    if(String(e.message)==='AUTH_EXPIRED') return;
+    console.error(e); cloudEstado('☁️ erro','#FFB3A7');
+    toast(/fin_dados|relation|does not exist/i.test(e.message)?'Falta criar a tabela fin_dados no Supabase (corre o SQL da instalação).':'Sem ligação à cloud — a trabalhar só neste PC.', false);
+    return;
+  }
+  const cloud={}; (rows||[]).forEach(r=>{cloud[r.chave]=r.valor;});
+  const porId={'arca_movs':1,'arca_recargas':1,'arca_lembretes':1,'arca_cofre':1};
+  const paraSubir=[];
+  CLOUD_KEYS.forEach(k=>{
+    const local=LS.get(k), naCloud=cloud[k];
+    let final;
+    if(porId[k]) final=fundirPorId(naCloud, local);
+    else final=(naCloud!==undefined&&naCloud!==null)?naCloud:local;
+    if(final===undefined) final=null;
+    LS._silencio=true; LS.set(k, final); LS._silencio=false;
+    const mudouCloud = JSON.stringify(final)!==JSON.stringify(naCloud===undefined?null:naCloud);
+    if(mudouCloud && final!==null) paraSubir.push({chave:k, valor:final});
+  });
+  // recarregar estruturas em memória e ecrã
+  movimentos = LS.get('arca_movs')||[];
+  recargas = LS.get('arca_recargas')||[];
+  lembretes = LS.get('arca_lembretes')||[];
+  movCofre = LS.get('arca_cofre')||[];
+  faturas = LS.get('arca_faturas')||{};
+  config = LS.get('arca_config')||getDefaultConfig();
+  try{ populateMov(); updateCat(); }catch(e){}
+  try{ const pg=document.querySelector('.page.active'); if(pg) renderPage(pg.id.replace('page-','')); }catch(e){}
+  cloudPronto = true;
+  if(paraSubir.length){
+    try{ await supaFetch('fin_dados','POST',paraSubir.map(x=>({chave:x.chave,valor:x.valor,atualizado_em:new Date().toISOString()}))); }
+    catch(e){ console.warn('subida inicial:',e); }
+  }
+  cloudEstado('☁️ sincronizado','#B6F0C8');
+}
+function cloudAgendar(chave){
+  if(!cloudPronto) return;
+  clearTimeout(_cloudTimers[chave]);
+  cloudEstado('☁️ a guardar…');
+  _cloudTimers[chave]=setTimeout(async()=>{
+    delete _cloudTimers[chave];
+    try{
+      await supaFetch('fin_dados','POST',[{chave, valor:LS.get(chave), atualizado_em:new Date().toISOString()}]);
+      if(!Object.keys(_cloudTimers).length) cloudEstado('☁️ sincronizado','#B6F0C8');
+    }catch(e){ console.error('sync '+chave+':',e); cloudEstado('☁️ erro ao guardar','#FFB3A7'); }
+  }, 700);
+}
+// LS.set passa a empurrar para a cloud as chaves partilhadas
+const _lsSetOriginal = LS.set.bind(LS);
+LS.set = (k,v)=>{ _lsSetOriginal(k,v); if(!LS._silencio && CLOUD_KEYS.includes(k)) cloudAgendar(k); };
+
 let config = LS.get('arca_config') || getDefaultConfig();
 // Migração (set/2026): o ATL passa a registar-se apenas por totais — as semanas/meses
 // vivem na futura app do ATL; aqui entra só "Receita Total" e "Despesa Total" por edição.
@@ -4608,6 +4741,7 @@ populateMov();updateCat();
 renderDashboard();
 startMotivacional();
 checkRoleLogin();
+if(supaSession?.access_token){ cloudArrancar(); } else { finMostrarLogin(); }
 // Show logo on login overlay
 (function(){
   const logo=LS.get('arca_logo');
