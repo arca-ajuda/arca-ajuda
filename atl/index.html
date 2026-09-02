@@ -1222,7 +1222,10 @@ function imprimirGrupo(g){
 }
 function renderMapaOcupacao(){
   const semanas=semanasPeriodo();
-  const colDias=[]; semanas.forEach(s=>s.dias.forEach(iso=>colDias.push(iso)));
+  const semDe={}; semanas.forEach(s=>s.dias.forEach(iso=>semDe[iso]=s.label));
+  const colDias=diasUteisPeriodo().map(isoDate); // TODOS os dias úteis do período (não só as semanas inteiras)
+  // cabeçalhos agrupados: semanas inteiras + "Dias soltos" para os dias fora delas
+  const grupos=[]; colDias.forEach(iso=>{ const lbl=semDe[iso]||'Dias soltos'; const last=grupos[grupos.length-1]; if(last&&last.lbl===lbl) last.n++; else grupos.push({lbl,n:1}); });
   const d=getD(); const criancas=criancasAtivas(d).slice().sort(byNome);
   if(!colDias.length){ return '<div class="card"><div class="empty">Sem dias úteis no período.</div></div>'; }
   const att = criancas.map(c=>({c, dias:diasDaCrianca(c)}));
@@ -1244,7 +1247,7 @@ function renderMapaOcupacao(){
       <div class="mapa-wrap">
         <table class="mapa">
           <thead>
-            <tr><th class="stick corner"></th>${semanas.map(s=>`<th class="wk" colspan="${s.dias.length}">${s.label}</th>`).join('')}</tr>
+            <tr><th class="stick corner"></th>${grupos.map(g=>`<th class="wk" colspan="${g.n}">${g.lbl}</th>`).join('')}</tr>
             <tr><th class="stick corner">Dia →</th>${colDias.map(iso=>`<th class="dcol"><div>${dd(iso)}</div><div class="lt">${letra(iso)}</div></th>`).join('')}</tr>
           </thead>
           <tbody>
@@ -1261,7 +1264,13 @@ function renderMapaOcupacao(){
 function criancasPorSemana(){
   const semanas=semanasPeriodo(); const d=getD();
   const att=criancasAtivas(d).map(c=>({c,dias:diasDaCrianca(c)}));
-  return semanas.map(s=>({ s, lista: att.filter(a=>s.dias.some(dia=>a.dias.has(dia))).map(a=>a.c).sort(byNome) }));
+  const grupos=semanas.map(s=>({ s, lista: att.filter(a=>s.dias.some(dia=>a.dias.has(dia))).map(a=>a.c).sort(byNome) }));
+  const cobertos=new Set(); semanas.forEach(s=>s.dias.forEach(x=>cobertos.add(x)));
+  const soltos=diasUteisPeriodo().map(isoDate).filter(iso=>!cobertos.has(iso));
+  if(soltos.length){ const lista=att.filter(a=>soltos.some(dia=>a.dias.has(dia))).map(a=>a.c).sort(byNome);
+    const a=soltos[0].split('-'), b=soltos[soltos.length-1].split('-');
+    grupos.push({ s:{id:'AVULSO', label:'Dias soltos', periodo:`${+a[2]}/${+a[1]} a ${+b[2]}/${+b[1]}`, dias:soltos}, lista }); }
+  return grupos;
 }
 
 /* ============================================================
