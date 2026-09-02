@@ -200,7 +200,6 @@
     <button data-tab="equipa" onclick="showTab('equipa')">👥 Funcionários</button>
     <button data-tab="atividades" onclick="showTab('atividades')">🎟️ Atividades</button>
     <button data-tab="precos" onclick="showTab('precos')">🏷️ Valores</button>
-    <button data-tab="conta" onclick="showTab('conta')">🏦 Conta</button>
     <button data-tab="documentos" onclick="showTab('documentos')">📄 Documentos</button>
   </nav>
 
@@ -215,7 +214,6 @@
     <div id="sec-equipa" class="section"></div>
     <div id="sec-atividades" class="section"></div>
     <div id="sec-precos" class="section"></div>
-    <div id="sec-conta" class="section"></div>
     <div id="sec-documentos" class="section"></div>
     <div id="sec-definicoes" class="section"></div>
   </main>
@@ -547,7 +545,6 @@ function abrirAjuda(){
       <li><b>📆 Mapa</b>: ocupação por dia, e listas por semana (seguradora), <b>alergias (cozinha)</b>, observações e <b>grupos</b> — cada uma imprime-se por semana.</li>
       <li><b>💸 Despesas</b>: lançamentos manuais (seguros, material, autocarro…), <b>🍽️ Alimentação por dia</b> (automática) e <b>Resumo</b> por dia/semana/mês. Funcionários e atividades também contam.</li>
       <li><b>🎟️ Atividades</b>: preço × nº de crianças do grupo presentes no dia. <b>🗓️ Mapa por dia</b> mostra G1/G2 por atividade.</li>
-      <li><b>🏦 Conta</b>: saldo do banco, depósitos do cofre e transferências, com saldo corrido.</li>
       <li><b>📄 Documentos</b>: declarações editáveis + atalhos para as listas. O logótipo e a morada/NIF definem-se em ⚙️ Definições.</li>
     </ul>
     <div class="subt">Automático</div>
@@ -626,7 +623,7 @@ function renderAtual(){
     const el=$('sec-'+tabAtual); if(el) el.innerHTML=`<div class="card"><div class="empty">Este ecrã é por período (as datas e os valores variam de período para período).<br><br>Escolhe um período específico no seletor do topo para o ver.</div></div>`;
     popularEdicoes(); return;
   }
-  const r={dashboard:renderDashboard,criancas:renderCriancas,semanas:renderSemanas,mapa:renderMapa,despesas:renderDespesas,receitas:renderReceitas,equipa:renderEquipa,atividades:renderAtividades,precos:renderPrecos,conta:renderConta,documentos:renderDocumentos,definicoes:renderDefinicoes}[tabAtual];
+  const r={dashboard:renderDashboard,criancas:renderCriancas,semanas:renderSemanas,mapa:renderMapa,despesas:renderDespesas,receitas:renderReceitas,equipa:renderEquipa,atividades:renderAtividades,precos:renderPrecos,documentos:renderDocumentos,definicoes:renderDefinicoes}[tabAtual];
   if(r) r(); popularEdicoes();
 }
 function precisaEdicao(el){
@@ -1778,17 +1775,16 @@ function lembreteFimMes(key, alvo){
     [ {txt:'✔️ Já tratei (não mostrar até ao próximo mês)',cls:'btn-neutral',fn:()=>{ save('atl_lembreteMes',key); fecharModal(); toast('Ok, até ao próximo mês.'); }} ]);
 }
 function imprimirMovimentosMes(key){
-  const ed=getEdicao()||{}; const d=getD(); const conta=getConta();
+  const ed=getEdicao()||{}; const d=getD();
   const noMes=x=>((x.data||'').slice(0,7)===key);
-  const desp=(d.despesas||[]).filter(noMes); const rec=(d.receitas||[]).filter(noMes); const movs=(conta.movimentos||[]).filter(noMes);
+  const desp=(d.despesas||[]).filter(noMes); const rec=(d.receitas||[]).filter(noMes);
   const tD=desp.reduce((s,x)=>s+(+x.valor||0),0), tR=rec.reduce((s,x)=>s+(+x.valor||0),0);
   const tabela=(tit,rows,cols)=> `<div class="sec">${tit}</div>`+(rows.length?`<table><thead><tr>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${c[1](r)}</td>`).join('')}</tr>`).join('')}</tbody></table>`:'<p>Sem registos.</p>');
   const body=`<h1>Movimentos do mês — ${MESES[+key.slice(5,7)-1]} ${key.slice(0,4)}</h1>
     <div style="font-size:12px;color:#555;margin-bottom:6px">${esc(ed.nome||'')}${ed.ano?(' · '+ed.ano):''}</div>
     ${tabela('Receitas ('+fmt(tR)+')', rec, [['Data',r=>esc(fmtData(r.data))],['Categoria',r=>esc(r.cat||'')],['Descrição',r=>esc(r.desc||'')],['Valor',r=>fmt(r.valor)]])}
     ${tabela('Despesas ('+fmt(tD)+')', desp, [['Data',r=>esc(fmtData(r.data))],['Categoria',r=>esc(r.cat||'')],['Descrição',r=>esc(r.desc||'')],['Valor',r=>fmt(r.valor)]])}
-    ${tabela('Conta bancária', movs, [['Data',r=>esc(fmtData(r.data))],['Tipo',r=>esc(r.tipo||'')],['Nota',r=>esc(r.desc||'')],['Valor',r=>((+r.valor||0)>=0?'+':'')+fmt(r.valor)]])}
-    <div class="sec">Resumo</div><table><tr><th>Total receitas</th><td>${fmt(tR)}</td></tr><tr><th>Total despesas</th><td>${fmt(tD)}</td></tr><tr><th>Saldo atual da conta</th><td>${fmt(saldoConta())}</td></tr></table>`;
+    <div class="sec">Resumo</div><table><tr><th>Total receitas</th><td>${fmt(tR)}</td></tr><tr><th>Total despesas</th><td>${fmt(tD)}</td></tr></table>`;
   abrirImpressao('Movimentos '+key, body);
 }
 
