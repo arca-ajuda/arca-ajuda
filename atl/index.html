@@ -347,7 +347,20 @@ let edicaoAtiva = LS.get('atl_edicao_ativa') || null;
 const ANO='__ano__'; // vista anual (todos os períodos)
 function modoAno(){ return edicaoAtiva===ANO; }
 function edKey(){ return 'atl_ed_'+edicaoAtiva; }
-function dadosVazios(){ return {criancas:[],preInscricoes:[],despesas:[],equipa:[],atividades:[],receitas:[],categorias:CATEGORIAS_DEFAULT.slice(),categoriasRec:CATEGORIAS_REC_DEFAULT.slice(),precos:precosDefault(),semanasMeta:{}}; }
+function dadosVazios(){ return {criancas:[],preInscricoes:[],despesas:[],equipa:[],atividades:[],receitas:[],categorias:CATEGORIAS_DEFAULT.slice(),categoriasRec:CATEGORIAS_REC_DEFAULT.slice(),precos:precosDefault(),semanasMeta:{},inscricaoOnline:{aberto:true,prazo:'',max:0}}; }
+// crianças que contam (exclui as canceladas) — usado em contagens, mapas e custos
+function criancasAtivas(d){ d=d||getD(); return (d.criancas||[]).filter(c=>!c.cancelada); }
+// configuração do link de inscrições online (abrir/fechar, prazo, limite)
+function getInscOnline(d){ d=d||getD(); const o=d.inscricaoOnline||{}; return {aberto:o.aberto!==false, prazo:o.prazo||'', max:+o.max||0}; }
+// nº de inscrições que contam para o limite: crianças ativas + pré-inscrições por aprovar
+function nInscricoesAtuais(d){ d=d||getD(); return criancasAtivas(d).length + ((d.preInscricoes||[]).length); }
+// estado do link: {aberto, motivo} — fechado por opção, prazo ultrapassado ou limite atingido
+function estadoLink(d){ d=d||getD(); const cfg=getInscOnline(d);
+  if(!cfg.aberto) return {aberto:false, motivo:'As inscrições estão encerradas.'};
+  if(cfg.prazo && hoje()>cfg.prazo) return {aberto:false, motivo:'O prazo de inscrição terminou ('+fmtData(cfg.prazo)+').'};
+  if(cfg.max>0 && nInscricoesAtuais(d)>=cfg.max) return {aberto:false, motivo:'Foi atingido o número máximo de inscrições ('+cfg.max+').'};
+  return {aberto:true, motivo:'', cfg, atuais:nInscricoesAtuais(d)};
+}
 function getDAno(){
   const base=dadosVazios();
   edicoes.forEach(e=>{ const d=LS.get('atl_ed_'+e.id); if(!d) return; const nome=e.nome+(e.ano?(' '+e.ano):'');
@@ -467,10 +480,15 @@ function diasUteisDe(ed){
 }
 function semanasDe(ed){
   const dias=diasUteisDe(ed); if(!dias.length) return [];
-  const semanas=[]; let atual=null;
-  dias.forEach(d=>{ if(!atual){ atual={dias:[]}; } atual.dias.push(d); if(d.getDay()===5){ semanas.push(atual); atual=null; } });
-  if(atual) semanas.push(atual);
-  return semanas.map((s,i)=>{ const a=s.dias[0], b=s.dias[s.dias.length-1];
+  const fim=parseD(ed.dataFim);
+  // agrupa os dias úteis por semana de calendário (começa nova semana a cada segunda-feira)
+  const grupos=[]; let atual=null;
+  dias.forEach(d=>{ if(atual && d.getDay()===1){ grupos.push(atual); atual=null; } if(!atual) atual={dias:[]}; atual.dias.push(d); });
+  if(atual) grupos.push(atual);
+  // só contam SEMANAS INTEIRAS: começam à segunda e a sexta dessa semana está dentro do período.
+  // Os dias soltos (início/fim de período que não formam semana completa) ficam disponíveis como AVULSO.
+  const full=grupos.filter(g=>{ const a=g.dias[0]; if(a.getDay()!==1) return false; const sexta=new Date(a); sexta.setDate(sexta.getDate()+4); return !fim || sexta<=fim; });
+  return full.map((s,i)=>{ const a=s.dias[0], b=s.dias[s.dias.length-1];
     return { id:'S'+(i+1), num:i+1, label:'Semana '+(i+1), periodo: `${a.getDate()}/${a.getMonth()+1} a ${b.getDate()}/${b.getMonth()+1}`, dias: s.dias.map(isoDate) }; });
 }
 function mesesDe(ed){ const dias=diasUteisDe(ed); const set=[];
@@ -635,8 +653,9 @@ function precisaEdicao(el){
 /* ---------- totais ---------- */
 function totais(){
   const d=getD();
-  const totInscrito = d.criancas.reduce((s,c)=>s+(+c.valor||0),0);
-  const totPago = d.criancas.reduce((s,c)=>s+(+c.pago||0),0);
+  const ativas=criancasAtivas(d);
+  const totInscrito = ativas.reduce((s,c)=>s+(+c.valor||0),0);
+  const totPago = ativas.reduce((s,c)=>s+(+c.pago||0),0);
   const outrasRec = d.receitas.reduce((s,r)=>s+(+r.valor||0),0);
   const despLancadas = d.despesas.reduce((s,x)=>s+(+x.valor||0),0);
   const custoEquipa = d.equipa.reduce((s,m)=>s+(+m.remuneracao||0),0);
@@ -657,9 +676,9 @@ function renderDashboard(){
   const t=totais(); const d=t.d; const ed=getEdicao(); const nSem=semanasPeriodo().length; const nDias=diasUteisPeriodo().length;
   el.innerHTML = `
     <div class="cards">
-      <div class="metric"><div class="lbl">Crianças</div><div class="val blue">${d.criancas.length}</div><div class="sub">inscritas</div></div>
+      <div class="metric"><div class="lbl">Crianças</div><div class="val blue">${criancasAtivas(d).length}</div><div class="sub">inscritas${d.criancas.filter(c=>c.cancelada).length?` · ${d.criancas.filter(c=>c.cancelada).length} cancelada(s)`:''}</div></div>
       <div class="metric"><div class="lbl">Receita prevista</div><div class="val">${fmt(t.totInscrito)}</div><div class="sub">Recebido: ${fmt(t.totPago)}</div></div>
-      <div class="metric"><div class="lbl">Pendente</div><div class="val amber">${fmt(t.pendente)}</div><div class="sub">${d.criancas.filter(c=>(+c.valor||0)>(+c.pago||0)).length} por pagar</div></div>
+      <div class="metric"><div class="lbl">Pendente</div><div class="val amber">${fmt(t.pendente)}</div><div class="sub">${criancasAtivas(d).filter(c=>(+c.valor||0)>(+c.pago||0)).length} por pagar</div></div>
       <div class="metric"><div class="lbl">Despesas</div><div class="val red">${fmt(t.totDesp)}</div><div class="sub">Gerais ${fmt(t.despLancadas)} · Funcion. ${fmt(t.custoEquipa)} · Aliment. ${fmt(t.custoAlim)} · Ativid. ${fmt(t.custoAtiv)}</div></div>
       <div class="metric" style="border-color:${t.saldo>=0?'var(--teal)':'var(--coral)'}"><div class="lbl">Saldo</div><div class="val ${t.saldo>=0?'green':'red'}">${fmt(t.saldo)}</div><div class="sub">${t.saldo>=0?'Lucro':'Prejuízo'}</div></div>
     </div>
@@ -691,7 +710,7 @@ function renderPrecos(){
 
     <div class="card">
       <div class="card-head"><div class="card-title">🎫 Inscrições</div><button class="btn-sm btn-add" onclick="addPacote()">+ Escalão</button></div>
-      <div class="muted" style="margin-bottom:10px">Preço de cada tipo de inscrição e o desconto para <b>atletas da ARCA</b> nesse escalão.</div>
+      <div class="muted" style="margin-bottom:10px">Trabalhamos <b>por semanas</b>: define o preço de cada escalão (1, 2, 3… semanas) e o preço do <b>dia avulso</b>. Quem quer, por exemplo, uma semana + 2 dias paga o escalão da semana + 2 dias avulso — o valor exato, sem erros. Podes renomear, acrescentar ou apagar escalões.</div>
       <div class="table-wrap"><table><thead><tr><th>Descrição</th><th class="right">Preço (€)</th><th class="right">Desc. atleta ARCA (€)</th><th></th></tr></thead><tbody id="pk-body">
       ${p.inscricoes.map(pk=>`<tr>
         <td><input data-pk="${pk.id}" data-f="label" value="${esc(pk.label)}" style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px">${pk.avulso?'<div class="muted" style="margin-top:2px">preço × nº de dias escolhidos</div>':''}</td>
@@ -700,15 +719,6 @@ function renderPrecos(){
         <td class="right"><button class="btn-sm btn-del" onclick="delPacote('${pk.id}')">✕</button></td>
       </tr>`).join('')}
       </tbody></table></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">🈷️ Preço por mês inteiro</div>
-      <div class="muted" style="margin:6px 0 10px">Usado quando na inscrição se marca um ou mais meses inteiros.</div>
-      <div class="grid2">
-        <div class="fg"><label>Preço por mês (€)</label><input id="pm-preco" type="number" step="0.01" value="${esc(p.precoMes)}"></div>
-        <div class="fg"><label>Desconto atleta ARCA / mês (€)</label><input id="pm-arca" type="number" step="0.01" value="${esc(p.descontoArcaMes)}"></div>
-      </div>
     </div>
 
     <div class="card">
@@ -778,7 +788,6 @@ function lerValoresDoDOM(){
   document.querySelectorAll('[data-cm]').forEach(inp=>{ const cm=p.campanhas.find(x=>x.id===inp.dataset.cm); if(!cm) return; const f=inp.dataset.f; if(f==='descontoPct')cm[f]=parseFloat(inp.value)||0; else if(f==='semanas')cm[f]=inp.value===''?'':(+inp.value); else cm[f]=inp.value; });
   document.querySelectorAll('[data-ex]').forEach(inp=>{ const grp=inp.dataset.ex; const a=p[grp].find(x=>x.id===inp.dataset.id); if(!a) return; a[inp.dataset.f]= inp.dataset.f==='preco'?(parseFloat(inp.value)||0):inp.value; });
   const dt=$('di-tipo'), dv=$('di-valor'); if(dt&&dv) p.descontoIrmao={tipo:dt.value, valor:parseFloat(dv.value)||0};
-  const pmp=$('pm-preco'), pma=$('pm-arca'); if(pmp) p.precoMes=parseFloat(pmp.value)||0; if(pma) p.descontoArcaMes=parseFloat(pma.value)||0;
   const aa=$('al-almoco'), alm=$('al-lm'), alt=$('al-lt'); if(aa) p.alimentacaoDiaria={almoco:parseFloat(aa.value)||0, lancheManha:parseFloat(alm.value)||0, lancheTarde:parseFloat(alt.value)||0};
   return d;
 }
@@ -836,9 +845,9 @@ function diasDaCrianca(c){ return diasDaCriancaEm(c, semanasPeriodo(), diasUteis
 // ---------- custos automáticos: alimentação e atividades ----------
 function precoDiaAlimentacaoDe(p){ const a=(p&&p.alimentacaoDiaria)||{}; return (+a.almoco||0)+(+a.lancheManha||0)+(+a.lancheTarde||0); }
 function precoDiaAlimentacao(){ return precoDiaAlimentacaoDe(getD().precos); }
-function custoAlimentacaoTotal(){ const d=getD(); const pd=precoDiaAlimentacao(); if(!pd) return 0; return d.criancas.reduce((s,c)=>s+pd*diasDaCrianca(c).size,0); }
+function custoAlimentacaoTotal(){ const d=getD(); const pd=precoDiaAlimentacao(); if(!pd) return 0; return criancasAtivas(d).reduce((s,c)=>s+pd*diasDaCrianca(c).size,0); }
 // crianças do grupo QUE ESTÃO PRESENTES na data da atividade (se não estão, não contam)
-function nCriancasAtividade(a){ const d=getD(); const grupo=a.grupo||'Todos'; return d.criancas.filter(c=>{ if(grupo!=='Todos' && (c.grupo||'')!==grupo) return false; return a.data && diasDaCrianca(c).has(a.data); }).length; }
+function nCriancasAtividade(a){ const d=getD(); const grupo=a.grupo||'Todos'; return criancasAtivas(d).filter(c=>{ if(grupo!=='Todos' && (c.grupo||'')!==grupo) return false; return a.data && diasDaCrianca(c).has(a.data); }).length; }
 function custoAtividade(a){ return (+a.precoCrianca||0)*nCriancasAtividade(a); }
 function custoAtividadesTotal(){ return getD().atividades.reduce((s,a)=>s+custoAtividade(a),0); }
 // versões por período (para a vista anual)
@@ -846,13 +855,13 @@ function custoAlimentacaoPeriodo(edId){
   const ed=edicoes.find(e=>e.id===edId); const d=LS.get('atl_ed_'+edId); if(!ed||!d) return 0;
   const p=normalizaPrecos(d.precos||{}); const pd=precoDiaAlimentacaoDe(p); if(!pd) return 0;
   const sem=semanasDe(ed), du=diasUteisDe(ed);
-  return (d.criancas||[]).reduce((s,c)=>s+pd*diasDaCriancaEm(c,sem,du).size,0);
+  return (d.criancas||[]).filter(c=>!c.cancelada).reduce((s,c)=>s+pd*diasDaCriancaEm(c,sem,du).size,0);
 }
 function custoAtividadesPeriodo(edId){
   const ed=edicoes.find(e=>e.id===edId); const d=LS.get('atl_ed_'+edId); if(!ed||!d) return 0;
   const sem=semanasDe(ed), du=diasUteisDe(ed);
   return (d.atividades||[]).reduce((s,a)=>{ const grupo=a.grupo||'Todos';
-    const n=(d.criancas||[]).filter(c=>{ if(grupo!=='Todos'&&(c.grupo||'')!==grupo) return false; return a.data && diasDaCriancaEm(c,sem,du).has(a.data); }).length;
+    const n=(d.criancas||[]).filter(c=>!c.cancelada).filter(c=>{ if(grupo!=='Todos'&&(c.grupo||'')!==grupo) return false; return a.data && diasDaCriancaEm(c,sem,du).has(a.data); }).length;
     return s+(+a.precoCrianca||0)*n; },0);
 }
 
@@ -944,7 +953,7 @@ function imprimirListaSemanal(kind, idx){
   abrirImpressao(cfg.titulo+(idx!=null?(' '+grupos[0].s.label):''), `<h1>${esc(cfg.titulo)}</h1><div style="font-size:12px;color:#555;margin-bottom:8px">${esc(ed.nome||'')}${ed.ano?(' · '+ed.ano):''}${sufixo}</div>${body}`);
 }
 // listas por grupo (G1 / G2) — para a seguradora, coordenação, etc.
-function criancasDoGrupo(g){ return getD().criancas.filter(c=> g==='Sem'? !(c.grupo) : (c.grupo||'')===g).sort(byNome); }
+function criancasDoGrupo(g){ return criancasAtivas().filter(c=> g==='Sem'? !(c.grupo) : (c.grupo||'')===g).sort(byNome); }
 function primeiroUltimo(nome){ const p=(nome||'').trim().split(/\s+/).filter(Boolean); if(!p.length) return ''; return p.length===1?p[0]:(p[0]+' '+p[p.length-1]); }
 function tabelaGrupoHTML(lista){ return `<div class="table-wrap"><table><thead><tr><th>Nome completo</th><th>Idade</th><th>NIF</th><th>Validade</th><th>Enc. Educação</th><th>Contacto</th><th>Emergência (nome + tel)</th></tr></thead><tbody>
   ${lista.map(c=>`<tr><td><b>${esc(c.nome)}</b></td><td>${idadeATL(c)}</td><td>${esc(c.nif||'—')}</td><td>${esc(fmtData(c.ccVal)||'—')}</td><td>${esc(primeiroUltimo(c.resp)||'—')}</td><td>${esc(c.tel||'—')}</td><td>${esc(c.emergencia||'—')}</td></tr>`).join('')}
@@ -971,7 +980,7 @@ function imprimirGrupo(g){
 function renderMapaOcupacao(){
   const semanas=semanasPeriodo();
   const colDias=[]; semanas.forEach(s=>s.dias.forEach(iso=>colDias.push(iso)));
-  const d=getD(); const criancas=d.criancas.slice().sort(byNome);
+  const d=getD(); const criancas=criancasAtivas(d).slice().sort(byNome);
   if(!colDias.length){ return '<div class="card"><div class="empty">Sem dias úteis no período.</div></div>'; }
   const att = criancas.map(c=>({c, dias:diasDaCrianca(c)}));
   const countDia = {}; colDias.forEach(iso=>{ countDia[iso]=att.filter(a=>a.dias.has(iso)).length; });
@@ -1008,7 +1017,7 @@ function renderMapaOcupacao(){
 // lista de crianças por semana (interseção dos dias frequentados com a semana)
 function criancasPorSemana(){
   const semanas=semanasPeriodo(); const d=getD();
-  const att=d.criancas.map(c=>({c,dias:diasDaCrianca(c)}));
+  const att=criancasAtivas(d).map(c=>({c,dias:diasDaCrianca(c)}));
   return semanas.map(s=>({ s, lista: att.filter(a=>s.dias.some(dia=>a.dias.has(dia))).map(a=>a.c).sort(byNome) }));
 }
 
@@ -1019,13 +1028,29 @@ let fCri={busca:'',pago:''};
 function filtraCri(){
   const d=getD(); let lista=d.criancas.slice();
   if(fCri.busca){ const q=fCri.busca.toLowerCase().trim(); lista=lista.filter(c=>(c.nome||'').toLowerCase().includes(q)||(c.resp||'').toLowerCase().includes(q)||String(c.numero||'')===q||(q.length>=3&&(c.nif||'').includes(q))); }
-  if(fCri.pago==='sim') lista=lista.filter(c=>(+c.pago||0)>=(+c.valor||0)&&(+c.valor||0)>0);
-  if(fCri.pago==='nao') lista=lista.filter(c=>(+c.pago||0)<(+c.valor||0));
+  if(fCri.pago==='sim') lista=lista.filter(c=>!c.cancelada&&(+c.pago||0)>=(+c.valor||0)&&(+c.valor||0)>0);
+  if(fCri.pago==='nao') lista=lista.filter(c=>!c.cancelada&&(+c.pago||0)<(+c.valor||0));
+  // canceladas vão para o fim da lista
+  lista.sort((a,b)=> (a.cancelada?1:0)-(b.cancelada?1:0));
   return lista;
 }
 function renderCriancas(){
   const el=$('sec-criancas'); if(precisaEdicao(el)) return;
   const d=getD(); const pend=(d.preInscricoes||[]);
+  const est=estadoLink(d); const cfg=getInscOnline(d); const vagas=cfg.max>0?Math.max(0,cfg.max-nInscricoesAtuais(d)):null;
+  const cardLink = modoAno()? '' : `<div class="card">
+    <div class="card-head"><div class="card-title">🔗 Inscrições online (link para os pais)</div><span class="chip ${est.aberto?'green':'red'}">${est.aberto?'ABERTO':'ENCERRADO'}</span></div>
+    <div class="muted" style="margin-bottom:10px">${est.aberto? `Os pais podem inscrever-se. ${cfg.max>0?`Vagas: <b>${vagas}</b> de ${cfg.max} (${nInscricoesAtuais(d)} ocupadas).`:'Sem limite de vagas definido.'}${cfg.prazo?` Prazo: <b>${fmtData(cfg.prazo)}</b>.`:''}` : `<b style="color:var(--coral-d)">⛔ ${esc(est.motivo)}</b> Quem abrir o link vê a mensagem de inscrições encerradas.`}</div>
+    <div class="grid3">
+      <div class="fg"><label>Estado do link</label><select id="io-aberto"><option value="1" ${cfg.aberto?'selected':''}>Aberto (a receber)</option><option value="0" ${!cfg.aberto?'selected':''}>Fechado manualmente</option></select></div>
+      <div class="fg"><label>Prazo limite <span class="muted">(fecha depois desta data)</span></label><input id="io-prazo" type="date" value="${esc(cfg.prazo)}"></div>
+      <div class="fg"><label>Nº máximo de inscrições <span class="muted">(0 = sem limite)</span></label><input id="io-max" type="number" min="0" step="1" value="${esc(cfg.max)}"></div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+      <button class="btn-sm btn-add" onclick="guardarInscOnline()">💾 Guardar definições do link</button>
+      <button class="btn-sm btn-neutral" onclick="copiarLinkInscricao()">🔗 Copiar link p/ pais</button>
+      <button class="btn-sm btn-neutral" onclick="abrirFichaPublica()">👪 Pré-visualizar ficha</button>
+    </div></div>`;
   const cardPre = pend.length? `<div class="card" style="border:2px solid var(--amber)">
     <div class="card-head"><div class="card-title">📥 Pré-inscrições online · ${pend.length} por aprovar</div></div>
     <div class="muted" style="margin-bottom:10px">Inscrições feitas pelos pais. Confirma os dados, atribui o grupo depois de aprovar e valida os descontos.</div>
@@ -1042,9 +1067,9 @@ function renderCriancas(){
     </tr>`; }).join('')}
     </tbody></table></div>
   </div>`:'';
-  el.innerHTML = cardPre + `<div class="card">
-    <div class="card-head"><div class="card-title">Inscrições · ${d.criancas.length} criança(s)</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">${modoAno()?'':'<button class="btn-sm btn-neutral" onclick="copiarLinkInscricao()">🔗 Copiar link p/ pais</button><button class="btn-sm btn-neutral" onclick="abrirFichaPublica()">👪 Ficha pública (pré-visualizar)</button><button class="btn-sm btn-add" onclick="abrirModalCrianca()">+ Nova inscrição</button>'}</div></div>
+  el.innerHTML = cardLink + cardPre + `<div class="card">
+    <div class="card-head"><div class="card-title">Inscrições · ${criancasAtivas(d).length} criança(s)${d.criancas.filter(c=>c.cancelada).length?` <span class="muted" style="font-weight:400">(+${d.criancas.filter(c=>c.cancelada).length} cancelada(s))</span>`:''}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${modoAno()?'':'<button class="btn-sm btn-add" onclick="abrirModalCrianca()">+ Nova inscrição</button>'}</div></div>
     <div class="filters">
       <input placeholder="🔍 procurar por Nº, nome, responsável ou NIF" value="${esc(fCri.busca)}" oninput="fCri.busca=this.value;renderCriancasTabela()">
       <select onchange="fCri.pago=this.value;renderCriancasTabela()"><option value="">Todas</option><option value="sim" ${fCri.pago==='sim'?'selected':''}>Pagas</option><option value="nao" ${fCri.pago==='nao'?'selected':''}>Por pagar</option></select>
@@ -1060,7 +1085,9 @@ function abrirFichaPublica(){
   _cCur={avulsoDias:[],semanasSel:[],mesesSel:[],atleta:false,temIrmao:false,dataInscricao:hoje()};
   _valorManual=false; _modalCriancaNovo=false;
   const c=_cCur;
+  const _estL=estadoLink();
   modal('👪 Ficha de Inscrição — ATL ARCAKIDS', `
+    ${_estL.aberto?'':`<div class="info" style="background:#FDECEA;border-color:#F0855F;color:#7a2e12"><b>⛔ Inscrições encerradas.</b> ${esc(_estL.motivo)}<br><span class="muted">(Pré-visualização — o botão de envio está desativado enquanto estiver encerrado.)</span></div>`}
     <div class="info">Pré-visualização da ficha que os pais vão preencher. Idade permitida: <b>6 a 12 anos</b>. O valor é calculado automaticamente.</div>
     <div class="subt">Dados da criança</div>
     <div class="grid2">
@@ -1073,8 +1100,8 @@ function abrirFichaPublica(){
       <div class="fg"><label>NIF</label><input id="c-nif"></div>
       <div class="fg"><label>Validade</label><input id="c-ccval" type="date"></div>
     </div>
-    <div class="fg"><label>Alergias / intolerâncias</label><textarea id="c-alergias" rows="2"></textarea></div>
-    <div class="fg"><label>Observações (medicação, cuidados especiais)</label><textarea id="c-obs" rows="2"></textarea></div>
+    ${campoNota('c-alergias','Alergias / intolerâncias', '')}
+    ${campoNota('c-obs','Observações (medicação, cuidados especiais)', '')}
     <div class="subt">Encarregado de educação</div>
     <div class="grid3">
       <div class="fg"><label>Nome *</label><input id="c-resp"></div>
@@ -1086,7 +1113,7 @@ function abrirFichaPublica(){
       <div class="fg"><label>Contacto de emergência (nome + tel) *</label><input id="c-emerg"></div>
     </div>
     <div class="subt">Inscrição</div>
-    <div class="muted" style="margin-bottom:8px">Escolhe os dias avulso, semanas inteiras e/ou meses.</div>
+    <div class="muted" style="margin-bottom:8px">Escolhe as semanas inteiras e, se precisares, junta dias avulso (ex.: 1 semana + 2 dias).</div>
     <div id="c-blocos"></div>
     <div class="subt">Descontos</div>
     <div class="info" style="background:#FFF3D6;border-color:#E6B800;color:#6b4e00">
@@ -1103,27 +1130,33 @@ function abrirFichaPublica(){
       <div class="muted" id="c-sugestao" style="margin-top:2px"></div>
       <div class="muted" style="margin-top:4px">Os descontos serão confirmados pela coordenação. Pode pagar a pré-inscrição (40€) e o restante depois.</div>
     </div>
-    <div class="subt">Documentos a anexar</div>
-    <div class="muted" style="margin-bottom:8px">Anexa o comprovativo de pagamento e o Cartão de Cidadão da criança (frente e verso).</div>
-    <div class="fg"><label>💳 Comprovativo de pagamento</label><input id="c-anexo-comp" type="file" accept="image/*,application/pdf"></div>
+    <div class="subt">Documentos a anexar <span style="color:var(--coral-d)">*</span></div>
+    <div class="info" style="background:#FDECEA;border-color:#F0855F;color:#7a2e12">
+      <b>Obrigatório.</b> A inscrição só é enviada com os 3 documentos anexados. O Cartão de Cidadão tem de ser <b>o da criança</b> (não o do encarregado) — frente e verso.
+    </div>
+    <div class="fg"><label>💳 Comprovativo de pagamento *</label><input id="c-anexo-comp" type="file" accept="image/*,application/pdf"></div>
     <div class="grid2">
-      <div class="fg"><label>🪪 CC da criança — frente</label><input id="c-anexo-ccf" type="file" accept="image/*,application/pdf"></div>
-      <div class="fg"><label>🪪 CC da criança — verso</label><input id="c-anexo-ccv" type="file" accept="image/*,application/pdf"></div>
+      <div class="fg"><label>🪪 CC da criança — frente *</label><input id="c-anexo-ccf" type="file" accept="image/*,application/pdf"></div>
+      <div class="fg"><label>🪪 CC da criança — verso *</label><input id="c-anexo-ccv" type="file" accept="image/*,application/pdf"></div>
     </div>`,
     [ {txt:'Enviar inscrição', cls:'btn-add', fn:guardarPreInscricao} ]);
   renderBlocosInsc(); verIdade(); refDescontoRadio(); atualizaSugestaoPublica();
 }
 function atualizaSugestaoPublica(){ atualizaSugestao(false); const v=calcValor(_cCur); const el=$('c-valor-pub'); if(el) el.textContent=fmt(v); }
 async function guardarPreInscricao(){
+  const estL=estadoLink(); if(!estL.aberto){ toast('Inscrições encerradas: '+estL.motivo,false); return; }
   const nome=$('c-nome').value.trim(); if(!nome){ toast('Indica o nome da criança.',false); return; }
   const resp=$('c-resp').value.trim(); const tel=$('c-tel').value.trim();
   if(!resp||!tel){ toast('Indica o nome e o telemóvel do encarregado.',false); return; }
   const nascV=$('c-nasc').value;
   if(nascV){ const a=idadeEm(nascV, refIdadeISO()); if(a==null||a<6||a>12){ toast('Idade fora do limite (6 a 12 anos à data de início do ATL).',false); return; } }
   _cCur.semanasSel=[...document.querySelectorAll('.ck-sem:checked')].map(x=>x.value);
-  _cCur.mesesSel=[...document.querySelectorAll('.ck-mes:checked')].map(x=>+x.value);
+  _cCur.mesesSel=[];
+  const fComp=$('c-anexo-comp').files[0], fCcf=$('c-anexo-ccf').files[0], fCcv=$('c-anexo-ccv').files[0];
+  if(!fComp||!fCcf||!fCcv){ toast('Anexa os 3 documentos: comprovativo de pagamento e CC da criança (frente e verso). São obrigatórios.',false); return; }
   toast('A processar anexos…');
-  const [comprovativo,ccFrente,ccVerso]=await Promise.all([ comprimirFicheiro($('c-anexo-comp').files[0]), comprimirFicheiro($('c-anexo-ccf').files[0]), comprimirFicheiro($('c-anexo-ccv').files[0]) ]);
+  const [comprovativo,ccFrente,ccVerso]=await Promise.all([ comprimirFicheiro(fComp), comprimirFicheiro(fCcf), comprimirFicheiro(fCcv) ]);
+  if(!comprovativo||!ccFrente||!ccVerso){ toast('Não consegui ler um dos anexos. Tenta com uma foto (JPG/PNG) de cada documento.',false); return; }
   const d=getD();
   const obj={ id:uid(), submetido:hoje(), nome,
     nasc:nascV, ccTipo:$('c-cctipo').value, cc:$('c-cc').value.trim(), nif:$('c-nif').value.trim(), ccVal:$('c-ccval').value,
@@ -1147,6 +1180,7 @@ function rejeitarPreInscricao(id){ if(!confirm('Rejeitar/eliminar esta pré-insc
 /* ---------- descontos: escolha única (nenhum / atleta / irmão) ---------- */
 function setDescontoOpcao(v){ _cCur.atleta=(v==='atleta'); _cCur.temIrmao=(v==='irmao'); atualizaSugestao(true); }
 function refDescontoRadio(){ const v=_cCur.atleta?'atleta':_cCur.temIrmao?'irmao':'nenhum'; const el=document.querySelector('input[name="c-desc"][value="'+v+'"]'); if(el) el.checked=true; }
+function guardarInscOnline(){ if(guardaModoAno()) return; const d=getD(); d.inscricaoOnline={ aberto: $('io-aberto').value==='1', prazo: $('io-prazo').value||'', max: parseInt($('io-max').value)||0 }; setD(d); renderCriancas(); toast('Definições do link guardadas.'); }
 function copiarLinkInscricao(){ const url=location.href.split('#')[0]+'#inscricao'; if(navigator.clipboard){ navigator.clipboard.writeText(url).then(()=>toast('🔗 Link copiado! Envia aos pais.')).catch(()=>prompt('Copia o link da inscrição:', url)); } else prompt('Copia o link da inscrição:', url); }
 /* ---------- anexos: comprimir imagem (baixa qualidade) e ver ---------- */
 function comprimirFicheiro(file){
@@ -1156,15 +1190,22 @@ function comprimirFicheiro(file){
     const r=new FileReader(); r.onload=e=>{ const orig=e.target.result; const img=new Image(); img.onload=()=>{ try{ const max=1200; let w=img.width,h=img.height; if(w>max||h>max){ if(w>=h){ h=Math.round(h*max/w); w=max; } else { w=Math.round(w*max/h); h=max; } } const cv=document.createElement('canvas'); cv.width=w||1; cv.height=h||1; cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height); res({name:file.name.replace(/\.[^.]+$/,'')+'.jpg', dataUrl:cv.toDataURL('image/jpeg',0.55)}); }catch(err){ res({name:file.name, dataUrl:orig}); } }; img.onerror=()=>res({name:file.name, dataUrl:orig}); img.src=orig; }; r.onerror=()=>res(null); r.readAsDataURL(file);
   });
 }
+// botões por documento na linha da criança (abrir + imprimir cada um)
 function anexosIcons(id,pre){
   const d=getD(); const c=(pre?(d.preInscricoes||[]):d.criancas).find(x=>x.id===id); const ax=(c&&c.anexos)||{};
-  const it=[]; const tag=(k,lbl,cls)=>{ if(ax[k]&&ax[k].dataUrl) it.push(`<span class="chip ${cls}" style="cursor:pointer;font-size:10px" onclick="verAnexo('${id}','${k}',${pre?'true':'false'})" title="Abrir ${esc(ax[k].name||lbl)}">${lbl}</span>`); };
-  tag('comprovativo','💳 comprov.','green'); tag('ccFrente','🪪 CC F','blue'); tag('ccVerso','🪪 CC V','blue');
-  return it.length?`<div style="margin-top:3px;display:flex;gap:3px;flex-wrap:wrap">${it.join('')}</div>`:'';
+  const it=[]; const btn=(k,lbl,cls)=>{ if(ax[k]&&ax[k].dataUrl) it.push(`<button class="btn-sm ${cls}" style="padding:2px 7px;font-size:10.5px" onclick="verAnexo('${id}','${k}',${pre?'true':'false'})" title="Abrir / imprimir ${esc(ax[k].name||lbl)}">🖨️ ${lbl}</button>`); };
+  btn('comprovativo','Comprov.','btn-neutral'); btn('ccFrente','CC frente','btn-neutral'); btn('ccVerso','CC verso','btn-neutral');
+  return it.length?`<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">${it.join('')}</div>`:'';
 }
 function verAnexo(id,key,pre){
-  const d=getD(); const c=(pre?(d.preInscricoes||[]):d.criancas).find(x=>x.id===id); const ax=(c&&c.anexos&&c.anexos[key]); if(!ax||!ax.dataUrl){ toast('Sem anexo.',false); return; }
-  const w=window.open('','_blank'); if(!w){ toast('Permite pop-ups (janelas) para ver o anexo.',false); return; }
+  const d=getD(); const c=(pre?(d.preInscricoes||[]):d.criancas).find(x=>x.id===id); const ax=(c&&c.anexos&&c.anexos[key]);
+  if(!ax||!ax.dataUrl){ toast('Sem documento.',false); return; }
+  verAnexoData(key, ax, c.nome||'');
+}
+// abre uma janela com o documento e botão de impressão (CC à escala do cartão)
+function verAnexoData(key, ax, nome){
+  if(!ax||!ax.dataUrl){ toast('Sem documento.',false); return; }
+  const w=window.open('','_blank'); if(!w){ toast('Permite pop-ups (janelas) para ver o documento.',false); return; }
   const isCC = key==='ccFrente'||key==='ccVerso';
   const isPdf=(ax.dataUrl||'').indexOf('application/pdf')>=0;
   const titulo = key==='comprovativo'?'Comprovativo de pagamento':key==='ccFrente'?'CC — frente':'CC — verso';
@@ -1172,16 +1213,26 @@ function verAnexo(id,key,pre){
     ? '@media print{body{margin:0;background:#fff}.bar{display:none}img{width:85.6mm;height:54mm;object-fit:contain;display:block;margin:8mm auto}}'
     : '@media print{body{margin:0;background:#fff}.bar{display:none}img{max-width:100%;max-height:100%;display:block;margin:0 auto}}';
   const conteudo = isPdf? `<iframe src="${ax.dataUrl}" style="width:100%;height:88vh;border:0;background:#fff"></iframe>` : `<img src="${ax.dataUrl}" style="max-width:100%;max-height:86vh;box-shadow:0 4px 18px rgba(0,0,0,.4)">`;
-  w.document.write(`<html><head><meta charset="utf-8"><title>${esc(titulo)} — ${esc(c.nome||'')}</title>
+  w.document.write(`<html><head><meta charset="utf-8"><title>${esc(titulo)} — ${esc(nome||'')}</title>
     <style>body{margin:0;background:#2b2b2b;font-family:Arial,Helvetica,sans-serif}
     .bar{position:sticky;top:0;background:#0F6E56;color:#fff;padding:9px 12px;display:flex;align-items:center;gap:12px;justify-content:center}
     .bar b{font-size:13px} .bar button{padding:7px 14px;background:#fff;color:#0F6E56;border:none;border-radius:8px;font-weight:700;cursor:pointer}
     .wrap{display:flex;align-items:center;justify-content:center;min-height:88vh;padding:14px}
     ${printCss}</style></head><body>
-    <div class="bar"><b>${esc(titulo)} · ${esc(c.nome||'')}</b><button onclick="window.print()">🖨️ Imprimir${isCC?' (tamanho CC)':''}</button></div>
+    <div class="bar"><b>${esc(titulo)} · ${esc(nome||'')}</b><button onclick="window.print()">🖨️ Imprimir${isCC?' (tamanho CC)':''}</button></div>
     <div class="wrap">${conteudo}</div></body></html>`);
   w.document.close();
 }
+// estado dos documentos dentro da ficha admin (abrir/remover antes de guardar)
+function anexosEstadoEdit(){
+  const ax=(_cCur&&_cCur.anexos)||{};
+  const item=(k,l)=> ax[k]&&ax[k].dataUrl
+    ? `<button type="button" class="btn-sm btn-neutral" style="padding:2px 7px" onclick="verAnexoCur('${k}')" title="Abrir / imprimir">🖨️ ${l} ✓</button> <button type="button" class="btn-sm btn-del" style="padding:2px 6px" onclick="removerAnexoCur('${k}')" title="Remover documento">✕</button>`
+    : `<span class="chip red" style="font-size:10.5px">✗ ${l} (por anexar)</span>`;
+  return `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">${item('comprovativo','Comprovativo')} ${item('ccFrente','CC frente')} ${item('ccVerso','CC verso')}</div>`;
+}
+function verAnexoCur(key){ const ax=(_cCur&&_cCur.anexos&&_cCur.anexos[key]); verAnexoData(key, ax, (_cCur&&_cCur.nome)||''); }
+function removerAnexoCur(key){ if(_cCur&&_cCur.anexos){ delete _cCur.anexos[key]; } const el=$('c-docs-estado'); if(el) el.innerHTML=anexosEstadoEdit(); toast('Documento removido — guarda a ficha para confirmar.'); }
 function detalheInsc(c){
   const parts=[];
   if((c.avulsoDias||[]).length) parts.push(c.avulsoDias.length+' dia(s)');
@@ -1202,16 +1253,17 @@ function renderCriancasTabela(){
   if(!lista.length){ box.innerHTML='<div class="empty">Sem inscrições para mostrar.</div>'; return; }
   box.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Nº</th><th>Nome</th><th>Responsável</th><th>Inscrição</th><th title="Atribuído pela coordenação">Grupo</th><th class="right">Valor</th><th class="right">Pago</th><th>Estado</th><th></th></tr></thead><tbody>
     ${lista.map(c=>{ const val=+c.valor||0,pg=+c.pago||0; const estado= val>0&&pg>=val?'<span class="chip green">Pago</span>':pg>0?'<span class="chip amber">Parcial</span>':'<span class="chip red">Por pagar</span>';
-      return `<tr>
+      const canc=!!c.cancelada;
+      return `<tr${canc?' style="opacity:.55;background:#faf3f2"':''}>
         <td><b>${c.numero||'—'}</b></td>
-        <td><b>${esc(c.nome)}</b>${c.nasc?`<div class="muted">${idade(c.nasc)}</div>`:''}${modoAno()&&c._ed?`<div><span class="chip blue" style="font-size:10px">${esc(c._ed)}</span></div>`:''}${anexosIcons(c.id,false)}</td>
+        <td><b style="${canc?'text-decoration:line-through':''}">${esc(c.nome)}</b>${canc?' <span class="chip red" style="font-size:10px">🚫 Cancelada</span>':''}${c.nasc?`<div class="muted">${idade(c.nasc)}</div>`:''}${modoAno()&&c._ed?`<div><span class="chip blue" style="font-size:10px">${esc(c._ed)}</span></div>`:''}${anexosIcons(c.id,false)}${canc&&c.motivoCancel?`<div class="muted" style="font-size:11px">motivo: ${esc(c.motivoCancel)}</div>`:''}</td>
         <td>${esc(c.resp||'')}${c.tel?`<div class="muted">${esc(c.tel)}</div>`:''}</td>
         <td class="muted">${esc(detalheInsc(c))}${statusDescontoBadge(c)}</td>
-        <td>${modoAno()? `<span class="chip ${c.grupo==='G1'?'blue':c.grupo==='G2'?'amber':'green'}">${esc(c.grupo||'—')}</span>` : `<select onchange="setGrupo('${c.id}',this.value)" style="padding:5px 7px;border:1.5px solid var(--line);border-radius:7px;font-weight:700">${['—','G1','G2'].map(g=>`<option value="${g==='—'?'':g}" ${((c.grupo||'')===(g==='—'?'':g))?'selected':''}>${g}</option>`).join('')}</select>`}</td>
+        <td>${canc?'<span class="muted">—</span>':(modoAno()? `<span class="chip ${c.grupo==='G1'?'blue':c.grupo==='G2'?'amber':'green'}">${esc(c.grupo||'—')}</span>` : `<select onchange="setGrupo('${c.id}',this.value)" style="padding:5px 7px;border:1.5px solid var(--line);border-radius:7px;font-weight:700">${['—','G1','G2'].map(g=>`<option value="${g==='—'?'':g}" ${((c.grupo||'')===(g==='—'?'':g))?'selected':''}>${g}</option>`).join('')}</select>`)}</td>
         <td class="right">${fmt(val)}</td>
         <td class="right">${fmt(pg)}</td>
-        <td>${estado}${c.notaInscricao?` <span class="tag-nota" title="${esc(c.notaInscricao)}">📝 Nota</span>`:''}${c.lembrete?` <span class="tag-lembrete" title="${esc(c.lembrete)}">🔔 Lembrete</span>`:''}</td>
-        <td class="right" style="white-space:nowrap"><button class="btn-sm btn-neutral" title="Imprimir ficha e declarações" onclick="abrirImprimir('${c.id}')">🖨️</button> <button class="btn-sm btn-neutral" title="Gestão administrativa (verificação e notas)" onclick="abrirAdminInscricao('${c.id}')">🗂️</button> <button class="btn-sm btn-edit" onclick="abrirModalCrianca('${c.id}')">✏️</button> <button class="btn-sm btn-del" onclick="eliminarCrianca('${c.id}')">🗑️</button></td>
+        <td>${canc?'<span class="chip red">Cancelada</span>':estado}${c.notaInscricao?` <span class="tag-nota" title="${esc(c.notaInscricao)}">📝 Nota</span>`:''}${c.lembrete?` <span class="tag-lembrete" title="${esc(c.lembrete)}">🔔 Lembrete</span>`:''}</td>
+        <td class="right" style="white-space:nowrap"><button class="btn-sm btn-neutral" title="Imprimir ficha e declarações" onclick="abrirImprimir('${c.id}')">🖨️</button> <button class="btn-sm btn-neutral" title="Gestão administrativa (verificação e notas)" onclick="abrirAdminInscricao('${c.id}')">🗂️</button> <button class="btn-sm btn-edit" onclick="abrirModalCrianca('${c.id}')">✏️</button> ${canc?`<button class="btn-sm btn-add" title="Reativar inscrição" onclick="reativarInscricao('${c.id}')">↩️ Reativar</button>`:`<button class="btn-sm btn-neutral" title="Cancelar inscrição (mantém o registo)" onclick="cancelarInscricao('${c.id}')">🚫</button>`} <button class="btn-sm btn-del" title="Eliminar definitivamente" onclick="eliminarCrianca('${c.id}')">🗑️</button></td>
       </tr>`; }).join('')}
     </tbody></table></div>`;
 }
@@ -1277,8 +1329,8 @@ function abrirModalCrianca(id){ if(guardaModoAno()) return;
       <div class="fg"><label>NIF</label><input id="c-nif" value="${esc(c.nif||'')}"></div>
       <div class="fg"><label>Validade</label><input id="c-ccval" type="date" value="${esc(c.ccVal||'')}"></div>
     </div>
-    <div class="fg"><label>Alergias / intolerâncias</label><textarea id="c-alergias" rows="2">${esc(c.alergias||'')}</textarea></div>
-    <div class="fg"><label>Observações (medicação, cuidados especiais, etc.)</label><textarea id="c-obs" rows="3">${esc(c.obs||'')}</textarea></div>
+    ${campoNota('c-alergias','Alergias / intolerâncias', c.alergias)}
+    ${campoNota('c-obs','Observações (medicação, cuidados especiais, etc.)', c.obs)}
     <div class="subt">Responsável</div>
     <div class="grid3">
       <div class="fg"><label>Nome</label><input id="c-resp" value="${esc(c.resp||'')}"></div>
@@ -1291,7 +1343,7 @@ function abrirModalCrianca(id){ if(guardaModoAno()) return;
     </div>
     <div class="subt">Inscrição</div>
     <div class="fg" style="max-width:220px"><label>Data da inscrição</label><input id="c-datains" type="date" value="${esc(c.dataInscricao||hoje())}" onchange="_cCur.dataInscricao=this.value;atualizaSugestao(true)"></div>
-    <div class="muted" style="margin-bottom:8px">Podes combinar livremente: dias avulso, semanas inteiras e/ou meses.</div>
+    <div class="muted" style="margin-bottom:8px">Trabalhamos por semanas: escolhe as semanas inteiras e, se precisar, junta dias avulso (ex.: 1 semana + 2 dias).</div>
     <div id="c-blocos"></div>
     <div class="subt">Descontos</div>
     <div class="info">Os descontos <b>não são acumuláveis</b> (aplica-se o mais vantajoso) e ficam <b>sujeitos a confirmação da administração</b> (atleta, ou irmão a frequentar o ATL no mesmo período).</div>
@@ -1303,6 +1355,14 @@ function abrirModalCrianca(id){ if(guardaModoAno()) return;
       <div class="fg"><label>Valor a pagar (€) <span class="muted">— calculado automaticamente</span></label><input id="c-valor" type="number" step="0.01" value="${esc(c.valor)}" oninput="_valorManual=true"><div class="muted" id="c-sugestao" style="margin-top:3px"></div></div>
       <div class="fg"><label>Já pago (€)</label><input id="c-pago" type="number" step="0.01" value="${esc(c.pago)}"></div>
       <div class="fg"><label>Forma de pagamento</label><select id="c-pag">${FORMAS_PAG.map(o=>`<option ${o===c.pagamento?'selected':''}>${o}</option>`).join('')}</select></div>
+    </div>
+    <div class="subt">Documentos da inscrição</div>
+    <div class="muted" style="margin-bottom:8px">Anexa (ou substitui) os documentos. Ficam guardados na ficha e podem ser abertos/impressos a partir da linha da criança. O <b>CC é o da criança</b>.</div>
+    <div id="c-docs-estado" style="margin-bottom:8px">${anexosEstadoEdit()}</div>
+    <div class="grid3">
+      <div class="fg"><label>💳 Comprovativo de pagamento</label><input id="c-anexo-comp" type="file" accept="image/*,application/pdf"></div>
+      <div class="fg"><label>🪪 CC da criança — frente</label><input id="c-anexo-ccf" type="file" accept="image/*,application/pdf"></div>
+      <div class="fg"><label>🪪 CC da criança — verso</label><input id="c-anexo-ccv" type="file" accept="image/*,application/pdf"></div>
     </div>`,
     [ {txt:'Guardar', cls:'btn-add', fn:()=>guardarCrianca(id)} ]);
   _valorManual=false; _modalCriancaNovo=!id;
@@ -1312,22 +1372,29 @@ function abrirModalCrianca(id){ if(guardaModoAno()) return;
 }
 function renderBlocosInsc(){
   const box=$('c-blocos'); if(!box) return;
-  const semanas=semanasPeriodo(), meses=mesesPeriodo();
+  const semanas=semanasPeriodo();
   box.innerHTML = `
-    <div class="subt2">🗓️ Dias avulso</div>
-    <div id="c-cal">${calendarioDias(_cCur.avulsoDias||[])}</div>
-    <div class="subt2" style="margin-top:12px">📅 Semanas inteiras</div>
-    ${semanas.length? semanas.map(s=>`<label class="sem-check"><input type="checkbox" class="ck-sem" value="${s.id}" ${(_cCur.semanasSel||[]).includes(s.id)?'checked':''} onchange="onSemanaSelChange()"> ${s.label} <span class="muted">(${s.periodo})</span></label>`).join('') : '<div class="muted">Sem semanas — define as datas do período.</div>'}
-    <div class="subt2" style="margin-top:12px">🈷️ Meses inteiros</div>
-    ${meses.length? meses.map(m=>`<label class="sem-check"><input type="checkbox" class="ck-mes" value="${m.mes}" ${(_cCur.mesesSel||[]).includes(m.mes)?'checked':''} onchange="onMesSelChange()"> ${m.nome}</label>`).join('') : '<div class="muted">Sem meses no período.</div>'}`;
+    <div class="subt2">📅 Semanas inteiras</div>
+    ${semanas.length? semanas.map(s=>`<label class="sem-check"><input type="checkbox" class="ck-sem" value="${s.id}" ${(_cCur.semanasSel||[]).includes(s.id)?'checked':''} onchange="onSemanaSelChange()"> ${s.label} <span class="muted">(${s.periodo})</span></label>`).join('') : '<div class="muted">Sem semanas inteiras no período — usa os dias avulso abaixo.</div>'}
+    <div class="subt2" style="margin-top:14px">🗓️ Dias avulso <span class="muted">(dias soltos, fora das semanas inteiras)</span></div>
+    <div class="muted" style="margin-bottom:6px;font-size:12px">Ao marcar uma semana, os dias dessa semana ficam <b>bloqueados</b> aqui — assim não se cobra a dobrar. Usa os dias avulso só para dias soltos (ex.: 1 semana + 2 dias).</div>
+    <div id="c-cal">${calendarioDias(_cCur.avulsoDias||[])}</div>`;
 }
-function onSemanaSelChange(){ _cCur.semanasSel=[...document.querySelectorAll('.ck-sem:checked')].map(x=>x.value); atualizaSugestao(true); }
-function onMesSelChange(){ _cCur.mesesSel=[...document.querySelectorAll('.ck-mes:checked')].map(x=>+x.value); atualizaSugestao(true); }
+// dias (iso) já cobertos pelas semanas inteiras selecionadas
+function diasDasSemanasSel(){ const sem=semanasPeriodo(); const set=new Set(); (_cCur.semanasSel||[]).forEach(id=>{ const s=sem.find(x=>x.id===id); if(s) s.dias.forEach(d=>set.add(d)); }); return set; }
+function onSemanaSelChange(){
+  _cCur.semanasSel=[...document.querySelectorAll('.ck-sem:checked')].map(x=>x.value);
+  const lock=diasDasSemanasSel();
+  _cCur.avulsoDias=(_cCur.avulsoDias||[]).filter(iso=>!lock.has(iso)); // tira avulsos que ficaram dentro de uma semana
+  const cal=$('c-cal'); if(cal) cal.innerHTML=calendarioDias(_cCur.avulsoDias||[]);
+  atualizaSugestao(true);
+}
 function calendarioDias(sel){
   const dias=diasUteisPeriodo(); if(!dias.length) return '<div class="muted">Sem dias úteis — define as datas do período.</div>';
   const porMes={};
   dias.forEach(d=>{ const k=d.getFullYear()+'-'+d.getMonth(); (porMes[k]=porMes[k]||[]).push(d); });
   const uteisSet=new Set(dias.map(isoDate));
+  const lock=diasDasSemanasSel();   // dias já incluídos numa semana selecionada → bloqueados
   let h='<div class="cal-flow">';
   Object.keys(porMes).forEach(k=>{
     const arr=porMes[k]; const first=arr[0]; const y=first.getFullYear(), mo=first.getMonth();
@@ -1335,20 +1402,34 @@ function calendarioDias(sel){
     for(let i=0;i<7;i++) h+=`<div class="h">${DIAS_SEM[i]}</div>`;
     const primeiro=new Date(y,mo,1); const offset=primeiro.getDay(); const ndias=new Date(y,mo+1,0).getDate();
     for(let i=0;i<offset;i++) h+='<div class="d off"></div>';
-    for(let dia=1;dia<=ndias;dia++){ const iso=y+'-'+pad2(mo+1)+'-'+pad2(dia); const util=uteisSet.has(iso); const on=sel.includes(iso);
-      h+=`<div class="d ${util?(on?'on':''):'na'}" ${util?`onclick="toggleDia('${iso}')"`:''}>${dia}</div>`; }
+    for(let dia=1;dia<=ndias;dia++){ const iso=y+'-'+pad2(mo+1)+'-'+pad2(dia); const util=uteisSet.has(iso); const on=sel.includes(iso); const locked=lock.has(iso);
+      if(!util){ h+=`<div class="d na">${dia}</div>`; }
+      else if(locked){ h+=`<div class="d" style="background:#cfe8de;color:#0b5a46;cursor:not-allowed;font-weight:700" title="Já incluído na semana selecionada">${dia}</div>`; }
+      else { h+=`<div class="d ${on?'on':''}" onclick="toggleDia('${iso}')">${dia}</div>`; } }
     h+='</div></div>';
   });
   return h+'</div>';
 }
-function toggleDia(iso){ _cCur.avulsoDias=_cCur.avulsoDias||[]; const i=_cCur.avulsoDias.indexOf(iso); if(i>=0)_cCur.avulsoDias.splice(i,1); else _cCur.avulsoDias.push(iso); $('c-cal').innerHTML=calendarioDias(_cCur.avulsoDias); atualizaSugestao(true); }
+function toggleDia(iso){ if(diasDasSemanasSel().has(iso)){ toast('Esse dia já está incluído numa semana selecionada.',false); return; } _cCur.avulsoDias=_cCur.avulsoDias||[]; const i=_cCur.avulsoDias.indexOf(iso); if(i>=0)_cCur.avulsoDias.splice(i,1); else _cCur.avulsoDias.push(iso); $('c-cal').innerHTML=calendarioDias(_cCur.avulsoDias); atualizaSugestao(true); }
+// campo com botão "Nada a apontar / Sim — indicar" (alergias, observações)
+function campoNota(idBase, label, valor){
+  const tem=!!(valor&&String(valor).trim());
+  return `<div class="fg"><label>${label}</label>
+    <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:13px;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:normal"><input type="radio" name="${idBase}-tg" value="nao" ${tem?'':'checked'} onchange="toggleNota('${idBase}',false)"> Nada a apontar</label>
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:normal"><input type="radio" name="${idBase}-tg" value="sim" ${tem?'checked':''} onchange="toggleNota('${idBase}',true)"> Sim — indicar</label>
+    </div>
+    <textarea id="${idBase}" rows="2" placeholder="Descreve aqui…" style="${tem?'':'display:none'}">${esc(valor||'')}</textarea>
+  </div>`;
+}
+function toggleNota(idBase, sim){ const t=$(idBase); if(!t) return; t.style.display=sim?'':'none'; if(sim){ t.focus(); } else { t.value=''; } }
 function atualizaSugestao(preencher){
   const s=$('c-sugestao'); const vi=$('c-valor'); if(!s) return;
   const b=breakdown(_cCur);
   // preenche automaticamente o "valor a pagar" (a não ser que a admin o tenha alterado à mão)
   if(preencher && !_valorManual && vi){ vi.value = b.total>0? b.total : ''; }
   const pub=$('c-valor-pub'); if(pub){ pub.textContent=fmt(b.total); if(vi) vi.value=b.total; }
-  if(b.subtotal<=0 && !b.desconto){ s.innerHTML='<span class="muted">Marca dias, semanas ou meses para calcular.</span>'; return; }
+  if(b.subtotal<=0 && !b.desconto){ s.innerHTML='<span class="muted">Marca semanas ou dias avulso para calcular.</span>'; return; }
   const parts=['subtotal '+fmt(b.subtotal)];
   if(b.desconto>0) parts.push('−'+fmt(b.desconto)+' '+b.descontoLabel);
   if(b.campanhaTxt) parts.push(b.campanhaTxt);
@@ -1357,13 +1438,20 @@ function atualizaSugestao(preencher){
   if(_modalCriancaNovo) capturarRascunhoInsc();
 }
 function aplicarSugestao(){ _valorManual=false; $('c-valor').value = calcValor(_cCur); atualizaSugestao(false); }
-function guardarCrianca(id){
+async function guardarCrianca(id){
   const nome=$('c-nome').value.trim(); if(!nome){ toast('Indica o nome.',false); return; }
   const nascV=$('c-nasc').value;
   if(nascV){ const a=idadeEm(nascV, refIdadeISO()); if(a==null||a<6||a>12){ if(!confirm(`Atenção: à data de início do ATL a criança teria ${a} anos. O limite é 6 a 12 anos (inclusive). Guardar mesmo assim?`)) return; } }
   const d=getD();
   _cCur.semanasSel=[...document.querySelectorAll('.ck-sem:checked')].map(x=>x.value);
-  _cCur.mesesSel=[...document.querySelectorAll('.ck-mes:checked')].map(x=>+x.value);
+  _cCur.mesesSel=[];
+  // documentos: mantém os já anexados e substitui pelos ficheiros novos escolhidos
+  const anexos=Object.assign({}, _cCur.anexos||{});
+  const novos=[]; const fc=$('c-anexo-comp'), ff=$('c-anexo-ccf'), fv=$('c-anexo-ccv');
+  if(fc&&fc.files[0]) novos.push(['comprovativo',fc.files[0]]);
+  if(ff&&ff.files[0]) novos.push(['ccFrente',ff.files[0]]);
+  if(fv&&fv.files[0]) novos.push(['ccVerso',fv.files[0]]);
+  if(novos.length){ toast('A processar documentos…'); for(const [k,f] of novos){ const r=await comprimirFicheiro(f); if(r) anexos[k]=r; } }
   const numero = id ? (_cCur.numero || proximoNumero()) : proximoNumero();
   const obj={ id:id||uid(), numero, nome,
     nasc:$('c-nasc').value, ccTipo:$('c-cctipo').value, cc:$('c-cc').value.trim(), nif:$('c-nif').value.trim(), ccVal:$('c-ccval').value,
@@ -1372,11 +1460,20 @@ function guardarCrianca(id){
     dataInscricao:$('c-datains').value||hoje(), avulsoDias:_cCur.avulsoDias||[], semanasSel:_cCur.semanasSel||[], mesesSel:_cCur.mesesSel||[],
     atleta:!!_cCur.atleta, temIrmao:!!_cCur.temIrmao, grupo:_cCur.grupo||'',
     descontoVerificado:!!_cCur.descontoVerificado, notaInscricao:_cCur.notaInscricao||'', lembrete:_cCur.lembrete||'',
+    cancelada:!!_cCur.cancelada, dataCancel:_cCur.dataCancel||'', motivoCancel:_cCur.motivoCancel||'',
+    anexos,
     valor:parseFloat($('c-valor').value)||0, pago:parseFloat($('c-pago').value)||0, pagamento:$('c-pag').value };
   if(id){ const i=d.criancas.findIndex(x=>x.id===id); if(i>=0) d.criancas[i]=obj; } else d.criancas.push(obj);
   setD(d); LS.del('atl_rascunho_insc'); _modalCriancaNovo=false; fecharModal(); renderCriancas(); toast('Inscrição guardada.');
 }
-function eliminarCrianca(id){ if(!confirm('Eliminar esta inscrição?')) return; const d=getD(); d.criancas=d.criancas.filter(x=>x.id!==id); setD(d); renderCriancas(); toast('Inscrição eliminada.'); }
+function eliminarCrianca(id){ if(!confirm('Eliminar DEFINITIVAMENTE esta inscrição? (Para manter o registo, usa antes o botão 🚫 Cancelar.)')) return; const d=getD(); d.criancas=d.criancas.filter(x=>x.id!==id); setD(d); renderCriancas(); toast('Inscrição eliminada.'); }
+function cancelarInscricao(id){ if(guardaModoAno()) return; const d=getD(); const c=d.criancas.find(x=>x.id===id); if(!c) return;
+  const motivo=prompt('Cancelar a inscrição de '+(c.nome||'')+'.\nMotivo (opcional):', c.motivoCancel||'');
+  if(motivo===null) return; // premiu Cancelar
+  c.cancelada=true; c.dataCancel=hoje(); c.motivoCancel=(motivo||'').trim();
+  setD(d); renderCriancas(); toast('Inscrição cancelada (mantida no registo). Deixa de contar para mapas, listas e custos.');
+}
+function reativarInscricao(id){ if(guardaModoAno()) return; const d=getD(); const c=d.criancas.find(x=>x.id===id); if(!c) return; if(!confirm('Reativar a inscrição de '+(c.nome||'')+'?')) return; c.cancelada=false; delete c.dataCancel; delete c.motivoCancel; setD(d); renderCriancas(); toast('Inscrição reativada.'); }
 // gestão administrativa da inscrição (só a admin) — verificação + notas
 function abrirAdminInscricao(id){ if(guardaModoAno()) return;
   const d=getD(); const c=d.criancas.find(x=>x.id===id); if(!c) return;
@@ -1429,7 +1526,7 @@ function renderDespesasAlimentacao(){
   if(modoAno()) return `<div class="card"><div class="empty">A alimentação por dia é por período (as datas variam). Escolhe um período específico no seletor do topo.</div></div>`;
   const dias=diasUteisPeriodo();
   if(!dias.length) return `<div class="card"><div class="empty">Este período não tem datas. Define-as no período.</div></div>`;
-  const att=d.criancas.map(diasDaCrianca);
+  const att=criancasAtivas(d).map(diasDaCrianca);
   const rows=dias.map(dt=>{ const iso=isoDate(dt); const n=att.filter(s=>s.has(iso)).length; return {iso,n,custo:n*pd}; });
   const comGente=rows.filter(r=>r.n>0);
   const total=rows.reduce((s,r)=>s+r.custo,0);
@@ -1457,7 +1554,7 @@ function itensDespesa(){
   (d.despesas||[]).forEach(x=>out.push({data:x.data||'', valor:+x.valor||0, cat:x.cat||'Outros', desc:x.desc||'', tipo:'Despesa'}));
   (d.equipa||[]).forEach(m=>{ if(+m.remuneracao||0) out.push({data:'', valor:+m.remuneracao||0, cat:'Funcionários', desc:((m.cargo||'')+' '+(m.nome||'')).trim(), tipo:'Funcionário'}); });
   const pd=precoDiaAlimentacao();
-  if(pd){ const att=d.criancas.map(diasDaCrianca); diasUteisPeriodo().forEach(dt=>{ const iso=isoDate(dt); const n=att.filter(s=>s.has(iso)).length; if(n) out.push({data:iso, valor:n*pd, cat:'Alimentação', desc:n+' criança(s) × '+fmt(pd), tipo:'Alimentação'}); }); }
+  if(pd){ const att=criancasAtivas(d).map(diasDaCrianca); diasUteisPeriodo().forEach(dt=>{ const iso=isoDate(dt); const n=att.filter(s=>s.has(iso)).length; if(n) out.push({data:iso, valor:n*pd, cat:'Alimentação', desc:n+' criança(s) × '+fmt(pd), tipo:'Alimentação'}); }); }
   (d.atividades||[]).forEach(a=>{ const v=custoAtividade(a); if(v) out.push({data:a.data||'', valor:v, cat:'Atividades / Visitas', desc:(a.nome||'')+' ('+(a.grupo||'Todos')+' · '+nCriancasAtividade(a)+' crianças)', tipo:'Atividade'}); });
   return out;
 }
