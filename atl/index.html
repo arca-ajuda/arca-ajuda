@@ -8,12 +8,12 @@
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   :root{
-    --teal:#0F6E56;--teal-d:#085041;--teal-l:#E1F5EE;--teal-m:#1D9E75;
+    --teal:#2C7CB5;--teal-d:#163E6E;--teal-l:#E8F2FB;--teal-m:#2E77C2;
     --coral:#D85A30;--coral-l:#FAECE7;--coral-d:#712B13;
     --amber:#BA7517;--amber-l:#FAEEDA;--amber-d:#633806;
     --blue:#185FA5;--blue-l:#E6F1FB;
-    --text:#1F2A2E;--text-2:#5C6B70;--text-3:#93A0A4;
-    --bg:#F5F7F6;--bg2:#EDF1EF;--card:#FFFFFF;--line:#E3E9E6;
+    --text:#1B2A3D;--text-2:#556377;--text-3:#8C98A8;
+    --bg:#F3F6FB;--bg2:#E8EFF8;--card:#FFFFFF;--line:#DFE7F1;
     --radius:10px;--radius-lg:14px;--border:1px solid var(--line);
   }
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.45}
@@ -21,9 +21,9 @@
   input,select,textarea{font-family:inherit;font-size:14px}
   .hidden{display:none!important}
 
-  #login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0F6E56,#085041);display:flex;align-items:center;justify-content:center;padding:20px;z-index:1000}
+  #login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#2C7CB5,#163E6E);display:flex;align-items:center;justify-content:center;padding:20px;z-index:1000}
   /* ---- PÁGINA PÚBLICA (pais) ---- */
-  #pub{display:none;min-height:100vh;background:linear-gradient(160deg,#0F6E56,#0a4a39)}
+  #pub{display:none;min-height:100vh;background:linear-gradient(160deg,#2C7CB5,#163E6E)}
   #pub .pub-wrap{max-width:720px;margin:0 auto;padding:22px 16px 50px}
   #pub .pub-hero{color:#fff;text-align:center;font-weight:800;font-size:26px;letter-spacing:.4px;padding:14px 0 18px;display:flex;flex-direction:column;align-items:center;gap:4px}
   #pub .pub-hero .pub-sub{font-size:14px;font-weight:600;opacity:.92}
@@ -69,19 +69,18 @@
   .side-mini:hover{background:rgba(255,255,255,.28)}
   .side-period-btns .side-mini{flex:1}
   #cloud-pill{font-size:11px;font-weight:700;padding:5px 9px;border-radius:20px;background:rgba(255,255,255,.18)}
-  nav#tabs{display:flex;flex-direction:column;gap:6px;overflow-y:auto;padding:2px 0}
-  nav#tabs button{--c:#0F6E56;text-align:left;border:none;border-left:5px solid var(--c);border-radius:9px;padding:9px 12px;font-size:13.5px;font-weight:800;white-space:nowrap;cursor:pointer;transition:all .12s ease;background:#fff;color:var(--c);box-shadow:0 1px 3px rgba(0,0,0,.14)}
+  nav#tabs{display:flex;flex-direction:column;gap:6px;overflow:visible;padding:2px 0}
+  nav#tabs button{--c:#173F72;text-align:left;border:none;border-left:5px solid var(--c);border-radius:9px;padding:9px 12px;font-size:13.5px;font-weight:800;white-space:nowrap;cursor:pointer;transition:all .12s ease;background:#fff;color:var(--c);box-shadow:0 1px 3px rgba(0,0,0,.14)}
   nav#tabs button:hover{filter:brightness(.97);transform:translateX(2px)}
   nav#tabs button.active{background:var(--c);color:#fff;border-left-color:rgba(255,255,255,.65);box-shadow:0 3px 9px rgba(0,0,0,.25)}
-  nav#tabs button:nth-child(1){--c:#185FA5}
-  nav#tabs button:nth-child(2){--c:#B8791C}
-  nav#tabs button:nth-child(3){--c:#7A3FB0}
-  nav#tabs button:nth-child(4){--c:#D85A30}
-  nav#tabs button:nth-child(5){--c:#1D9E75}
-  nav#tabs button:nth-child(6){--c:#C77A0A}
-  nav#tabs button:nth-child(7){--c:#556074}
-  nav#tabs button:nth-child(8){--c:#C0398B}
-  nav#tabs button:nth-child(9){--c:#6B7A70}
+  nav#tabs button:nth-child(1){--c:#1B4E8A}
+  nav#tabs button:nth-child(2){--c:#2E77C2}
+  nav#tabs button:nth-child(3){--c:#C0453A}
+  nav#tabs button:nth-child(4){--c:#B7791F}
+  nav#tabs button:nth-child(5){--c:#5A4FB0}
+  nav#tabs button:nth-child(6){--c:#4A6079}
+  nav#tabs button:nth-child(7){--c:#2E77C2}
+  nav#tabs button:nth-child(8){--c:#4A6079}
   .side-foot{margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px;border-top:1px solid rgba(255,255,255,.2);padding-top:10px}
   .side-foot .side-mini{flex:1}
   #content{flex:1;min-width:0}
@@ -231,8 +230,7 @@
     </div>
     <nav id="tabs">
       <button data-tab="criancas" onclick="showTab('criancas')">🧒 Inscrições</button>
-      <button data-tab="semanas" onclick="showTab('semanas')">📅 Semanas</button>
-      <button data-tab="mapa" onclick="showTab('mapa')">📆 Mapa</button>
+      <button data-tab="mapa" onclick="showTab('mapa')">📆 Semanas / Mapa</button>
       <button data-tab="despesas" onclick="showTab('despesas')">💸 Despesas</button>
       <button data-tab="receitas" onclick="showTab('receitas')">💰 Receitas</button>
       <button data-tab="precos" onclick="showTab('precos')">🏷️ Valores</button>
@@ -451,26 +449,26 @@ function docsDefault(){ return [
 // ---------- impressão ----------
 function logoHeaderHTML(){
   const c=getCfg(); const logo=c.logo? `<img src="${c.logo}" style="max-height:78px;max-width:200px;object-fit:contain">` : '';
-  return `<div style="display:flex;align-items:center;gap:16px;border-bottom:3px solid #0F6E56;padding-bottom:10px;margin-bottom:18px">${logo}<div><div style="font-size:18px;font-weight:800;color:#0F6E56">${esc(c.assocNome||"ARCA d'Ajuda")}</div><div style="font-size:12px;color:#555">ATL ARCAKIDS</div></div></div>`;
+  return `<div style="display:flex;align-items:center;gap:16px;border-bottom:3px solid #173F72;padding-bottom:10px;margin-bottom:18px">${logo}<div><div style="font-size:18px;font-weight:800;color:#173F72">${esc(c.assocNome||"ARCA d'Ajuda")}</div><div style="font-size:12px;color:#555">ATL ARCAKIDS</div></div></div>`;
 }
 function rodapeImpressaoHTML(){
   const c=getCfg(); const bits=[]; if(c.assocMorada)bits.push(esc(c.assocMorada)); if(c.assocNif)bits.push('NIF/NIPC: '+esc(c.assocNif)); if(c.assocContacto)bits.push(esc(c.assocContacto));
   const nome=esc(c.assocNome||''); if(!nome && !bits.length) return '';
-  return `<div style="margin-top:34px;border-top:2px solid #0F6E56;padding-top:8px;font-size:10.5px;color:#555;text-align:center;line-height:1.4"><b style="color:#0F6E56">${nome}</b>${bits.length?'<br>'+bits.join(' · '):''}</div>`;
+  return `<div style="margin-top:34px;border-top:2px solid #173F72;padding-top:8px;font-size:10.5px;color:#555;text-align:center;line-height:1.4"><b style="color:#173F72">${nome}</b>${bits.length?'<br>'+bits.join(' · '):''}</div>`;
 }
 function abrirImpressao(titulo, corpoHtml){
   const w=window.open('','_blank'); if(!w){ toast('Permite pop-ups (janelas) para imprimir.',false); return; }
   w.document.write(`<html><head><meta charset="utf-8"><title>${esc(titulo)}</title><style>
     body{font-family:Arial,Helvetica,sans-serif;padding:28px;color:#111;line-height:1.55}
-    h1{font-size:18px;color:#0F6E56;margin:0 0 4px}
+    h1{font-size:18px;color:#173F72;margin:0 0 4px}
     table{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0 12px}
     td,th{border:1px solid #bbb;padding:6px 9px;text-align:left;vertical-align:top}
-    th{background:#E1F5EE;width:34%;font-weight:700}
-    .sec{font-weight:700;color:#0F6E56;margin:16px 0 4px;border-bottom:1px solid #ccc;font-size:13px;padding-bottom:2px}
+    th{background:#E8F1FB;width:34%;font-weight:700}
+    .sec{font-weight:700;color:#173F72;margin:16px 0 4px;border-bottom:1px solid #ccc;font-size:13px;padding-bottom:2px}
     .decl{white-space:pre-wrap;font-size:13.5px;margin-top:10px}
     .btnbar{margin-top:22px}
     @media print{.btnbar{display:none}}
-  </style></head><body>${logoHeaderHTML()}${corpoHtml}${rodapeImpressaoHTML()}<div class="btnbar"><button onclick="window.print()" style="padding:9px 16px;background:#0F6E56;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">🖨️ Imprimir</button></div></body></html>`);
+  </style></head><body>${logoHeaderHTML()}${corpoHtml}${rodapeImpressaoHTML()}<div class="btnbar"><button onclick="window.print()" style="padding:9px 16px;background:#173F72;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">🖨️ Imprimir</button></div></body></html>`);
   w.document.close(); w.focus(); setTimeout(()=>{try{w.print();}catch(e){}},400);
 }
 function preencherPlaceholders(txt, c){
@@ -600,7 +598,7 @@ async function criarConta(){
   }catch(e){ loginMsg(e.message||'Falha ao criar conta.', false); }
 }
 function usarLocal(){ modoLocal=true; LS.set('atl_modo_local', true); entrarApp(); }
-function loginMsg(m, ok){ const el=$('login-msg'); el.textContent=m||''; el.style.color = ok===false?'#C0392B':(ok===true?'#0F6E56':'#5C6B70'); }
+function loginMsg(m, ok){ const el=$('login-msg'); el.textContent=m||''; el.style.color = ok===false?'#C0392B':(ok===true?'#173F72':'#5C6B70'); }
 
 async function entrarApp(){
   $('login-screen').style.display='none'; $('app').style.display='flex';
@@ -689,12 +687,17 @@ function guardarEdicao(id){
   const nome=$('e-nome').value.trim(); if(!nome){ toast('Dá um nome ao período.',false); return; }
   const ini=$('e-ini').value, fim=$('e-fim').value;
   if(ini&&fim&&parseD(ini)>parseD(fim)){ toast('A data de fim tem de ser depois do início.',false); return; }
+  const antigo = id ? edicoes.find(e=>e.id===id) : null;
+  const datasMudaram = antigo ? (antigo.dataInicio!==ini || antigo.dataFim!==fim) : false;
   const obj={ id:id||uid(), nome, ano:parseInt($('e-ano').value)||'', dataInicio:ini, dataFim:fim };
   if(id){ const i=edicoes.findIndex(e=>e.id===id); if(i>=0) edicoes[i]=obj; } else edicoes.push(obj);
   edicaoAtiva = obj.id; save('atl_edicoes', edicoes); save('atl_edicao_ativa', edicaoAtiva);
-  if(!id){ const dd=dadosVazios(); if(obj.dataInicio&&obj.dataFim){ dd.precos.inscricoes=escaloesDoPeriodo(obj, dd.precos.inscricoes); } setD(dd); }
+  let escaloesRefeitos=false;
+  if(!id){ const dd=dadosVazios(); if(obj.dataInicio&&obj.dataFim){ dd.precos.inscricoes=escaloesDoPeriodo(obj, dd.precos.inscricoes); escaloesRefeitos=true; } setD(dd); }
+  else if(datasMudaram && obj.dataInicio && obj.dataFim){ const d=getD(); d.precos.inscricoes=escaloesDoPeriodo(obj, d.precos.inscricoes); setD(d); escaloesRefeitos=true; }
   publicarConfigPublica(true);
-  fecharModal(); popularEdicoes(); renderAtual(); toast('Período guardado.'+((!id&&obj.dataInicio)?' Escalões (1 dia, semanas e Total) criados — define os preços em 🏷️ Valores.':''));
+  fecharModal(); popularEdicoes(); renderAtual();
+  toast('Período guardado.'+(escaloesRefeitos?' Escalões atualizados para as datas (define/confere os preços em 🏷️ Valores).':''));
 }
 function eliminarEdicao(id){
   const e=edicoes.find(x=>x.id===id); const nome=e?e.nome:'';
@@ -774,7 +777,7 @@ function renderDashboard(){
     </div>
     `;
   try{ if(chartRV) chartRV.destroy();
-    chartRV = new Chart($('ch-rv'), { type:'doughnut', data:{ labels:['Recebido','Pendente','Despesas'], datasets:[{ data:[t.totPago, t.pendente, t.totDesp], backgroundColor:['#1D9E75','#BA7517','#D85A30'], borderWidth:0 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{size:11}}}} } });
+    chartRV = new Chart($('ch-rv'), { type:'doughnut', data:{ labels:['Recebido','Pendente','Despesas'], datasets:[{ data:[t.totPago, t.pendente, t.totDesp], backgroundColor:['#2E77C2','#BA7517','#D85A30'], borderWidth:0 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{size:11}}}} } });
   }catch(e){}
 }
 
@@ -989,11 +992,10 @@ function custoAtividadesPeriodo(edId){
 /* ============================================================
    SEMANAS (geradas automaticamente do período)
    ============================================================ */
-function renderSemanas(){
-  const el=$('sec-semanas'); if(precisaEdicao(el)) return;
-  const ed=getEdicao(); const semanas=semanasPeriodo(); const d=getD(); const meta=d.semanasMeta||{};
-  if(!ed.dataInicio){ el.innerHTML=`<div class="card"><div class="empty">Este período não tem datas.<br><br><button class="btn btn-primary" style="width:auto;padding:10px 18px" onclick="abrirModalEdicao(getEdicao())">✏️ Definir datas</button></div></div>`; return; }
-  el.innerHTML=`<div class="card">
+function renderSemanas(){ const el=$('sec-semanas'); if(precisaEdicao(el)) return; el.innerHTML=renderSemanasConteudo(); }
+function renderSemanasConteudo(){
+  const semanas=semanasPeriodo(); const d=getD(); const meta=d.semanasMeta||{};
+  return `<div class="card">
     <div class="card-head"><div class="card-title">Semanas · ${semanas.length}</div><div class="muted">Geradas automaticamente (só dias úteis)</div></div>
     ${!semanas.length?'<div class="empty">Sem dias úteis no período.</div>':
     `<div class="table-wrap"><table><thead><tr><th>Semana</th><th>Período</th><th>Dias úteis</th><th>Tema</th><th>Monitores</th><th></th></tr></thead><tbody>
@@ -1007,7 +1009,7 @@ function editarMetaSemana(sid){
   modal('Semana — tema e monitores',`
     <div class="fg"><label>Tema</label><input id="sm-tema" value="${esc(meta.tema||'')}"></div>
     <div class="fg"><label>Monitores</label><input id="sm-mon" value="${esc(meta.monitores||'')}"></div>`,
-    [ {txt:'Guardar',cls:'btn-add',fn:()=>{ const dd=getD(); dd.semanasMeta=dd.semanasMeta||{}; dd.semanasMeta[sid]={tema:$('sm-tema').value.trim(),monitores:$('sm-mon').value.trim()}; setD(dd); fecharModal(); renderSemanas(); toast('Semana atualizada.'); }} ]);
+    [ {txt:'Guardar',cls:'btn-add',fn:()=>{ const dd=getD(); dd.semanasMeta=dd.semanasMeta||{}; dd.semanasMeta[sid]={tema:$('sm-tema').value.trim(),monitores:$('sm-mon').value.trim()}; setD(dd); fecharModal(); renderMapa(); toast('Semana atualizada.'); }} ]);
 }
 
 /* ============================================================
@@ -1022,13 +1024,15 @@ function renderMapa(){
   const ed=getEdicao();
   if(!ed.dataInicio){ el.innerHTML=`<div class="card"><div class="empty">Este período não tem datas.<br><br><button class="btn btn-primary" style="width:auto;padding:10px 18px" onclick="abrirModalEdicao(getEdicao())">✏️ Definir datas</button></div></div>`; return; }
   const seg=`<div class="seg" style="margin-bottom:14px">
+    <button class="${mapaView==='semanas'?'on':''}" onclick="mapaView='semanas';renderMapa()">📅 Semanas</button>
     <button class="${mapaView==='ocupacao'?'on':''}" onclick="mapaView='ocupacao';renderMapa()">📆 Ocupação por dia</button>
     <button class="${mapaView==='nomes'?'on':''}" onclick="mapaView='nomes';renderMapa()">🧾 Nomes por semana</button>
     <button class="${mapaView==='alergias'?'on':''}" onclick="mapaView='alergias';renderMapa()">🍽️ Alergias (cozinha)</button>
     <button class="${mapaView==='obs'?'on':''}" onclick="mapaView='obs';renderMapa()">💊 Observações</button>
     <button class="${mapaView==='grupos'?'on':''}" onclick="mapaView='grupos';renderMapa()">👥 Grupos</button></div>`;
   let corpo;
-  if(mapaView==='nomes') corpo=renderListaSemanal('nomes');
+  if(mapaView==='semanas') corpo=renderSemanasConteudo();
+  else if(mapaView==='nomes') corpo=renderListaSemanal('nomes');
   else if(mapaView==='alergias') corpo=renderListaSemanal('alergias');
   else if(mapaView==='obs') corpo=renderListaSemanal('obs');
   else if(mapaView==='grupos') corpo=renderListaGrupos();
@@ -1067,7 +1071,7 @@ function imprimirListaSemanal(kind, idx){
   if(idx!=null){ if(!grupos[idx]) return; grupos=[grupos[idx]]; }
   let body='';
   grupos.forEach(g=>{
-    body+=`<h2 style="font-size:14px;margin:16px 0 6px;border-bottom:2px solid #0F6E56;padding-bottom:3px;color:#0F6E56">${esc(g.s.label)} (${esc(g.s.periodo)}) — ${g.lista.length} criança(s)</h2>`;
+    body+=`<h2 style="font-size:14px;margin:16px 0 6px;border-bottom:2px solid #173F72;padding-bottom:3px;color:#173F72">${esc(g.s.label)} (${esc(g.s.periodo)}) — ${g.lista.length} criança(s)</h2>`;
     body+= g.lista.length? '<table><thead><tr><th>Nome completo</th><th>Idade</th><th>NIF</th><th>'+esc(cfg.colH)+'</th></tr></thead><tbody>'+g.lista.map(c=>`<tr><td>${esc(c.nome)}</td><td>${idadeATL(c)}</td><td>${esc(c.nif||'')}</td><td>${cfg.val(c)}</td></tr>`).join('')+'</tbody></table>' : '<p>Sem crianças.</p>';
   });
   const sufixo = idx!=null? ' — '+esc(grupos[0].s.label)+' ('+esc(grupos[0].s.periodo)+')' : '';
@@ -1248,7 +1252,7 @@ function fichaPublicaCamposHTML(){
     <label class="sem-check"><input type="radio" name="c-desc" value="nenhum" checked onchange="setDescontoOpcao('nenhum')"> ✅ Não se aplica — o meu educando <b>não é atleta da ARCA</b> e <b>não tem irmão(ã)</b> a frequentar (ou que vá frequentar) o ATL no mesmo período</label>
     <label class="sem-check"><input type="radio" name="c-desc" value="atleta" onchange="setDescontoOpcao('atleta')"> 🏅 É <b>atleta da ARCA</b></label>
     <label class="sem-check"><input type="radio" name="c-desc" value="irmao" onchange="setDescontoOpcao('irmao')"> 👧👦 Tem <b>irmão(ã)</b> que já frequenta ou vai frequentar o ATL no mesmo período</label>
-    <div class="card" style="background:var(--teal-l);border-color:#bfe6d8;margin-top:12px">
+    <div class="card" style="background:var(--teal-l);border-color:#c9dcf3;margin-top:12px">
       <div style="font-size:13px;color:var(--teal-d)">Valor a pagar</div>
       <div style="font-size:26px;font-weight:800;color:var(--teal-d)" id="c-valor-pub">€ 0,00</div>
       <input type="hidden" id="c-valor">
@@ -1456,8 +1460,8 @@ function verAnexoData(key, ax, nome){
   const conteudo = isPdf? `<iframe src="${ax.dataUrl}" style="width:100%;height:88vh;border:0;background:#fff"></iframe>` : `<img src="${ax.dataUrl}" style="max-width:100%;max-height:86vh;box-shadow:0 4px 18px rgba(0,0,0,.4)">`;
   w.document.write(`<html><head><meta charset="utf-8"><title>${esc(titulo)} — ${esc(nome||'')}</title>
     <style>body{margin:0;background:#2b2b2b;font-family:Arial,Helvetica,sans-serif}
-    .bar{position:sticky;top:0;background:#0F6E56;color:#fff;padding:9px 12px;display:flex;align-items:center;gap:12px;justify-content:center}
-    .bar b{font-size:13px} .bar button{padding:7px 14px;background:#fff;color:#0F6E56;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+    .bar{position:sticky;top:0;background:#173F72;color:#fff;padding:9px 12px;display:flex;align-items:center;gap:12px;justify-content:center}
+    .bar b{font-size:13px} .bar button{padding:7px 14px;background:#fff;color:#173F72;border:none;border-radius:8px;font-weight:700;cursor:pointer}
     .wrap{display:flex;align-items:center;justify-content:center;min-height:88vh;padding:14px}
     ${printCss}</style></head><body>
     <div class="bar"><b>${esc(titulo)} · ${esc(nome||'')}</b><button onclick="window.print()">🖨️ Imprimir${isCC?' (tamanho CC)':''}</button><button onclick="window.close()">✕ Fechar</button></div>
@@ -1477,8 +1481,8 @@ function abrirImpressaoAnexos(anexos, nome){
   const blocoCC = ccs.length? `<div class="ccrow">${ccs.map(([k,t])=>`<div class="doc cc"><div class="tt">${esc(t)}</div>${media(k,true)}</div>`).join('')}</div>`:'';
   w.document.write(`<html><head><meta charset="utf-8"><title>Documentos — ${esc(nome||'')}</title>
     <style>body{margin:0;background:#2b2b2b;font-family:Arial,Helvetica,sans-serif;color:#fff}
-    .bar{position:sticky;top:0;background:#0F6E56;padding:9px 12px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
-    .bar b{font-size:13px}.bar button{padding:7px 14px;background:#fff;color:#0F6E56;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+    .bar{position:sticky;top:0;background:#173F72;padding:9px 12px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+    .bar b{font-size:13px}.bar button{padding:7px 14px;background:#fff;color:#173F72;border:none;border-radius:8px;font-weight:700;cursor:pointer}
     .wrap{padding:14px;display:flex;flex-direction:column;gap:12px;align-items:center}
     .doc{background:#fff;color:#111;border-radius:8px;padding:10px;width:100%;max-width:900px;box-sizing:border-box}
     .doc .tt{font-weight:700;margin-bottom:6px;font-size:13px}
@@ -1682,7 +1686,7 @@ function calendarioDias(sel){
     for(let i=0;i<offset;i++) h+='<div class="d off"></div>';
     for(let dia=1;dia<=ndias;dia++){ const iso=y+'-'+pad2(mo+1)+'-'+pad2(dia); const util=uteisSet.has(iso); const on=sel.includes(iso); const locked=lock.has(iso);
       if(!util){ h+=`<div class="d na">${dia}</div>`; }
-      else if(locked){ h+=`<div class="d" style="background:#cfe8de;color:#0b5a46;cursor:not-allowed;font-weight:700" title="Já incluído na semana selecionada">${dia}</div>`; }
+      else if(locked){ h+=`<div class="d" style="background:#dbe8f7;color:#173F72;cursor:not-allowed;font-weight:700" title="Já incluído na semana selecionada">${dia}</div>`; }
       else { h+=`<div class="d ${on?'on':''}" onclick="toggleDia('${iso}')">${dia}</div>`; } }
     h+='</div></div>';
   });
@@ -1816,7 +1820,7 @@ function renderDespesasLista(){
   const tot=lista.reduce((s,x)=>s+(+x.valor||0),0);
   const cAlim=modoAno()?edicoes.reduce((s,e)=>s+custoAlimentacaoPeriodo(e.id),0):custoAlimentacaoTotal();
   const cAtiv=modoAno()?edicoes.reduce((s,e)=>s+custoAtividadesPeriodo(e.id),0):custoAtividadesTotal();
-  const avisoAuto=`<div class="info" style="background:var(--teal-l);border-color:#bfe6d8;color:var(--teal-d)">
+  const avisoAuto=`<div class="info" style="background:var(--teal-l);border-color:#c9dcf3;color:var(--teal-d)">
     ⚙️ <b>Calculadas automaticamente</b> (não precisam de lançamento): 🍽️ <b>Alimentação ${fmt(cAlim)}</b>${cAlim===0?' <span class="muted">— define os valores em Valores → Alimentação diária</span>':''} · 🎟️ <b>Atividades ${fmt(cAtiv)}</b>${cAtiv===0?' <span class="muted">— cria em Atividades</span>':''}. Já contam no <b>Resumo</b> e no <b>Painel</b>.</div>`;
   return `${avisoAuto}<div class="card">
     <div class="card-head"><div class="card-title">Despesas lançadas por ti · ${fmt(tot)}</div>
