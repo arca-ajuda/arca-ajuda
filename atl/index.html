@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ATL ARCAKIDS — ARCA d'Ajuda</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   :root{
@@ -68,6 +69,8 @@
   .side-mini{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:7px 9px;font-size:12px;font-weight:700;cursor:pointer}
   .side-mini:hover{background:rgba(255,255,255,.28)}
   .side-period-btns .side-mini{flex:1}
+  .side-drive-aviso{width:100%;margin-top:6px;background:#FFE9A8;color:#6b4e00;border:1px solid #E6B800;border-radius:8px;padding:7px 9px;font-size:11.5px;font-weight:800;cursor:pointer;line-height:1.25;text-align:center}
+  .side-drive-aviso:hover{background:#FFDF85}
   #cloud-pill{font-size:11px;font-weight:700;padding:5px 9px;border-radius:20px;background:rgba(255,255,255,.18)}
   nav#tabs{display:flex;flex-direction:column;gap:6px;overflow:visible;padding:2px 0}
   nav#tabs button{--c:#173F72;text-align:left;border:none;border-left:5px solid var(--c);border-radius:9px;padding:9px 12px;font-size:13.5px;font-weight:800;white-space:nowrap;cursor:pointer;transition:all .12s ease;background:#fff;color:var(--c);box-shadow:0 1px 3px rgba(0,0,0,.14)}
@@ -222,11 +225,13 @@
       <button class="side-home" data-tab="dashboard" onclick="showTab('dashboard')" title="Painel">📊 Painel</button>
     </div>
     <div class="side-period">
+      <select id="ano-sel" title="Ano" onchange="onAnoChange(this.value)"></select>
       <select id="ed-sel" onchange="onEdicaoChange(this.value)"></select>
       <div class="side-period-btns">
         <button class="side-mini" title="Editar nome/datas ou eliminar este período" onclick="editarPeriodoAtual()">✏️ Editar</button>
         <button class="side-mini" onclick="abrirModalEdicao()">+ Período</button>
       </div>
+      <button id="drive-aviso" class="side-drive-aviso" hidden onclick="driveReligarEGuardar()">⚠️ Religar a Google Drive p/ guardar</button>
     </div>
     <nav id="tabs">
       <button data-tab="criancas" onclick="showTab('criancas')">🧒 Inscrições</button>
@@ -364,6 +369,99 @@ function marcaCloud(state){ const p=$('cloud-pill'); if(!p) return;
 }
 
 /* ============================================================
+   CÓPIA DE SEGURANÇA NA GOOGLE DRIVE (Ano → ATL)
+   ============================================================ */
+let _driveTok=null, _driveTokExp=0, _driveTC=null, _drivePendente=false;
+function driveLigada(){ return !!_driveTok && Date.now()<_driveTokExp; }
+function atualizaDriveAviso(){
+  const el=$('drive-aviso'); if(!el) return;
+  const auto=getCfg().driveAuto;
+  if(!auto){ el.hidden=true; return; }
+  if(!driveLigada()){ el.hidden=false; el.textContent = _drivePendente? '⚠️ Há alterações por guardar na Drive — religar' : '⚠️ Religar a Google Drive p/ guardar'; }
+  else if(_drivePendente){ el.hidden=false; el.textContent='☁️ Guardar alterações na Drive'; }
+  else { el.hidden=true; }
+}
+async function driveReligarEGuardar(){ try{ toast('A ligar à Google Drive…'); await driveGetToken(true); _drivePendente=false; atualizaDriveAviso(); toast('A guardar na Drive…'); const rootId=await driveFolder('ATL ARCAKIDS','root'); for(const ed of edicoes){ await driveBackupEdicao(rootId, ed, true); } LS.set('atl_drive_ultima', Date.now()); toast('✅ Cópia guardada na Google Drive.'); atualizaDriveAviso(); }catch(e){ console.warn(e); toast('Não consegui guardar na Drive. Confirma o Client ID e a ligação.',false); } }
+function driveClient(){
+  const cid=(getCfg().driveClientId||'').trim();
+  if(!cid){ toast('Falta o Client ID da Google (Definições → Cópia na Google Drive).',false); return null; }
+  if(!(window.google&&google.accounts&&google.accounts.oauth2)){ toast('A biblioteca da Google ainda não carregou — espera uns segundos e tenta de novo.',false); return null; }
+  if(!_driveTC || _driveTC._cid!==cid){ _driveTC=google.accounts.oauth2.initTokenClient({client_id:cid, scope:'https://www.googleapis.com/auth/drive.file', callback:()=>{}}); _driveTC._cid=cid; }
+  return _driveTC;
+}
+function driveGetToken(interactive){
+  return new Promise((resolve,reject)=>{
+    if(_driveTok && Date.now()<_driveTokExp-60000) return resolve(_driveTok);
+    const tc=driveClient(); if(!tc) return reject(new Error('Sem Client ID / biblioteca.'));
+    tc.callback=(resp)=>{ if(resp&&resp.access_token){ _driveTok=resp.access_token; _driveTokExp=Date.now()+((resp.expires_in||3600)*1000); resolve(_driveTok); } else reject(new Error((resp&&resp.error)||'Não autorizado.')); };
+    try{ tc.requestAccessToken({prompt: interactive?'consent':''}); }catch(e){ reject(e); }
+  });
+}
+async function driveFetch(path, method='GET', body){
+  const res=await fetch('https://www.googleapis.com'+path,{method,headers:{Authorization:'Bearer '+_driveTok,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+  const j=await res.json().catch(()=>({})); if(!res.ok) throw new Error((j.error&&j.error.message)||('Drive '+res.status)); return j;
+}
+function driveEscQ(s){ return String(s||'').replace(/'/g,"\\'"); }
+async function driveFolder(nome, parent){
+  nome=String(nome||'').replace(/[\\/]/g,'-')||'sem-nome';
+  const q=encodeURIComponent(`name='${driveEscQ(nome)}' and mimeType='application/vnd.google-apps.folder' and '${parent}' in parents and trashed=false`);
+  const r=await driveFetch(`/drive/v3/files?q=${q}&fields=files(id,name)&spaces=drive`);
+  if(r.files&&r.files.length) return r.files[0].id;
+  const c=await driveFetch(`/drive/v3/files?fields=id`,'POST',{name:nome, mimeType:'application/vnd.google-apps.folder', parents:[parent]});
+  return c.id;
+}
+async function driveUpsert(nome, parent, mime, content){
+  const blob = content instanceof Blob ? content : new Blob([content],{type:mime});
+  const q=encodeURIComponent(`name='${driveEscQ(nome)}' and '${parent}' in parents and trashed=false`);
+  const found=await driveFetch(`/drive/v3/files?q=${q}&fields=files(id)&spaces=drive`);
+  if(found.files&&found.files.length){
+    const id=found.files[0].id;
+    const res=await fetch(`https://www.googleapis.com/upload/drive/v3/files/${id}?uploadType=media`,{method:'PATCH',headers:{Authorization:'Bearer '+_driveTok},body:blob});
+    if(!res.ok) throw new Error('Drive update '+res.status); return id;
+  }
+  const form=new FormData();
+  form.append('metadata', new Blob([JSON.stringify({name:nome, parents:[parent], mimeType:mime})],{type:'application/json'}));
+  form.append('file', blob);
+  const res=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{Authorization:'Bearer '+_driveTok},body:form});
+  const j=await res.json().catch(()=>({})); if(!res.ok) throw new Error((j.error&&j.error.message)||('Drive upload '+res.status)); return j.id;
+}
+function dataUrlToBlob(u){ const c=String(u||'').split(','); const mime=(c[0].match(/data:([^;]+)/)||[])[1]||'application/octet-stream'; const bin=atob(c[1]||''); const arr=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i); return new Blob([arr],{type:mime}); }
+function driveExt(u){ return /application\/pdf/.test(String(u||''))?'pdf':'jpg'; }
+async function driveBackupEdicao(rootId, ed, incluirDocs){
+  const d=LS.get('atl_ed_'+ed.id); if(!d) return;
+  const anoF=await driveFolder(String(ed.ano||'sem-ano'), rootId);
+  const atlF=await driveFolder(ed.nome||'ATL', anoF);
+  await driveUpsert('dados.json', atlF, 'application/json', JSON.stringify({edicao:ed, dados:d}, null, 2));
+  if(incluirDocs){
+    const comDocs=(d.criancas||[]).filter(c=>c.anexos&&(c.anexos.comprovativo||c.anexos.ccFrente||c.anexos.ccVerso));
+    if(comDocs.length){ const docsF=await driveFolder('Documentos', atlF);
+      for(const c of comDocs){ const ax=c.anexos||{}; const cF=await driveFolder(((c.numero?('#'+c.numero+' '):'')+(c.nome||'crianca')), docsF);
+        for(const [k,fn] of [['comprovativo','comprovativo'],['ccFrente','CC-frente'],['ccVerso','CC-verso']]){ const a=ax[k]; if(a&&a.dataUrl){ try{ const blob=dataUrlToBlob(a.dataUrl); await driveUpsert(fn+'.'+driveExt(a.dataUrl), cF, blob.type, blob); }catch(e){ console.warn('doc',e); } } }
+      }
+    }
+  }
+}
+async function driveLigar(){ try{ toast('A abrir a autorização da Google…'); await driveGetToken(true); _drivePendente=false; atualizaDriveAviso(); toast('Google Drive ligada. ✅'); const el=$('drive-estado'); if(el) el.textContent='✅ Google Drive ligada nesta sessão.'; }catch(e){ console.warn(e); toast('Não foi possível ligar à Google Drive. Confirma o Client ID e o domínio autorizado.',false); } }
+async function driveBackupTudo(){
+  if(!edicoes.length){ toast('Não há ATL para guardar.',false); return; }
+  try{ toast('A ligar à Google Drive…'); await driveGetToken(true);
+    const rootId=await driveFolder('ATL ARCAKIDS','root');
+    toast('A guardar na Drive… (pode demorar um pouco)');
+    for(const ed of edicoes){ await driveBackupEdicao(rootId, ed, true); }
+    LS.set('atl_drive_ultima', Date.now()); _drivePendente=false; atualizaDriveAviso();
+    toast('✅ Cópia guardada na Google Drive (Ano → ATL).');
+  }catch(e){ console.warn(e); toast('Falha ao guardar na Drive: '+(e.message||'erro'),false); }
+}
+let _driveAutoT=null;
+function driveAutoBackup(){
+  if(!getCfg().driveAuto) return;
+  if(!driveLigada()){ _drivePendente=true; atualizaDriveAviso(); return; } // expirou/desligou → avisa para religar
+  if(modoAno()||!edicaoAtiva) return;
+  clearTimeout(_driveAutoT);
+  _driveAutoT=setTimeout(async()=>{ try{ const rootId=await driveFolder('ATL ARCAKIDS','root'); const ed=getEdicao(); if(ed&&ed.id) await driveBackupEdicao(rootId, ed, false); LS.set('atl_drive_ultima', Date.now()); _drivePendente=false; atualizaDriveAviso(); }catch(e){ console.warn('auto drive',e); _drivePendente=true; atualizaDriveAviso(); } }, 6000);
+}
+
+/* ============================================================
    MODELO DE DADOS
    atl_edicoes -> [{id,nome,ano,dataInicio,dataFim}]
    atl_edicao_ativa -> id
@@ -403,9 +501,12 @@ function normalizaPrecos(p){
 }
 let edicoes = LS.get('atl_edicoes') || [];
 let edicaoAtiva = LS.get('atl_edicao_ativa') || null;
+let anoFiltro = LS.get('atl_ano_filtro') || null; // ano selecionado no menu ('todos' = todos os anos)
 
-const ANO='__ano__'; // vista anual (todos os períodos)
+const ANO='__ano__'; // vista anual (soma dos períodos do ano selecionado)
 function modoAno(){ return edicaoAtiva===ANO; }
+function anosDisponiveis(){ const ys=[...new Set(edicoes.map(e=>String(e.ano||'')).filter(Boolean))]; ys.sort((a,b)=>+b-+a); return ys; }
+function edicoesFiltradas(){ return (!anoFiltro||anoFiltro==='todos')? edicoes : edicoes.filter(e=>String(e.ano||'')===String(anoFiltro)); }
 function edKey(){ return 'atl_ed_'+edicaoAtiva; }
 function dadosVazios(){ return {criancas:[],preInscricoes:[],despesas:[],equipa:[],atividades:[],receitas:[],categorias:CATEGORIAS_DEFAULT.slice(),categoriasRec:CATEGORIAS_REC_DEFAULT.slice(),precos:precosDefault(),semanasMeta:{},inscricaoOnline:{aberto:true,prazo:'',max:0}}; }
 // crianças que contam (exclui as canceladas) — usado em contagens, mapas e custos
@@ -423,7 +524,7 @@ function estadoLink(d){ d=d||getD(); const cfg=getInscOnline(d);
 }
 function getDAno(){
   const base=dadosVazios();
-  edicoes.forEach(e=>{ const d=LS.get('atl_ed_'+e.id); if(!d) return; const nome=e.nome+(e.ano?(' '+e.ano):'');
+  edicoesFiltradas().forEach(e=>{ const d=LS.get('atl_ed_'+e.id); if(!d) return; const nome=e.nome+(e.ano?(' '+e.ano):'');
     (d.criancas||[]).forEach(c=>base.criancas.push(Object.assign({}, c, {_ed:nome, _edId:e.id})));
     (d.despesas||[]).forEach(x=>base.despesas.push(Object.assign({}, x, {_ed:nome})));
     (d.receitas||[]).forEach(x=>base.receitas.push(Object.assign({}, x, {_ed:nome})));
@@ -433,10 +534,11 @@ function getDAno(){
   return base;
 }
 function getD(){ if(modoAno()) return getDAno(); if(!edicaoAtiva) return dadosVazios(); const d=LS.get(edKey()); if(!d) return dadosVazios(); const m=Object.assign(dadosVazios(), d); m.precos=normalizaPrecos(m.precos); return m; }
-function setD(d){ if(!edicaoAtiva || modoAno()) return; save(edKey(), d); }
+function setD(d){ if(!edicaoAtiva || modoAno()) return; save(edKey(), d); driveAutoBackup(); }
+// aplica uma alteração aos dados de UMA edição específica (permite editar da vista anual)
 function getEdicao(){ if(modoAno()) return {id:ANO, nome:'Todo o ano', ano:'', dataInicio:'', dataFim:''}; return edicoes.find(e=>e.id===edicaoAtiva)||null; }
 function guardaModoAno(){ if(modoAno()){ toast('Vista anual: escolhe um período específico para editar.',false); return true; } return false; }
-function getCfg(){ return Object.assign({emailEnvio:'',emailNotif:'',emailDrive:'',logo:'',assocNome:"ARCA d'Ajuda",assocMorada:'',assocNif:'',assocContacto:''}, LS.get('atl_cfg')||{}); }
+function getCfg(){ return Object.assign({emailEnvio:'',emailNotif:'',emailDrive:'',driveClientId:'',driveAuto:false,logo:'',assocNome:"ARCA d'Ajuda",assocMorada:'',assocNif:'',assocContacto:''}, LS.get('atl_cfg')||{}); }
 function setCfg(c){ save('atl_cfg', c); }
 function proximoNumero(){ const arr=getD().criancas.map(c=>+c.numero||0); return (arr.length?Math.max(...arr):0)+1; }
 // ---------- documentos / declarações (modelos editáveis, globais) ----------
@@ -606,7 +708,9 @@ async function entrarApp(){
   if(LS.get('atl_documentos')===null) setDocs(docsDefault());
   edicoes = LS.get('atl_edicoes') || []; edicaoAtiva = LS.get('atl_edicao_ativa') || null;
   if(!edicaoAtiva && edicoes.length) edicaoAtiva = edicoes[0].id;
-  popularEdicoes(); showTab('dashboard'); initAjudaFab();
+  // alinhar o ano do menu com a edição ativa (ou o ano mais recente)
+  { const ea=edicoes.find(e=>e.id===edicaoAtiva); if(ea&&ea.ano) anoFiltro=String(ea.ano); else if(!anoFiltro) anoFiltro = anosDisponiveis()[0]||String(new Date().getFullYear()); }
+  popularEdicoes(); showTab('dashboard'); initAjudaFab(); atualizaDriveAviso();
   carregarPreInscricoesCloud();
   verificarFimMes();
 }
@@ -654,11 +758,24 @@ function sair(){ if(!confirm('Sair da conta do ATL neste dispositivo?')) return;
 /* ============================================================
    EDIÇÕES / PERÍODOS
    ============================================================ */
+function popularAnos(){
+  const sel=$('ano-sel'); if(!sel) return; const anos=anosDisponiveis();
+  if(anoFiltro!=='todos' && !anos.includes(String(anoFiltro))){ const ea=edicoes.find(e=>e.id===edicaoAtiva); anoFiltro = (ea&&ea.ano)? String(ea.ano) : (anos[0]||String(new Date().getFullYear())); }
+  sel.innerHTML='';
+  anos.forEach(y=>{ const o=document.createElement('option'); o.value=y; o.textContent='📅 '+y; if(String(anoFiltro)===y)o.selected=true; sel.appendChild(o); });
+  const ot=document.createElement('option'); ot.value='todos'; ot.textContent='🗂️ Todos os ATL (todos os anos)'; if(anoFiltro==='todos')ot.selected=true; sel.appendChild(ot);
+}
 function popularEdicoes(){
+  popularAnos();
   const sel=$('ed-sel'); sel.innerHTML='';
-  if(!edicoes.length){ const o=document.createElement('option'); o.value=''; o.textContent='(sem períodos)'; sel.appendChild(o); return; }
-  edicoes.forEach(e=>{ const o=document.createElement('option'); o.value=e.id; o.textContent=`${e.nome}${e.ano?' · '+e.ano:''}`; if(e.id===edicaoAtiva)o.selected=true; sel.appendChild(o); });
-  const oa=document.createElement('option'); oa.value=ANO; oa.textContent='📅 Todo o ano (todos os períodos)'; if(edicaoAtiva===ANO)oa.selected=true; sel.appendChild(oa);
+  const lista=edicoesFiltradas();
+  if(!lista.length){ const o=document.createElement('option'); o.value=''; o.textContent='(sem períodos neste ano)'; sel.appendChild(o); }
+  else lista.forEach(e=>{ const o=document.createElement('option'); o.value=e.id; o.textContent=`${e.nome}${e.ano?' · '+e.ano:''}`; if(e.id===edicaoAtiva)o.selected=true; sel.appendChild(o); });
+  const oa=document.createElement('option'); oa.value=ANO; oa.textContent = anoFiltro==='todos'? '➕ Somar todos os ATL (todos os anos)' : ('➕ Somar todos os ATL de '+anoFiltro); if(edicaoAtiva===ANO)oa.selected=true; sel.appendChild(oa);
+}
+function onAnoChange(v){ anoFiltro=v; LS.set('atl_ano_filtro', v);
+  if(edicaoAtiva!==ANO){ const lista=edicoesFiltradas(); if(!lista.find(e=>e.id===edicaoAtiva)){ edicaoAtiva = lista[0]? lista[0].id : ANO; save('atl_edicao_ativa', edicaoAtiva); } }
+  popularEdicoes(); renderAtual();
 }
 function onEdicaoChange(id){ edicaoAtiva=id; save('atl_edicao_ativa', id); renderAtual(); }
 function editarPeriodoAtual(){
@@ -692,6 +809,7 @@ function guardarEdicao(id){
   const obj={ id:id||uid(), nome, ano:parseInt($('e-ano').value)||'', dataInicio:ini, dataFim:fim };
   if(id){ const i=edicoes.findIndex(e=>e.id===id); if(i>=0) edicoes[i]=obj; } else edicoes.push(obj);
   edicaoAtiva = obj.id; save('atl_edicoes', edicoes); save('atl_edicao_ativa', edicaoAtiva);
+  if(obj.ano){ anoFiltro=String(obj.ano); LS.set('atl_ano_filtro', anoFiltro); }
   let escaloesRefeitos=false;
   if(!id){ const dd=dadosVazios(); if(obj.dataInicio&&obj.dataFim){ dd.precos.inscricoes=escaloesDoPeriodo(obj, dd.precos.inscricoes); escaloesRefeitos=true; } setD(dd); }
   else if(datasMudaram && obj.dataInicio && obj.dataFim){ const d=getD(); d.precos.inscricoes=escaloesDoPeriodo(obj, d.precos.inscricoes); setD(d); escaloesRefeitos=true; }
@@ -748,7 +866,7 @@ function totais(){
   const despLancadas = d.despesas.reduce((s,x)=>s+(+x.valor||0),0);
   const custoEquipa = d.equipa.reduce((s,m)=>s+(+m.remuneracao||0),0);
   let custoAtiv, custoAlim;
-  if(modoAno()){ custoAlim=edicoes.reduce((s,e)=>s+custoAlimentacaoPeriodo(e.id),0); custoAtiv=edicoes.reduce((s,e)=>s+custoAtividadesPeriodo(e.id),0); }
+  if(modoAno()){ custoAlim=edicoesFiltradas().reduce((s,e)=>s+custoAlimentacaoPeriodo(e.id),0); custoAtiv=edicoesFiltradas().reduce((s,e)=>s+custoAtividadesPeriodo(e.id),0); }
   else { custoAlim=custoAlimentacaoTotal(); custoAtiv=custoAtividadesTotal(); }
   const totDesp = despLancadas + custoEquipa + custoAtiv + custoAlim;
   const recTotal = totPago + outrasRec;
@@ -1544,7 +1662,7 @@ function renderCriancasTabela(){
         <td class="right">${fmt(val)}</td>
         <td class="right">${fmt(pg)}</td>
         <td>${canc?'<span class="chip red">Cancelada</span>':estado}${c.notaInscricao?` <span class="tag-nota" title="${esc(c.notaInscricao)}">📝 Nota</span>`:''}${c.lembrete?` <span class="tag-lembrete" title="${esc(c.lembrete)}">🔔 Lembrete</span>`:''}</td>
-        <td class="right" style="white-space:nowrap"><button class="btn-sm btn-neutral" title="Imprimir ficha e declarações" onclick="abrirImprimir('${c.id}')">🖨️</button> <button class="btn-sm btn-neutral" title="Gestão administrativa (verificação e notas)" onclick="abrirAdminInscricao('${c.id}')">🗂️</button> <button class="btn-sm btn-edit" onclick="abrirModalCrianca('${c.id}')">✏️</button> ${canc?`<button class="btn-sm btn-add" title="Reativar inscrição" onclick="reativarInscricao('${c.id}')">↩️ Reativar</button>`:`<button class="btn-sm btn-neutral" title="Cancelar inscrição (mantém o registo)" onclick="cancelarInscricao('${c.id}')">🚫</button>`} <button class="btn-sm btn-del" title="Eliminar definitivamente" onclick="eliminarCrianca('${c.id}')">🗑️</button></td>
+        <td class="right" style="white-space:nowrap"><button class="btn-sm btn-neutral" title="Imprimir ficha e declarações" onclick="abrirImprimir('${c.id}')">🖨️</button>${modoAno()?'':` <button class="btn-sm btn-neutral" title="Gestão administrativa (verificação e notas)" onclick="abrirAdminInscricao('${c.id}')">🗂️</button> <button class="btn-sm btn-edit" onclick="abrirModalCrianca('${c.id}')">✏️</button> ${canc?`<button class="btn-sm btn-add" title="Reativar inscrição" onclick="reativarInscricao('${c.id}')">↩️ Reativar</button>`:`<button class="btn-sm btn-neutral" title="Cancelar inscrição (mantém o registo)" onclick="cancelarInscricao('${c.id}')">🚫</button>`} <button class="btn-sm btn-del" title="Eliminar definitivamente" onclick="eliminarCrianca('${c.id}')">🗑️</button>`}</td>
       </tr>`; }).join('')}
     </tbody></table></div>`;
 }
@@ -1770,14 +1888,16 @@ async function guardarCrianca(id){
   if(id){ const i=d.criancas.findIndex(x=>x.id===id); if(i>=0) d.criancas[i]=obj; } else d.criancas.push(obj);
   setD(d); LS.del('atl_rascunho_insc'); _modalCriancaNovo=false; fecharModal(); renderCriancas(); toast('Inscrição guardada.');
 }
-function eliminarCrianca(id){ if(!confirm('Eliminar DEFINITIVAMENTE esta inscrição? (Para manter o registo, usa antes o botão 🚫 Cancelar.)')) return; const d=getD(); d.criancas=d.criancas.filter(x=>x.id!==id); setD(d); renderCriancas(); toast('Inscrição eliminada.'); }
-function cancelarInscricao(id){ if(guardaModoAno()) return; const d=getD(); const c=d.criancas.find(x=>x.id===id); if(!c) return;
+function bloqAnual(){ if(modoAno()){ toast('Estás a ver vários ATL. Para apagar ou alterar, escolhe primeiro o ATL específico no seletor — assim não mexes nos dados de outros ATL por engano.',false); return true; } return false; }
+function eliminarCrianca(id){ if(bloqAnual()) return; if(!confirm('Eliminar DEFINITIVAMENTE esta inscrição? (Para manter o registo, usa antes o botão 🚫 Cancelar.)')) return;
+  const d=getD(); d.criancas=d.criancas.filter(x=>x.id!==id); setD(d); renderCriancas(); toast('Inscrição eliminada.'); }
+function cancelarInscricao(id){ if(bloqAnual()) return; const d=getD(); const c=d.criancas.find(x=>x.id===id); if(!c) return;
   const motivo=prompt('Cancelar a inscrição de '+(c.nome||'')+'.\nMotivo (opcional):', c.motivoCancel||'');
   if(motivo===null) return; // premiu Cancelar
   c.cancelada=true; c.dataCancel=hoje(); c.motivoCancel=(motivo||'').trim();
   setD(d); renderCriancas(); toast('Inscrição cancelada (mantida no registo). Deixa de contar para mapas, listas e custos.');
 }
-function reativarInscricao(id){ if(guardaModoAno()) return; const d=getD(); const c=d.criancas.find(x=>x.id===id); if(!c) return; if(!confirm('Reativar a inscrição de '+(c.nome||'')+'?')) return; c.cancelada=false; delete c.dataCancel; delete c.motivoCancel; setD(d); renderCriancas(); toast('Inscrição reativada.'); }
+function reativarInscricao(id){ if(bloqAnual()) return; const d=getD(); const c=d.criancas.find(x=>x.id===id); if(!c) return; if(!confirm('Reativar a inscrição de '+(c.nome||'')+'?')) return; c.cancelada=false; delete c.dataCancel; delete c.motivoCancel; setD(d); renderCriancas(); toast('Inscrição reativada.'); }
 // gestão administrativa da inscrição (só a admin) — verificação + notas
 function abrirAdminInscricao(id){ if(guardaModoAno()) return;
   const d=getD(); const c=d.criancas.find(x=>x.id===id); if(!c) return;
@@ -1801,7 +1921,7 @@ function renderDespesas(){
   const el=$('sec-despesas'); if(precisaEdicao(el)) return;
   const d=getD();
   const cEquipa=(d.equipa||[]).reduce((s,m)=>s+(+m.remuneracao||0),0);
-  const cAtiv=modoAno()?edicoes.reduce((s,e)=>s+custoAtividadesPeriodo(e.id),0):custoAtividadesTotal();
+  const cAtiv=modoAno()?edicoesFiltradas().reduce((s,e)=>s+custoAtividadesPeriodo(e.id),0):custoAtividadesTotal();
   const areas=`<div class="card" style="margin-bottom:14px"><div class="card-title" style="margin-bottom:8px">Áreas de despesa do ATL</div>
     <div class="muted" style="margin-bottom:8px">Funcionários e Atividades também são despesas — geres-as aqui.</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1818,8 +1938,8 @@ function renderDespesasLista(){
   const d=getD(); const cats=d.categorias||CATEGORIAS_DEFAULT;
   let lista=d.despesas.slice(); if(fDesp.cat) lista=lista.filter(x=>x.cat===fDesp.cat);
   const tot=lista.reduce((s,x)=>s+(+x.valor||0),0);
-  const cAlim=modoAno()?edicoes.reduce((s,e)=>s+custoAlimentacaoPeriodo(e.id),0):custoAlimentacaoTotal();
-  const cAtiv=modoAno()?edicoes.reduce((s,e)=>s+custoAtividadesPeriodo(e.id),0):custoAtividadesTotal();
+  const cAlim=modoAno()?edicoesFiltradas().reduce((s,e)=>s+custoAlimentacaoPeriodo(e.id),0):custoAlimentacaoTotal();
+  const cAtiv=modoAno()?edicoesFiltradas().reduce((s,e)=>s+custoAtividadesPeriodo(e.id),0):custoAtividadesTotal();
   const avisoAuto=`<div class="info" style="background:var(--teal-l);border-color:#c9dcf3;color:var(--teal-d)">
     ⚙️ <b>Calculadas automaticamente</b> (não precisam de lançamento): 🍽️ <b>Alimentação ${fmt(cAlim)}</b>${cAlim===0?' <span class="muted">— define os valores em Valores → Alimentação diária</span>':''} · 🎟️ <b>Atividades ${fmt(cAtiv)}</b>${cAtiv===0?' <span class="muted">— cria em Atividades</span>':''}. Já contam no <b>Resumo</b> e no <b>Painel</b>.</div>`;
   return `${avisoAuto}<div class="card">
@@ -2270,8 +2390,20 @@ function renderDefinicoes(){
       <div class="muted" style="margin:6px 0 12px">Podem ser o mesmo email nos três campos.</div>
       <div class="fg"><label>Email para <b>enviar</b> (remetente)</label><input id="cf-envio" type="email" value="${esc(c.emailEnvio)}" placeholder="atl.arcakids@gmail.com"></div>
       <div class="fg"><label>Email para <b>notificações</b></label><input id="cf-notif" type="email" value="${esc(c.emailNotif)}" placeholder="atl.arcakids@gmail.com"></div>
-      <div class="fg"><label>Email da <b>Google Drive</b></label><input id="cf-drive" type="email" value="${esc(c.emailDrive)}" placeholder="atl.arcakids@gmail.com"></div>
       <button class="btn-sm btn-add" onclick="guardarCfg()">💾 Guardar emails</button>
+    </div>
+    <div class="card">
+      <div class="card-title">📁 Cópia de segurança na Google Drive</div>
+      <div class="muted" style="margin:6px 0 10px">Guarda uma cópia dos dados e documentos na tua Google Drive, organizada em pastas <b>Ano → ATL</b>. Precisa de uma configuração única (Client ID da Google) — vê o guia. Só funciona no site publicado (arca-ajuda.github.io).</div>
+      <div class="fg"><label>Google Client ID</label><input id="cf-driveid" value="${esc(c.driveClientId)}" placeholder="xxxxxx.apps.googleusercontent.com"></div>
+      <div class="fg"><label>Email da conta Drive <span class="muted">(só indicativo)</span></label><input id="cf-drive" type="email" value="${esc(c.emailDrive)}" placeholder="atl.arcakids@gmail.com"></div>
+      <label class="sem-check"><input type="checkbox" id="cf-driveauto" ${c.driveAuto?'checked':''}> Guardar na Drive <b>automaticamente</b> ao gravar alterações (depois de ligada)</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn-sm btn-add" onclick="guardarCfg()">💾 Guardar definições</button>
+        <button class="btn-sm btn-neutral" onclick="driveLigar()">🔗 Ligar Google Drive</button>
+        <button class="btn-sm btn-neutral" onclick="driveBackupTudo()">☁️ Guardar cópia na Drive agora</button>
+      </div>
+      <div class="muted" id="drive-estado" style="margin-top:8px">${driveLigada()?'✅ Google Drive ligada nesta sessão.':'Ainda não ligada nesta sessão.'}${(()=>{const u=LS.get('atl_drive_ultima'); return u?(' · Última cópia: '+new Date(u).toLocaleString('pt-PT')):' · Sem cópia ainda.';})()}</div>
     </div>
     <div class="card">
       <div class="card-title">🔐 Conta / início de sessão</div>
@@ -2291,7 +2423,7 @@ function renderDefinicoes(){
       <button class="btn-sm btn-neutral" onclick="hidratarCloud().then(ok=>{toast(ok===false?'Não consegui sincronizar — verifica a internet e volta a tentar.':'Sincronizado.', ok!==false);renderDefinicoes();})">🔄 Sincronizar agora</button>
     </div>`;
 }
-function guardarCfg(){ const c=getCfg(); c.emailEnvio=$('cf-envio').value.trim(); c.emailNotif=$('cf-notif').value.trim(); c.emailDrive=$('cf-drive').value.trim(); setCfg(c); toast('Emails guardados.'); }
+function guardarCfg(){ const c=getCfg(); c.emailEnvio=$('cf-envio').value.trim(); c.emailNotif=$('cf-notif').value.trim(); const cd=$('cf-drive'); if(cd)c.emailDrive=cd.value.trim(); const ci=$('cf-driveid'); if(ci)c.driveClientId=ci.value.trim(); const ca=$('cf-driveauto'); if(ca)c.driveAuto=ca.checked; setCfg(c); atualizaDriveAviso(); toast('Definições guardadas.'); }
 function carregarLogo(input){ const f=input.files&&input.files[0]; if(!f) return; if(f.size>2*1024*1024){ toast('Imagem muito grande (máx ~2 MB).',false); input.value=''; return; } const rd=new FileReader(); rd.onload=e=>{ const c=getCfg(); c.logo=e.target.result; setCfg(c); toast('Logótipo guardado.'); renderDefinicoes(); }; rd.readAsDataURL(f); }
 function guardarAssoc(){ const c=getCfg(); const a=$('cf-assoc'); if(a) c.assocNome=a.value.trim()||"ARCA d'Ajuda"; const m=$('cf-morada'); if(m)c.assocMorada=m.value.trim(); const n=$('cf-nif'); if(n)c.assocNif=n.value.trim(); const ct=$('cf-contacto'); if(ct)c.assocContacto=ct.value.trim(); setCfg(c); toast('Guardado.'); renderDefinicoes(); }
 function removerLogo(){ const c=getCfg(); c.logo=''; setCfg(c); toast('Logótipo removido.'); renderDefinicoes(); }
