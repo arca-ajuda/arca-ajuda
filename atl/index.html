@@ -47,7 +47,8 @@
 
   #app{display:none;min-height:100vh}
   /* ---- MENU LATERAL ---- */
-  aside#side{width:238px;flex-shrink:0;background:linear-gradient(160deg,var(--teal),var(--teal-d));color:#fff;display:flex;flex-direction:column;gap:10px;padding:14px 12px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;z-index:50}
+  aside#side{width:238px;flex-shrink:0;background:linear-gradient(160deg,var(--teal),var(--teal-d));color:#fff;display:flex;flex-direction:column;gap:10px;padding:14px 12px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;z-index:50;scrollbar-width:none;-ms-overflow-style:none}
+  aside#side::-webkit-scrollbar{width:0;height:0;display:none}
   aside#side .brand{font-weight:800;font-size:16px;letter-spacing:.3px;display:flex;align-items:center;gap:8px;justify-content:center}
   .side-top-row{display:flex;gap:6px;align-items:stretch}
   .side-geral{display:flex;align-items:center;justify-content:center;gap:5px;background:rgba(255,255,255,.18);color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.34);border-radius:9px;padding:8px 10px;font-weight:800;font-size:12px;white-space:nowrap;flex:0 0 auto}
@@ -141,6 +142,7 @@
 
   .overlay{position:fixed;inset:0;background:rgba(15,30,26,.5);display:none;align-items:flex-start;justify-content:center;padding:24px 14px;z-index:200;overflow-y:auto}
   .overlay.open{display:flex}
+  body.modal-aberto{overflow:hidden}
   .modal{background:var(--card);border-radius:16px;width:100%;max-width:600px;box-shadow:0 24px 60px rgba(0,0,0,.3);margin:auto}
   .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:var(--border)}
   .modal-head .t{font-size:16px;font-weight:700}
@@ -1916,18 +1918,17 @@ function reativarInscricao(id){ if(bloqAnual()) return; const d=getD(); const c=
 // gestão administrativa da inscrição (só a admin) — verificação + notas
 function abrirAdminInscricao(id){ if(guardaModoAno()) return;
   const d=getD(); const c=d.criancas.find(x=>x.id===id); if(!c) return;
-  const b=breakdown(c); const temDesc=(c.atleta||c.temIrmao); const pendDesc=temDesc&&!c.descontoVerificado;
+  const b=breakdown(c); const temDesc=(c.atleta||c.temIrmao);
   modal('🗂️ Gestão administrativa — '+esc(c.nome), `
     <div class="muted" style="margin-bottom:10px">Área só para a administração. Não aparece na ficha de inscrição. <b>Todas as inscrições devem ser verificadas.</b></div>
-    ${temDesc?`<div class="info" style="background:#FDECEA;border-color:#F0855F;color:#7a2e12">⚠️ <b>Esta inscrição pede desconto:</b> ${c.atleta?`🏅 atleta da ARCA d'Ajuda `:''}${c.temIrmao?`👧👦 irmão no mesmo período `:''}— ${pendDesc?'<b>POR CONFIRMAR</b>':'confirmado'}. Confirma que corresponde à realidade. Valor calculado: <b>${fmt(b.total)}</b>${b.desconto>0?' (desconto '+fmt(b.desconto)+')':''}.</div>
-    <label class="sem-check" style="border-color:var(--coral)"><input type="checkbox" id="ai-verif" ${c.descontoVerificado?'checked':''}> ✅ <b>Desconto confirmado</b> — corresponde à realidade</label>`:'<div class="muted" style="margin-bottom:8px">Sem desconto pedido nesta inscrição.</div>'}
-    <label class="sem-check" style="border-color:var(--amber);background:#FFF8E6"><input type="checkbox" id="ai-verifgeral" ${c.verificado?'checked':''}> ☑️ <b>Inscrição verificada / conferida</b> pela administração</label>
+    ${temDesc?`<div class="info" style="background:#FDECEA;border-color:#F0855F;color:#7a2e12">⚠️ <b>Esta inscrição pede desconto:</b> ${c.atleta?`🏅 atleta da ARCA d'Ajuda `:''}${c.temIrmao?`👧👦 irmão no mesmo período `:''}. Confirma que corresponde à realidade <b>antes</b> de verificar. Valor calculado: <b>${fmt(b.total)}</b>${b.desconto>0?' (desconto '+fmt(b.desconto)+')':''}.</div>`:''}
+    <label class="sem-check" style="border-color:var(--amber);background:#FFF8E6"><input type="checkbox" id="ai-verifgeral" ${c.verificado?'checked':''}> ✅ <b>Inscrição verificada / conferida</b> pela administração${temDesc?' <span class="muted">(inclui a confirmação do desconto)</span>':''}</label>
     <div class="fg" style="margin-top:10px"><label>📝 Nota da inscrição <span class="muted">(ex.: pagou só os 40€ de pré-inscrição / pago na totalidade)</span></label><textarea id="ai-nota" rows="3">${esc(c.notaInscricao||'')}</textarea></div>
     <div class="fg"><label>🔔 Lembrete administrativo <span class="muted">(situação a ter em conta — editável a qualquer altura)</span></label><textarea id="ai-lembrete" rows="3">${esc(c.lembrete||'')}</textarea></div>`,
     [ {txt:'Guardar', cls:'btn-add', fn:()=>{ const dd=getD(); const cc=dd.criancas.find(x=>x.id===id); if(!cc){ fecharModal(); return; }
-        const verGeral=$('ai-verifgeral').checked; const verDesc=$('ai-verif')?$('ai-verif').checked:false;
-        if(verGeral && temDesc && !verDesc){ if(!confirm('Vais marcar a inscrição como verificada, mas o DESCONTO ainda não está confirmado.\n\nConfirmas que o desconto corresponde à realidade? (Se sim, marca também "Desconto confirmado".)')) return; }
-        cc.verificado=verGeral; if($('ai-verif')) cc.descontoVerificado=verDesc; cc.notaInscricao=$('ai-nota').value.trim(); cc.lembrete=$('ai-lembrete').value.trim(); setD(dd); fecharModal(); renderCriancas(); toast('Gestão administrativa guardada.'); }} ]);
+        const ver=$('ai-verifgeral').checked;
+        cc.verificado=ver; cc.descontoVerificado = temDesc ? ver : false; // verificar a inscrição = confirmar também o desconto
+        cc.notaInscricao=$('ai-nota').value.trim(); cc.lembrete=$('ai-lembrete').value.trim(); setD(dd); fecharModal(); renderCriancas(); toast(ver?'Inscrição verificada. ✅':'Gestão administrativa guardada.'); }} ]);
 }
 
 /* ============================================================
@@ -2463,9 +2464,9 @@ function modal(title, bodyHTML, botoes){
   const foot=$('ov-foot'); foot.innerHTML='';
   (botoes||[]).filter(Boolean).forEach(b=>{ const btn=document.createElement('button'); btn.className='btn-sm '+(b.cls||'btn-neutral'); btn.textContent=b.txt; btn.onclick=b.fn; foot.appendChild(btn); });
   const cancel=document.createElement('button'); cancel.className='btn-sm btn-neutral'; cancel.textContent='Cancelar'; cancel.onclick=fecharModal; foot.appendChild(cancel);
-  $('ov').classList.add('open');
+  $('ov').classList.add('open'); document.body.classList.add('modal-aberto');
 }
-function fecharModal(){ $('ov').classList.remove('open'); _modalCriancaNovo=false; }
+function fecharModal(){ $('ov').classList.remove('open'); document.body.classList.remove('modal-aberto'); _modalCriancaNovo=false; }
 // clicar fora NÃO fecha (evita perder o que se está a escrever) — só fecha no × ou em Cancelar
 $('ov').addEventListener('click', e=>{ if(e.target.id==='ov'){ const t=$('toast'); t.textContent='Usa "Cancelar" ou o × para fechar (assim não perdes o que escreveste).'; t.className='show'; clearTimeout(_toastT); _toastT=setTimeout(()=>t.className='',2600); } });
 </script>
