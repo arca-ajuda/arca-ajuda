@@ -56,6 +56,10 @@
   .side-home.active{background:#fff;color:var(--teal-d);box-shadow:0 3px 8px rgba(0,0,0,.2)}
   .side-icon{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:7px 11px;font-size:15px;line-height:1;cursor:pointer}
   .side-icon:hover{background:rgba(255,255,255,.28)}
+  .side-icon.def{background:#EAF3FF;color:#185FA5;border-color:#cfe0f5}
+  .side-icon.def:hover{background:#d9e9fc}
+  .side-icon.sair{background:#F6D9D0;color:#C0392B;border-color:#eec4b8}
+  .side-icon.sair:hover{background:#f2c9bd}
   .side-foot #cloud-pill{flex:1;text-align:center}
   .side-period{display:flex;flex-direction:column;gap:6px;border-top:1px solid rgba(255,255,255,.2);border-bottom:1px solid rgba(255,255,255,.2);padding:10px 0}
   aside#side select{width:100%;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:7px 10px;font-weight:600}
@@ -65,21 +69,19 @@
   .side-mini:hover{background:rgba(255,255,255,.28)}
   .side-period-btns .side-mini{flex:1}
   #cloud-pill{font-size:11px;font-weight:700;padding:5px 9px;border-radius:20px;background:rgba(255,255,255,.18)}
-  nav#tabs{display:flex;flex-direction:column;gap:5px;overflow-y:auto;padding:2px 0}
-  nav#tabs button{--c:#fff;text-align:left;border:none;border-left:3px solid rgba(255,255,255,.35);border-radius:9px;padding:9px 12px;font-size:13.5px;font-weight:700;white-space:nowrap;cursor:pointer;transition:all .12s ease;background:rgba(255,255,255,.10);color:#fff}
-  nav#tabs button:hover{background:rgba(255,255,255,.22)}
-  nav#tabs button.active{background:#fff;color:var(--teal-d);border-left-color:var(--c);box-shadow:0 3px 8px rgba(0,0,0,.2)}
-  nav#tabs button:nth-child(1){--c:#0F6E56}
-  nav#tabs button:nth-child(2){--c:#185FA5}
-  nav#tabs button:nth-child(3){--c:#B8791C}
-  nav#tabs button:nth-child(4){--c:#7A3FB0}
-  nav#tabs button:nth-child(5){--c:#D85A30}
-  nav#tabs button:nth-child(6){--c:#1D9E75}
-  nav#tabs button:nth-child(7){--c:#3B57A5}
+  nav#tabs{display:flex;flex-direction:column;gap:6px;overflow-y:auto;padding:2px 0}
+  nav#tabs button{--c:#0F6E56;text-align:left;border:none;border-left:5px solid var(--c);border-radius:9px;padding:9px 12px;font-size:13.5px;font-weight:800;white-space:nowrap;cursor:pointer;transition:all .12s ease;background:#fff;color:var(--c);box-shadow:0 1px 3px rgba(0,0,0,.14)}
+  nav#tabs button:hover{filter:brightness(.97);transform:translateX(2px)}
+  nav#tabs button.active{background:var(--c);color:#fff;border-left-color:rgba(255,255,255,.65);box-shadow:0 3px 9px rgba(0,0,0,.25)}
+  nav#tabs button:nth-child(1){--c:#185FA5}
+  nav#tabs button:nth-child(2){--c:#B8791C}
+  nav#tabs button:nth-child(3){--c:#7A3FB0}
+  nav#tabs button:nth-child(4){--c:#D85A30}
+  nav#tabs button:nth-child(5){--c:#1D9E75}
+  nav#tabs button:nth-child(6){--c:#C77A0A}
+  nav#tabs button:nth-child(7){--c:#556074}
   nav#tabs button:nth-child(8){--c:#C0398B}
-  nav#tabs button:nth-child(9){--c:#C77A0A}
-  nav#tabs button:nth-child(10){--c:#556074}
-  nav#tabs button:nth-child(11){--c:#6B7A70}
+  nav#tabs button:nth-child(9){--c:#6B7A70}
   .side-foot{margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px;border-top:1px solid rgba(255,255,255,.2);padding-top:10px}
   .side-foot .side-mini{flex:1}
   #content{flex:1;min-width:0}
@@ -233,15 +235,13 @@
       <button data-tab="mapa" onclick="showTab('mapa')">📆 Mapa</button>
       <button data-tab="despesas" onclick="showTab('despesas')">💸 Despesas</button>
       <button data-tab="receitas" onclick="showTab('receitas')">💰 Receitas</button>
-      <button data-tab="equipa" onclick="showTab('equipa')">👥 Funcionários</button>
-      <button data-tab="atividades" onclick="showTab('atividades')">🎟️ Atividades</button>
       <button data-tab="precos" onclick="showTab('precos')">🏷️ Valores</button>
       <button data-tab="documentos" onclick="showTab('documentos')">📄 Documentos</button>
     </nav>
     <div class="side-foot">
       <span id="cloud-pill" title="Estado da cloud — clica para sincronizar" style="cursor:pointer" onclick="marcaCloud(null);hidratarCloud().then(ok=>toast(ok===false?'Sem ligação à cloud — verifica a internet.':'Sincronizado.', ok!==false))">•</span>
-      <button class="side-icon" onclick="showTab('definicoes')" title="Definições">⚙️</button>
-      <button class="side-icon" onclick="sair()" title="Sair">🚪</button>
+      <button class="side-icon def" onclick="showTab('definicoes')" title="Definições">⚙️</button>
+      <button class="side-icon sair" onclick="sair()" title="Sair">⏻</button>
     </div>
   </aside>
 
@@ -534,7 +534,8 @@ function abrirImprimir(id){
   const c=getD().criancas.find(x=>x.id===id); if(!c) return; const docs=getDocs();
   modal('🖨️ Imprimir — '+esc(c.nome), `
     <div class="muted" style="margin-bottom:12px">Sai com o logótipo da associação no cabeçalho. ${getCfg().logo?'':'<b>(Ainda não definiste o logótipo — fá-lo em Definições.)</b>'}</div>
-    <button class="btn-sm btn-add" style="width:100%;margin-bottom:10px;padding:10px" onclick="imprimirFicha('${id}')">📄 Ficha de inscrição (N.º ${c.numero||'—'})</button>
+    <button class="btn-sm btn-add" style="width:100%;margin-bottom:8px;padding:10px" onclick="imprimirFicha('${id}')">📄 Ficha de inscrição (N.º ${c.numero||'—'})</button>
+    ${(c.anexos&&(c.anexos.comprovativo||c.anexos.ccFrente||c.anexos.ccVerso))?`<button class="btn-sm btn-neutral" style="width:100%;margin-bottom:10px;padding:10px" onclick="imprimirTodosAnexos('${id}',false)">🖨️ Documentos anexados — comprovativo + CC (os 3 juntos)</button>`:''}
     <div class="subt2">Declarações</div>
     ${docs.length? docs.map(dc=>`<button class="btn-sm btn-neutral" style="width:100%;margin-bottom:6px;text-align:left;padding:9px" onclick="imprimirDocumento('${dc.id}','${id}')">🖊️ ${esc(dc.titulo)}</button>`).join('') : '<div class="muted">Sem declarações — cria em 📄 Documentos.</div>'}
   `, [ {txt:'Fechar',cls:'btn-neutral',fn:fecharModal} ]);
@@ -1189,7 +1190,7 @@ function renderCriancas(){
       <td>${esc(p.resp||'')}${p.tel?`<div class="muted">${esc(p.tel)}</div>`:''}</td>
       <td class="muted">${esc(detalheInsc(p))}</td>
       <td>${p.atleta?'<span class="chip blue">🏅 atleta</span> ':''}${p.temIrmao?'<span class="chip amber">👧👦 irmão</span>':''}${!p.atleta&&!p.temIrmao?'<span class="muted">—</span>':''}</td>
-      <td style="font-size:10.5px">${anexTag('comprovativo','compr.')}${anexTag('ccFrente','CC F')}${anexTag('ccVerso','CC V')}</td>
+      <td style="font-size:10.5px">${anexTag('comprovativo','compr.')}${anexTag('ccFrente','CC F')}${anexTag('ccVerso','CC V')}${(ax.comprovativo||ax.ccFrente||ax.ccVerso)?`<div style="margin-top:3px"><button class="btn-sm btn-add" style="padding:1px 6px;font-size:10px" onclick="${isCloud?`imprimirTodosPreCloud('${ref}')`:`imprimirTodosAnexos('${ref}',true)`}" title="Imprimir os 3 juntos">🖨️ 3 juntos</button></div>`:''}</td>
       <td class="right">${fmt(p.valor)}</td>
       <td class="right" style="white-space:nowrap"><button class="btn-sm btn-add" onclick="${aprovar}">✔️ Aprovar</button> <button class="btn-sm btn-del" onclick="${rejeitar}">✕</button></td>
     </tr>`; }).join('')}
@@ -1282,7 +1283,7 @@ let _cfgPublico=null;
 function estadoLinkPublico(link){ link=link||{};
   if(link.aberto===false) return {aberto:false, motivo:'As inscrições estão encerradas.'};
   if(link.prazo && hoje()>link.prazo) return {aberto:false, motivo:'O prazo de inscrição terminou ('+fmtData(link.prazo)+').'};
-  if(link.max>0 && (link.atuais||0)>=link.max) return {aberto:false, motivo:'Foi atingido o número máximo de inscrições ('+link.max+').'};
+  if(link.max>0 && (link.atuais||0)>=link.max) return {aberto:false, motivo:'As inscrições estão encerradas — as vagas estão preenchidas.'};
   return {aberto:true, vagas: link.max>0?Math.max(0,link.max-(link.atuais||0)):null};
 }
 function pubHero(sub){ return `<div class="pub-hero">☀️ ATL ARCAKIDS${sub?`<span class="pub-sub">${esc(sub)}</span>`:''}</div>`; }
@@ -1434,6 +1435,7 @@ function anexosIcons(id,pre){
   const d=getD(); const c=(pre?(d.preInscricoes||[]):d.criancas).find(x=>x.id===id); const ax=(c&&c.anexos)||{};
   const it=[]; const btn=(k,lbl,cls)=>{ if(ax[k]&&ax[k].dataUrl) it.push(`<button class="btn-sm ${cls}" style="padding:2px 7px;font-size:10.5px" onclick="verAnexo('${id}','${k}',${pre?'true':'false'})" title="Abrir / imprimir ${esc(ax[k].name||lbl)}">🖨️ ${lbl}</button>`); };
   btn('comprovativo','Comprov.','btn-neutral'); btn('ccFrente','CC frente','btn-neutral'); btn('ccVerso','CC verso','btn-neutral');
+  if(it.length) it.push(`<button class="btn-sm btn-add" style="padding:2px 7px;font-size:10.5px" onclick="imprimirTodosAnexos('${id}',${pre?'true':'false'})" title="Imprimir os 3 documentos juntos">🖨️ 3 juntos</button>`);
   return it.length?`<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">${it.join('')}</div>`:'';
 }
 function verAnexo(id,key,pre){
@@ -1458,10 +1460,43 @@ function verAnexoData(key, ax, nome){
     .bar b{font-size:13px} .bar button{padding:7px 14px;background:#fff;color:#0F6E56;border:none;border-radius:8px;font-weight:700;cursor:pointer}
     .wrap{display:flex;align-items:center;justify-content:center;min-height:88vh;padding:14px}
     ${printCss}</style></head><body>
-    <div class="bar"><b>${esc(titulo)} · ${esc(nome||'')}</b><button onclick="window.print()">🖨️ Imprimir${isCC?' (tamanho CC)':''}</button></div>
+    <div class="bar"><b>${esc(titulo)} · ${esc(nome||'')}</b><button onclick="window.print()">🖨️ Imprimir${isCC?' (tamanho CC)':''}</button><button onclick="window.close()">✕ Fechar</button></div>
     <div class="wrap">${conteudo}</div></body></html>`);
   w.document.close();
 }
+// imprime os 3 documentos (comprovativo + CC frente + CC verso) juntos, para caber numa página
+function abrirImpressaoAnexos(anexos, nome){
+  anexos=anexos||{};
+  const items=[['comprovativo','Comprovativo de pagamento',false],['ccFrente','CC da criança — frente',true],['ccVerso','CC da criança — verso',true]].filter(x=>anexos[x[0]]&&anexos[x[0]].dataUrl);
+  if(!items.length){ toast('Esta inscrição não tem documentos anexados.',false); return; }
+  const w=window.open('','_blank'); if(!w){ toast('Permite pop-ups (janelas) para imprimir.',false); return; }
+  const media=(k,isCC)=>{ const ax=anexos[k]; const isPdf=(ax.dataUrl||'').indexOf('application/pdf')>=0; return isPdf? `<iframe src="${ax.dataUrl}"></iframe>` : `<img class="${isCC?'cc':'full'}" src="${ax.dataUrl}">`; };
+  const comp=items.find(x=>x[0]==='comprovativo');
+  const ccs=items.filter(x=>x[2]);
+  const blocoComp = comp? `<div class="doc"><div class="tt">${esc(comp[1])}</div>${media('comprovativo',false)}</div>`:'';
+  const blocoCC = ccs.length? `<div class="ccrow">${ccs.map(([k,t])=>`<div class="doc cc"><div class="tt">${esc(t)}</div>${media(k,true)}</div>`).join('')}</div>`:'';
+  w.document.write(`<html><head><meta charset="utf-8"><title>Documentos — ${esc(nome||'')}</title>
+    <style>body{margin:0;background:#2b2b2b;font-family:Arial,Helvetica,sans-serif;color:#fff}
+    .bar{position:sticky;top:0;background:#0F6E56;padding:9px 12px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+    .bar b{font-size:13px}.bar button{padding:7px 14px;background:#fff;color:#0F6E56;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+    .wrap{padding:14px;display:flex;flex-direction:column;gap:12px;align-items:center}
+    .doc{background:#fff;color:#111;border-radius:8px;padding:10px;width:100%;max-width:900px;box-sizing:border-box}
+    .doc .tt{font-weight:700;margin-bottom:6px;font-size:13px}
+    .doc img.full{max-width:100%;max-height:150mm;display:block;margin:0 auto}
+    .doc.cc{max-width:none;flex:0 0 auto}
+    .doc img.cc{width:85.6mm;height:54mm;object-fit:contain;display:block}
+    .doc iframe{width:100%;height:55vh;border:0}
+    .ccrow{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    @media print{body{background:#fff}.bar{display:none}.wrap{padding:0;gap:8px}
+      .doc{max-width:100%;border:0;padding:0}.doc img.full{max-height:150mm}
+      .ccrow{gap:8px}.doc img.cc{width:85.6mm;height:54mm}}
+    </style></head><body>
+    <div class="bar"><b>Documentos · ${esc(nome||'')}</b><button onclick="window.print()">🖨️ Imprimir os 3</button><button onclick="window.close()">✕ Fechar</button></div>
+    <div class="wrap">${blocoComp}${blocoCC}</div></body></html>`);
+  w.document.close();
+}
+function imprimirTodosAnexos(id, pre){ const d=getD(); const c=(pre?(d.preInscricoes||[]):d.criancas).find(x=>x.id===id); abrirImpressaoAnexos(c&&c.anexos, c&&c.nome); }
+function imprimirTodosPreCloud(rowId){ const r=(_preCloud||[]).find(x=>x.id===rowId); abrirImpressaoAnexos(r&&r.dados&&r.dados.anexos, r&&r.dados&&r.dados.nome); }
 // estado dos documentos dentro da ficha admin (abrir/remover antes de guardar)
 function anexosEstadoEdit(){
   const ax=(_cCur&&_cCur.anexos)||{};
@@ -1760,11 +1795,20 @@ let fRec={cat:''};
 let despView='lancamentos';
 function renderDespesas(){
   const el=$('sec-despesas'); if(precisaEdicao(el)) return;
+  const d=getD();
+  const cEquipa=(d.equipa||[]).reduce((s,m)=>s+(+m.remuneracao||0),0);
+  const cAtiv=modoAno()?edicoes.reduce((s,e)=>s+custoAtividadesPeriodo(e.id),0):custoAtividadesTotal();
+  const areas=`<div class="card" style="margin-bottom:14px"><div class="card-title" style="margin-bottom:8px">Áreas de despesa do ATL</div>
+    <div class="muted" style="margin-bottom:8px">Funcionários e Atividades também são despesas — geres-as aqui.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-sm btn-neutral" onclick="showTab('equipa')">👥 Funcionários · ${fmt(cEquipa)}</button>
+      <button class="btn-sm btn-neutral" onclick="showTab('atividades')">🎟️ Atividades · ${fmt(cAtiv)}</button>
+    </div></div>`;
   const seg=`<div class="seg" style="margin-bottom:14px">
     <button class="${despView==='lancamentos'?'on':''}" onclick="despView='lancamentos';renderDespesas()">📋 Lançamentos</button>
     <button class="${despView==='alimentacao'?'on':''}" onclick="despView='alimentacao';renderDespesas()">🍽️ Alimentação (por dia)</button>
     <button class="${despView==='resumo'?'on':''}" onclick="despView='resumo';renderDespesas()">📊 Resumo (dia · semana · mês)</button></div>`;
-  el.innerHTML = seg + (despView==='resumo'? renderDespesasResumo() : despView==='alimentacao'? renderDespesasAlimentacao() : renderDespesasLista());
+  el.innerHTML = areas + seg + (despView==='resumo'? renderDespesasResumo() : despView==='alimentacao'? renderDespesasAlimentacao() : renderDespesasLista());
 }
 function renderDespesasLista(){
   const d=getD(); const cats=d.categorias||CATEGORIAS_DEFAULT;
@@ -1969,7 +2013,7 @@ function apagarCategoriaRec(i){ const d=getD(); d.categoriasRec=d.categoriasRec|
 function renderEquipa(){
   const el=$('sec-equipa'); if(precisaEdicao(el)) return;
   const d=getD(); const tot=d.equipa.reduce((s,m)=>s+(+m.remuneracao||0),0);
-  el.innerHTML=`<div class="card">
+  el.innerHTML=`<button class="btn-sm btn-neutral" style="margin-bottom:12px" onclick="showTab('despesas')">← Voltar às Despesas</button><div class="card">
     <div class="card-head"><div class="card-title">Funcionários · ${d.equipa.length} · custo ${fmt(tot)}</div><button class="btn-sm btn-add" onclick="abrirModalEquipa()">+ Novo funcionário</button></div>
     <div class="muted" style="margin-bottom:10px">💡 As remunerações aqui já contam como despesa no Painel — não as lances também em Despesas para não duplicar.</div>
     ${!d.equipa.length?'<div class="empty">Sem funcionários.</div>':
@@ -2005,10 +2049,11 @@ function eliminarEquipa(id){ if(!confirm('Eliminar este funcionário?'))return; 
 let atvView='lista';
 function renderAtividades(){
   const el=$('sec-atividades'); if(precisaEdicao(el)) return;
+  const voltar=`<button class="btn-sm btn-neutral" style="margin-bottom:12px" onclick="showTab('despesas')">← Voltar às Despesas</button>`;
   const seg=`<div class="seg" style="margin-bottom:14px">
     <button class="${atvView==='lista'?'on':''}" onclick="atvView='lista';renderAtividades()">📋 Lista</button>
     <button class="${atvView==='mapa'?'on':''}" onclick="atvView='mapa';renderAtividades()">🗓️ Mapa por dia</button></div>`;
-  el.innerHTML = seg + (atvView==='mapa'? renderAtividadesMapa() : renderAtividadesLista());
+  el.innerHTML = voltar + seg + (atvView==='mapa'? renderAtividadesMapa() : renderAtividadesLista());
 }
 function renderAtividadesLista(){
   const d=getD(); const tot=custoAtividadesTotal();
