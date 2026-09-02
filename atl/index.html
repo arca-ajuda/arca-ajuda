@@ -48,8 +48,15 @@
   /* ---- MENU LATERAL ---- */
   aside#side{width:238px;flex-shrink:0;background:linear-gradient(160deg,var(--teal),var(--teal-d));color:#fff;display:flex;flex-direction:column;gap:10px;padding:14px 12px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;z-index:50}
   aside#side .brand{font-weight:800;font-size:16px;letter-spacing:.3px;display:flex;align-items:center;gap:8px;justify-content:center}
-  .side-geral{display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,.18);color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.34);border-radius:9px;padding:9px 10px;font-weight:800;font-size:13px}
+  .side-top-row{display:flex;gap:6px;align-items:stretch}
+  .side-geral{display:flex;align-items:center;justify-content:center;gap:5px;background:rgba(255,255,255,.18);color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.34);border-radius:9px;padding:8px 10px;font-weight:800;font-size:12px;white-space:nowrap;flex:0 0 auto}
   .side-geral:hover{background:rgba(255,255,255,.30)}
+  .side-home{flex:1;text-align:center;border:none;border-radius:9px;padding:8px 10px;font-size:13.5px;font-weight:800;cursor:pointer;background:rgba(255,255,255,.12);color:#fff;transition:all .12s ease}
+  .side-home:hover{background:rgba(255,255,255,.24)}
+  .side-home.active{background:#fff;color:var(--teal-d);box-shadow:0 3px 8px rgba(0,0,0,.2)}
+  .side-icon{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:7px 11px;font-size:15px;line-height:1;cursor:pointer}
+  .side-icon:hover{background:rgba(255,255,255,.28)}
+  .side-foot #cloud-pill{flex:1;text-align:center}
   .side-period{display:flex;flex-direction:column;gap:6px;border-top:1px solid rgba(255,255,255,.2);border-bottom:1px solid rgba(255,255,255,.2);padding:10px 0}
   aside#side select{width:100%;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:7px 10px;font-weight:600}
   aside#side select option{color:#111}
@@ -209,7 +216,10 @@
 <div id="app">
   <aside id="side">
     <div class="brand">☀️ ATL ARCAKIDS</div>
-    <a class="side-geral" href="../" title="Voltar ao menu geral da ARCA d'Ajuda">⬅️ Menu Geral</a>
+    <div class="side-top-row">
+      <a class="side-geral" href="../" title="Voltar ao menu geral da ARCA d'Ajuda">⬅️ Geral</a>
+      <button class="side-home" data-tab="dashboard" onclick="showTab('dashboard')" title="Painel">📊 Painel</button>
+    </div>
     <div class="side-period">
       <select id="ed-sel" onchange="onEdicaoChange(this.value)"></select>
       <div class="side-period-btns">
@@ -218,7 +228,6 @@
       </div>
     </div>
     <nav id="tabs">
-      <button data-tab="dashboard" class="active" onclick="showTab('dashboard')">📊 Painel</button>
       <button data-tab="criancas" onclick="showTab('criancas')">🧒 Inscrições</button>
       <button data-tab="semanas" onclick="showTab('semanas')">📅 Semanas</button>
       <button data-tab="mapa" onclick="showTab('mapa')">📆 Mapa</button>
@@ -231,8 +240,8 @@
     </nav>
     <div class="side-foot">
       <span id="cloud-pill" title="Estado da cloud — clica para sincronizar" style="cursor:pointer" onclick="marcaCloud(null);hidratarCloud().then(ok=>toast(ok===false?'Sem ligação à cloud — verifica a internet.':'Sincronizado.', ok!==false))">•</span>
-      <button class="side-mini" onclick="showTab('definicoes')">⚙️ Definições</button>
-      <button class="side-mini" onclick="sair()">Sair</button>
+      <button class="side-icon" onclick="showTab('definicoes')" title="Definições">⚙️</button>
+      <button class="side-icon" onclick="sair()" title="Sair">🚪</button>
     </div>
   </aside>
 
@@ -704,7 +713,7 @@ function eliminarEdicao(id){
 let tabAtual='dashboard';
 function showTab(t){
   tabAtual=t;
-  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===t));
+  document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active', b.dataset.tab===t));
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   $('sec-'+t).classList.add('active'); renderAtual();
   if(t==='criancas') carregarPreInscricoesCloud();
@@ -751,7 +760,8 @@ function renderDashboard(){
   const t=totais(); const d=t.d; const ed=getEdicao(); const nSem=semanasPeriodo().length; const nDias=diasUteisPeriodo().length;
   el.innerHTML = `
     <div class="cards">
-      <div class="metric"><div class="lbl">Crianças</div><div class="val blue">${criancasAtivas(d).length}</div><div class="sub">inscritas${d.criancas.filter(c=>c.cancelada).length?` · ${d.criancas.filter(c=>c.cancelada).length} cancelada(s)`:''}</div></div>
+      ${(()=>{ const io=getInscOnline(d); const insc=criancasAtivas(d).length; const canc=d.criancas.filter(c=>c.cancelada).length; const vagas=io.max>0?Math.max(0,io.max-nInscricoesAtuais(d)):null;
+        return `<div class="metric"><div class="lbl">Crianças</div><div class="val blue">${insc}</div><div class="sub">inscritas${io.max>0?` de ${io.max} vagas · <b>${vagas}</b> por preencher`:''}${canc?` · ${canc} cancelada(s)`:''}</div></div>`; })()}
       <div class="metric"><div class="lbl">Receita prevista</div><div class="val">${fmt(t.totInscrito)}</div><div class="sub">Recebido: ${fmt(t.totPago)}</div></div>
       <div class="metric"><div class="lbl">Pendente</div><div class="val amber">${fmt(t.pendente)}</div><div class="sub">${criancasAtivas(d).filter(c=>(+c.valor||0)>(+c.pago||0)).length} por pagar</div></div>
       <div class="metric"><div class="lbl">Despesas</div><div class="val red">${fmt(t.totDesp)}</div><div class="sub">Gerais ${fmt(t.despLancadas)} · Funcion. ${fmt(t.custoEquipa)} · Aliment. ${fmt(t.custoAlim)} · Ativid. ${fmt(t.custoAtiv)}</div></div>
@@ -1303,7 +1313,7 @@ function renderPaginaPublica(cfg){
   _valorManual=false; _modalCriancaNovo=false;
   pub.innerHTML=`<div class="pub-wrap">${pubHero('Ficha de Inscrição · '+(cfg.nome||''))}
     <div class="pub-card">
-      <div class="info">Preenche a ficha do teu educando. Idade permitida: <b>6 a 12 anos</b>. O valor é calculado automaticamente.${est.vagas!=null?` <b>Vagas disponíveis: ${est.vagas}.</b>`:''}</div>
+      <div class="info">Preenche a ficha do teu educando. Idade permitida: <b>6 a 12 anos</b>. O valor é calculado automaticamente.</div>
       ${fichaPublicaCamposHTML()}
       <div style="margin-top:16px"><button class="btn btn-primary" style="width:100%;padding:13px" onclick="enviarInscricaoPublica()">📨 Enviar inscrição</button></div>
       <div class="pub-foot">ARCA d'Ajuda · ATL ARCAKIDS</div>
