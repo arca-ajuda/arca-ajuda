@@ -1493,6 +1493,16 @@ async function cloudArrancar(){
   movCofre = LS.get('arca_cofre')||[];
   faturas = LS.get('arca_faturas')||{};
   config = LS.get('arca_config')||getDefaultConfig();
+  // blindagem: se vier da cloud uma config antiga do ATL (semanas/meses), corrige e sobe
+  try{
+    const velho=/semana|m[êe]s|meses|dias|camisola|monitor|coordenador|seguro|alimenta|transport|autocarro|entradas/i;
+    let mexeu=false;
+    [['recCats','ATL Páscoa','Receita Total'],['recCats','ATL Verão','Receita Total'],['despCats','Despesas ATL Páscoa','Despesa Total'],['despCats','Despesas ATL Verão','Despesa Total']].forEach(([g,c,alvo])=>{
+      const l=config[g]&&config[g][c];
+      if(Array.isArray(l) && (l.length>1||l[0]!==alvo) && l.some(x=>velho.test(String(x)))){ config[g][c]=[alvo]; mexeu=true; }
+    });
+    if(mexeu) LS.set('arca_config', config);
+  }catch(e){ console.warn('blindagem ATL:',e); }
   try{ populateMov(); updateCat(); }catch(e){}
   try{ const pg=document.querySelector('.page.active'); if(pg) renderPage(pg.id.replace('page-','')); }catch(e){}
   cloudPronto = true;
