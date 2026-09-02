@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATL ARCAKIDS — ARCA d'Ajuda</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --teal:#0F6E56;--teal-d:#085041;--teal-l:#E1F5EE;--teal-m:#1D9E75;
+    --coral:#D85A30;--coral-l:#FAECE7;--coral-d:#712B13;
+    --amber:#BA7517;--amber-l:#FAEEDA;--amber-d:#633806;
+    --blue:#185FA5;--blue-l:#E6F1FB;
+    --text:#1F2A2E;--text-2:#5C6B70;--text-3:#93A0A4;
+    --bg:#F5F7F6;--bg2:#EDF1EF;--card:#FFFFFF;--line:#E3E9E6;
+    --radius:10px;--radius-lg:14px;--border:1px solid var(--line);
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.45}
+  button{font-family:inherit;cursor:pointer}
+  input,select,textarea{font-family:inherit;font-size:14px}
+  .hidden{display:none!important}
+
+  #login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0F6E56,#085041);display:flex;align-items:center;justify-content:center;padding:20px;z-index:1000}
+  #login-card{background:#fff;border-radius:18px;padding:30px 26px;width:100%;max-width:400px;box-shadow:0 24px 60px rgba(0,0,0,.28)}
+  #login-card h1{font-size:20px;color:var(--teal-d);text-align:center;margin-bottom:2px}
+  #login-card .sub{text-align:center;color:var(--text-2);font-size:12.5px;margin-bottom:20px}
+  #login-card label{display:block;font-size:12px;font-weight:600;color:var(--text-2);margin:12px 0 4px}
+  #login-card input{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:9px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:9px;padding:11px 14px;font-size:14px;font-weight:600}
+  .btn-primary{background:var(--teal);color:#fff;width:100%;margin-top:18px}
+  .btn-primary:hover{background:var(--teal-d)}
+  .btn-ghost{background:none;color:var(--teal);border:1.5px solid var(--teal);width:100%;margin-top:9px}
+  .btn-link{background:none;border:none;color:var(--text-2);font-size:12.5px;text-decoration:underline;margin-top:14px;width:100%}
+  #login-msg{margin-top:12px;font-size:12.5px;text-align:center;min-height:16px}
+
+  #app{display:none}
+  header#top{background:linear-gradient(135deg,var(--teal),var(--teal-d));color:#fff;padding:12px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+  header#top .brand{font-weight:800;font-size:16px;letter-spacing:.3px;display:flex;align-items:center;gap:8px}
+  header#top select{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:7px 10px;font-weight:600;max-width:240px}
+  header#top select option{color:#111}
+  header#top .spacer{flex:1}
+  .top-btn{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:7px 11px;font-size:12.5px;font-weight:600}
+  .top-btn:hover{background:rgba(255,255,255,.28)}
+  #cloud-pill{font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;background:rgba(255,255,255,.16)}
+
+  nav#tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;background:var(--card);border-bottom:var(--border);padding:11px 12px;position:sticky;top:53px;z-index:40}
+  nav#tabs button{--c:#0F6E56;border:1.5px solid transparent;border-radius:22px;padding:8px 15px;font-size:13px;font-weight:700;white-space:nowrap;cursor:pointer;transition:all .15s ease;background:color-mix(in srgb, var(--c) 13%, #fff);color:var(--c)}
+  nav#tabs button:hover{background:color-mix(in srgb, var(--c) 24%, #fff);transform:translateY(-1px)}
+  nav#tabs button.active{background:var(--c);color:#fff;box-shadow:0 4px 10px color-mix(in srgb, var(--c) 45%, transparent)}
+  nav#tabs button:nth-child(1){--c:#0F6E56}
+  nav#tabs button:nth-child(2){--c:#185FA5}
+  nav#tabs button:nth-child(3){--c:#B8791C}
+  nav#tabs button:nth-child(4){--c:#7A3FB0}
+  nav#tabs button:nth-child(5){--c:#D85A30}
+  nav#tabs button:nth-child(6){--c:#1D9E75}
+  nav#tabs button:nth-child(7){--c:#3B57A5}
+  nav#tabs button:nth-child(8){--c:#C0398B}
+  nav#tabs button:nth-child(9){--c:#C77A0A}
+  nav#tabs button:nth-child(10){--c:#556074}
+  nav#tabs button:nth-child(11){--c:#6B7A70}
+
+  main{max-width:1080px;margin:0 auto;padding:18px 16px 60px}
+  .section{display:none}
+  .section.active{display:block}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px}
+  .metric{background:var(--card);border:var(--border);border-radius:var(--radius-lg);padding:14px 16px}
+  .metric .lbl{font-size:11.5px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  .metric .val{font-size:24px;font-weight:800;margin-top:3px}
+  .metric .sub{font-size:11.5px;color:var(--text-2);margin-top:2px}
+  .val.green{color:var(--teal)} .val.red{color:var(--coral)} .val.blue{color:var(--blue)} .val.amber{color:var(--amber)}
+
+  .card{background:var(--card);border:var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:16px}
+  .card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .card-title{font-size:15px;font-weight:700}
+  .muted{color:var(--text-2);font-size:12.5px}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3);font-weight:700}
+  tbody tr:hover{background:var(--bg2)}
+  td.right,th.right{text-align:right}
+  .table-wrap{overflow-x:auto}
+
+  .btn-sm{border:none;border-radius:7px;padding:5px 9px;font-size:12px;font-weight:600}
+  .btn-add{background:var(--teal);color:#fff}
+  .btn-add:hover{background:var(--teal-d)}
+  .btn-edit{background:var(--blue-l);color:var(--blue)}
+  .btn-del{background:var(--coral-l);color:var(--coral-d)}
+  .btn-neutral{background:var(--bg2);color:var(--text-2)}
+  .chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+  .chip.green{background:var(--teal-l);color:var(--teal-d)}
+  .chip.red{background:var(--coral-l);color:var(--coral-d)}
+  .chip.amber{background:var(--amber-l);color:var(--amber-d)}
+  .chip.blue{background:var(--blue-l);color:var(--blue)}
+
+  .empty{padding:26px;text-align:center;color:var(--text-3);font-size:13px}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .filters input,.filters select{padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--card)}
+
+  .overlay{position:fixed;inset:0;background:rgba(15,30,26,.5);display:none;align-items:flex-start;justify-content:center;padding:24px 14px;z-index:200;overflow-y:auto}
+  .overlay.open{display:flex}
+  .modal{background:var(--card);border-radius:16px;width:100%;max-width:600px;box-shadow:0 24px 60px rgba(0,0,0,.3);margin:auto}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:var(--border)}
+  .modal-head .t{font-size:16px;font-weight:700}
+  .modal-close{background:none;border:none;font-size:22px;color:var(--text-3);line-height:1}
+  .modal-body{padding:18px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .fg{margin-bottom:12px}
+  .fg label{display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:4px}
+  .fg input,.fg select,.fg textarea{width:100%;padding:9px 11px;border:1.5px solid var(--line);border-radius:8px;background:var(--card)}
+  .fg textarea{resize:vertical;min-height:56px}
+  .modal-foot{display:flex;gap:8px;justify-content:flex-end;padding:14px 18px;border-top:var(--border);flex-wrap:wrap}
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .seg button{border:1.5px solid var(--line);background:var(--card);color:var(--text-2);border-radius:20px;padding:7px 13px;font-size:12.5px;font-weight:600}
+  .seg button.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .sem-check{display:flex;align-items:center;gap:7px;padding:7px 9px;border:1.5px solid var(--line);border-radius:8px;margin-bottom:6px;font-size:13px}
+  .subt{font-size:12px;font-weight:700;color:var(--teal-d);text-transform:uppercase;letter-spacing:.4px;margin:4px 0 8px}
+
+  /* calendário de dias */
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:6px}
+  .cal .h{font-size:10px;text-align:center;color:var(--text-3);font-weight:700;padding:2px}
+  .cal .d{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:7px;font-size:12px;border:1px solid var(--line);cursor:pointer;user-select:none}
+  .cal .d.off{opacity:.28;cursor:default;border-color:transparent}
+  .cal .d.na{opacity:.4;cursor:default;background:var(--bg2)}
+  .cal .d.on{background:var(--teal);color:#fff;border-color:var(--teal);font-weight:700}
+  .cal-mes{font-size:12.5px;font-weight:700;margin:10px 0 2px;color:var(--text-2)}
+  .cal-flow{display:flex;flex-wrap:wrap;gap:14px}
+  .cal-block{width:150px}
+  .cal.mini{gap:2px;margin-top:2px}
+  .cal.mini .d{font-size:10.5px;border-radius:5px}
+  .cal.mini .h{font-size:9px}
+  .cal.mini .cal-mes,.cal-block .cal-mes{font-size:11px;margin:0 0 2px}
+  .subt2{font-size:12.5px;font-weight:700;color:var(--text);margin:2px 0 4px}
+  .tag-nota{display:inline-block;margin-left:5px;background:#FFC400;color:#4A3400;font-weight:700;font-size:10.5px;padding:1px 7px;border-radius:20px;border:1px solid #C79000;vertical-align:middle}
+  .tag-lembrete{display:inline-block;margin-left:5px;background:#FF5A3C;color:#fff;font-weight:700;font-size:10.5px;padding:1px 7px;border-radius:20px;border:1px solid #C0341C;vertical-align:middle}
+  .mapa-wrap{overflow:auto;max-height:70vh;border:var(--border);border-radius:10px}
+  table.mapa{border-collapse:separate;border-spacing:0;font-size:11px;min-width:100%}
+  table.mapa th,table.mapa td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:0;text-align:center}
+  table.mapa th.wk{background:var(--teal-l);color:var(--teal-d);font-weight:700;padding:4px 2px;font-size:10.5px;position:sticky;top:0;z-index:3;white-space:nowrap}
+  table.mapa th.dcol{background:var(--bg2);color:var(--text-2);padding:3px 0;min-width:30px;position:sticky;top:24px;z-index:3;font-weight:700}
+  table.mapa th.dcol .lt{font-size:9px;color:var(--text-3);font-weight:600}
+  table.mapa .stick{position:sticky;left:0;z-index:2;background:var(--card);text-align:left;padding:5px 10px;min-width:150px;box-shadow:1px 0 0 var(--line)}
+  table.mapa th.corner{z-index:5;background:var(--bg2)}
+  table.mapa td.nm{font-size:12px;font-weight:600;white-space:nowrap}
+  table.mapa td.cell{width:30px;height:26px}
+  table.mapa td.cell.on{background:var(--teal)}
+  table.mapa td.cell.on::after{content:"●";color:#fff;font-size:9px}
+  table.mapa tr.totrow td{position:sticky;top:48px;z-index:2}
+  table.mapa td.cnt{font-weight:800;color:var(--teal-d);height:26px}
+  table.mapa tr.totrow td.stick{background:var(--card);z-index:4}
+  .info{background:var(--blue-l);border:1px solid #cfe3f7;color:var(--blue);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:10px}
+
+  #ajuda-fab{position:fixed;right:20px;bottom:20px;z-index:180;background:linear-gradient(135deg,var(--teal),var(--teal-d));color:#fff;border:none;border-radius:30px;padding:12px 18px;font-size:14px;font-weight:800;box-shadow:0 8px 22px rgba(15,110,86,.45);cursor:grab;user-select:none;touch-action:none;display:none}
+  #ajuda-fab:hover{filter:brightness(1.06)}
+  #ajuda-fab:active{cursor:grabbing}
+  #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1F2A2E;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:500;opacity:0;transition:opacity .25s;pointer-events:none}
+  #toast.show{opacity:1}
+  #toast.err{background:var(--coral-d)}
+  @media(max-width:560px){.grid2,.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div id="login-card">
+    <h1>☀️ ATL ARCAKIDS</h1>
+    <div class="sub">Gestão do ATL — ARCA d'Ajuda</div>
+    <label>Email</label>
+    <input type="email" id="lg-email" autocomplete="username" placeholder="atl.arcakids@gmail.com">
+    <label>Palavra-passe</label>
+    <input type="password" id="lg-pass" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
+    <button class="btn btn-primary" onclick="fazerLogin()">Entrar</button>
+    <button class="btn btn-ghost" onclick="criarConta()">Criar conta</button>
+    <button class="btn-link" onclick="usarLocal()">Usar sem conta (só neste dispositivo)</button>
+    <div id="login-msg"></div>
+  </div>
+</div>
+
+<div id="app">
+  <header id="top">
+    <div class="brand">☀️ ATL ARCAKIDS</div>
+    <select id="ed-sel" onchange="onEdicaoChange(this.value)"></select>
+    <button class="top-btn" onclick="abrirModalEdicao()">+ Período</button>
+    <div class="spacer"></div>
+    <span id="cloud-pill">•</span>
+    <button class="top-btn" onclick="showTab('definicoes')">⚙️ Definições</button>
+    <button class="top-btn" onclick="sair()">Sair</button>
+  </header>
+
+  <nav id="tabs">
+    <button data-tab="dashboard" class="active" onclick="showTab('dashboard')">📊 Painel</button>
+    <button data-tab="criancas" onclick="showTab('criancas')">🧒 Inscrições</button>
+    <button data-tab="semanas" onclick="showTab('semanas')">📅 Semanas</button>
+    <button data-tab="mapa" onclick="showTab('mapa')">📆 Mapa</button>
+    <button data-tab="despesas" onclick="showTab('despesas')">💸 Despesas</button>
+    <button data-tab="receitas" onclick="showTab('receitas')">💰 Receitas</button>
+    <button data-tab="equipa" onclick="showTab('equipa')">👥 Funcionários</button>
+    <button data-tab="atividades" onclick="showTab('atividades')">🎟️ Atividades</button>
+    <button data-tab="precos" onclick="showTab('precos')">🏷️ Valores</button>
+    <button data-tab="conta" onclick="showTab('conta')">🏦 Conta</button>
+    <button data-tab="documentos" onclick="showTab('documentos')">📄 Documentos</button>
+  </nav>
+
+  <main>
+    <div id="ano-banner" class="hidden" style="background:#FFF3D6;border:1.5px solid #E6B800;color:#6b4e00;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;font-weight:600">📅 <b>Vista anual</b> — soma de todos os períodos do ano. Só para consulta (receitas, despesas e inscrições de todo o ATL). Para <b>editar</b>, escolhe um período específico no seletor do topo.</div>
+    <div id="sec-dashboard" class="section active"></div>
+    <div id="sec-criancas" class="section"></div>
+    <div id="sec-semanas" class="section"></div>
+    <div id="sec-mapa" class="section"></div>
+    <div id="sec-despesas" class="section"></div>
+    <div id="sec-receitas" class="section"></div>
+    <div id="sec-equipa" class="section"></div>
+    <div id="sec-atividades" class="section"></div>
+    <div id="sec-precos" class="section"></div>
+    <div id="sec-conta" class="section"></div>
+    <div id="sec-documentos" class="section"></div>
+    <div id="sec-definicoes" class="section"></div>
+  </main>
+  <button id="ajuda-fab" title="Ajuda — arrasta para mover">❓ Ajuda</button>
+</div>
+
+<div class="overlay" id="ov">
+  <div class="modal">
+    <div class="modal-head"><div class="t" id="ov-title">—</div><button class="modal-close" onclick="fecharModal()">×</button></div>
+    <div class="modal-body" id="ov-body"></div>
+    <div class="modal-foot" id="ov-foot"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   ATL ARCAKIDS — app autónoma (ARCA d'Ajuda)
+   localStorage + espelho na cloud (Supabase, tabela atl_dados)
+   ============================================================ */
+const SUPA_URL = 'https://yfsyifypsrqnwkqkfrnm.supabase.co';
+const SUPA_KEY = 'sb_publishable_AkzlMeHlYHDyl0HzeC7_qg__j_Y6C9W';
+
+const LS = {
+  get(k){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const $ = id => document.getElementById(id);
+const esc = s => (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmt = n => '€ ' + (Number(n)||0).toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2});
+const uid = () => 'x'+Math.random().toString(36).slice(2,9)+(performance.now()|0).toString(36);
+const FORMAS_PAG = ['','Numerário','Cartão Pré-Pago (MB)','MB Way','Transferência','Multibanco (Entidade/Ref)','Cheque'];
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS_SEM=['D','S','T','Q','Q','S','S'];
+const DIAS_SEM_FULL=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+// feriados nacionais fixos (MM-DD) + Madeira (07-01, 12-26)
+const FERIADOS=['01-01','04-25','05-01','06-10','08-15','10-05','11-01','12-01','12-08','12-25','07-01','12-26'];
+let _toastT=null;
+function toast(msg, ok=true){ const t=$('toast'); t.textContent=msg; t.className='show'+(ok?'':' err'); clearTimeout(_toastT); _toastT=setTimeout(()=>t.className='',2600); }
+
+/* ---------- Supabase auth ---------- */
+let supaSession = LS.get('atl_supa_session');
+let modoLocal = LS.get('atl_modo_local') || false;
+async function supaAuthLogin(email, password){
+  const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`,{ method:'POST', headers:{'Content-Type':'application/json','apikey':SUPA_KEY}, body: JSON.stringify({email,password}) });
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.error_description||data.msg||data.error||'Email ou palavra-passe incorretos.');
+  supaSession = data; LS.set('atl_supa_session', supaSession); return data;
+}
+async function supaSignup(email, password){
+  const res = await fetch(`${SUPA_URL}/auth/v1/signup`,{ method:'POST', headers:{'Content-Type':'application/json','apikey':SUPA_KEY}, body: JSON.stringify({email,password}) });
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.error_description||data.msg||data.error||'Não foi possível criar a conta.');
+  if(data.access_token){ supaSession=data; LS.set('atl_supa_session', supaSession); } return data;
+}
+async function supaFetch(path, method='GET', body=null, extra=null){
+  const headers={'apikey':SUPA_KEY,'Content-Type':'application/json'};
+  headers['Authorization']='Bearer '+((supaSession&&supaSession.access_token)||SUPA_KEY);
+  if(method!=='GET') headers['Prefer']='return=representation';
+  if(extra) Object.assign(headers, extra);
+  const opts={method,headers}; if(body) opts.body=JSON.stringify(body);
+  const res=await fetch(`${SUPA_URL}/rest/v1/${path}`, opts);
+  const text=await res.text(); if(!res.ok) throw new Error(text||('Erro '+res.status));
+  return text?JSON.parse(text):null;
+}
+const CLOUD_ON = () => !modoLocal && supaSession && supaSession.access_token;
+function ehChaveAtl(k){ return typeof k==='string' && k.indexOf('atl_')===0 && k!=='atl_supa_session' && k!=='atl_modo_local'; }
+let _fila = Promise.resolve();
+function cloudGuardar(chave, valor){
+  if(!CLOUD_ON()) return;
+  _fila = _fila.then(()=>supaFetch('atl_dados','POST',{chave, valor, atualizado_em:new Date().toISOString()},{'Prefer':'resolution=merge-duplicates'})).then(()=>marcaCloud(true)).catch(e=>{ console.warn('cloud guardar',chave,e); marcaCloud(false); });
+}
+function cloudApagar(chave){ if(!CLOUD_ON()) return; _fila=_fila.then(()=>supaFetch('atl_dados?chave=eq.'+encodeURIComponent(chave),'DELETE')).catch(e=>console.warn('cloud apagar',chave,e)); }
+function save(k,v){ LS.set(k,v); if(ehChaveAtl(k)) cloudGuardar(k,v); }
+function del(k){ LS.del(k); if(ehChaveAtl(k)) cloudApagar(k); }
+async function hidratarCloud(){
+  if(!CLOUD_ON()){ marcaCloud(null); return; }
+  let rows; try{ rows = await supaFetch('atl_dados?select=chave,valor'); }catch(e){ console.warn('cloud ler',e); marcaCloud(false); return; }
+  if(rows && rows.length){ rows.forEach(r=>{ try{ localStorage.setItem(r.chave, JSON.stringify(r.valor)); }catch(e){} }); }
+  else{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(ehChaveAtl(k)){ try{ cloudGuardar(k, JSON.parse(localStorage.getItem(k))); }catch(e){} } } }
+  marcaCloud(true);
+}
+function marcaCloud(state){ const p=$('cloud-pill'); if(!p) return;
+  if(modoLocal){ p.textContent='📴 Local'; return; }
+  p.textContent = state===true?'☁️ Ligado':state===false?'⚠️ Sem ligação':'☁️ …';
+}
+
+/* ============================================================
+   MODELO DE DADOS
+   atl_edicoes -> [{id,nome,ano,dataInicio,dataFim}]
+   atl_edicao_ativa -> id
+   atl_ed_<id> -> {criancas,despesas,equipa,atividades,receitas,categorias,precos,semanasMeta}
+   atl_cfg -> {emailEnvio,emailNotif,emailDrive}
+   ============================================================ */
+const CATEGORIAS_DEFAULT = ['Alimentação','Seguros','Atividades / Visitas','Autocarro / Saídas','Material','Camisolas / T-shirts','Funcionários','Professores convidados','Outros'];
+const CATEGORIAS_REC_DEFAULT = ['Donativos','Apoios / Subsídios','Eventos','Venda de material','Camisolas','Outros'];
+function hoje(){ return new Date().toISOString().slice(0,10); }
+// estrutura de preços (tudo editável, varia de ano para ano)
+function precosDefault(){
+  const packs = [1,2,3,4,5,6,7,8,9].map(n=>({id:uid(), label:n+(n===1?' semana':' semanas'), semanas:n, avulso:false, preco:0, descontoArca:0}));
+  return {
+    inscricoes:[ {id:uid(), label:'1 dia (avulso)', semanas:0, avulso:true, preco:0, descontoArca:0}, ...packs ],
+    precoMes:0, descontoArcaMes:0,
+    descontoIrmao:{tipo:'€', valor:0},
+    campanhas:[],
+    atividades:['Piscina','IlhaPark','Museu','Canoagem'].map(n=>({id:uid(),nome:n,preco:0})),
+    alimentacaoDiaria:{almoco:0, lancheManha:0, lancheTarde:0},
+    outros:['Seguro','Seguro acidentes pessoais','Camisola / t-shirt'].map(n=>({id:uid(),nome:n,preco:0})),
+  };
+}
+function normalizaPrecos(p){
+  p = p||{};
+  if(!Array.isArray(p.inscricoes)||!p.inscricoes.length) p.inscricoes = precosDefault().inscricoes;
+  p.inscricoes.forEach(x=>{ if(!x.id) x.id=uid(); if(x.descontoArca==null) x.descontoArca=0; });
+  if(p.precoMes==null) p.precoMes=0; if(p.descontoArcaMes==null) p.descontoArcaMes=0;
+  if(!p.descontoIrmao||typeof p.descontoIrmao!=='object') p.descontoIrmao={tipo:'€', valor:(p.descontoIrmaos||0)};
+  if(!Array.isArray(p.campanhas)) p.campanhas=[];
+  if(!Array.isArray(p.atividades)) p.atividades=precosDefault().atividades;
+  if(!p.alimentacaoDiaria||typeof p.alimentacaoDiaria!=='object') p.alimentacaoDiaria={almoco:0,lancheManha:0,lancheTarde:0};
+  if(!Array.isArray(p.outros)) p.outros=precosDefault().outros;
+  p.atividades.forEach(x=>{ if(!x.id) x.id=uid(); });
+  p.outros.forEach(x=>{ if(!x.id) x.id=uid(); });
+  p.campanhas.forEach(x=>{ if(!x.id) x.id=uid(); });
+  return p;
+}
+let edicoes = LS.get('atl_edicoes') || [];
+let edicaoAtiva = LS.get('atl_edicao_ativa') || null;
+
+const ANO='__ano__'; // vista anual (todos os períodos)
+function modoAno(){ return edicaoAtiva===ANO; }
+function edKey(){ return 'atl_ed_'+edicaoAtiva; }
+function dadosVazios(){ return {criancas:[],preInscricoes:[],despesas:[],equipa:[],atividades:[],receitas:[],categorias:CATEGORIAS_DEFAULT.slice(),categoriasRec:CATEGORIAS_REC_DEFAULT.slice(),precos:precosDefault(),semanasMeta:{}}; }
+function getDAno(){
+  const base=dadosVazios();
+  edicoes.forEach(e=>{ const d=LS.get('atl_ed_'+e.id); if(!d) return; const nome=e.nome+(e.ano?(' '+e.ano):'');
+    (d.criancas||[]).forEach(c=>base.criancas.push(Object.assign({}, c, {_ed:nome, _edId:e.id})));
+    (d.despesas||[]).forEach(x=>base.despesas.push(Object.assign({}, x, {_ed:nome})));
+    (d.receitas||[]).forEach(x=>base.receitas.push(Object.assign({}, x, {_ed:nome})));
+    (d.equipa||[]).forEach(x=>base.equipa.push(Object.assign({}, x, {_ed:nome})));
+    (d.atividades||[]).forEach(x=>base.atividades.push(Object.assign({}, x, {_ed:nome})));
+  });
+  return base;
+}
+function getD(){ if(modoAno()) return getDAno(); if(!edicaoAtiva) return dadosVazios(); const d=LS.get(edKey()); if(!d) return dadosVazios(); const m=Object.assign(dadosVazios(), d); m.precos=normalizaPrecos(m.precos); return m; }
+function setD(d){ if(!edicaoAtiva || modoAno()) return; save(edKey(), d); }
+function getEdicao(){ if(modoAno()) return {id:ANO, nome:'Todo o ano', ano:'', dataInicio:'', dataFim:''}; return edicoes.find(e=>e.id===edicaoAtiva)||null; }
+function guardaModoAno(){ if(modoAno()){ toast('Vista anual: escolhe um período específico para editar.',false); return true; } return false; }
+function getCfg(){ return Object.assign({emailEnvio:'',emailNotif:'',emailDrive:'',logo:'',assocNome:"ARCA d'Ajuda",assocMorada:'',assocNif:'',assocContacto:''}, LS.get('atl_cfg')||{}); }
+function setCfg(c){ save('atl_cfg', c); }
+function proximoNumero(){ const arr=getD().criancas.map(c=>+c.numero||0); return (arr.length?Math.max(...arr):0)+1; }
+// ---------- documentos / declarações (modelos editáveis, globais) ----------
+function getDocs(){ return LS.get('atl_documentos')||[]; }
+function setDocs(d){ save('atl_documentos', d); }
+function docsDefault(){ return [
+  {id:uid(), titulo:'Declaração de veracidade e conhecimento do plano de atividades', corpo:`Eu, {{responsavel}}, encarregado(a) de educação de {{nome}} (inscrição n.º {{numero}}), declaro que:\n\n• Tomei conhecimento do plano de atividades do {{atl}};\n• Todas as informações prestadas na ficha de inscrição são verdadeiras e completas, não tendo omitido qualquer informação relevante sobre a criança, nomeadamente relativa à saúde, alergias ou cuidados especiais.\n\nData: ____/____/________\n\nAssinatura do Encarregado de Educação:\n\n___________________________________________`},
+  {id:uid(), titulo:'Autorização de saída autónoma', corpo:`Eu, {{responsavel}}, encarregado(a) de educação de {{nome}} (inscrição n.º {{numero}}), autorizo que o(a) meu(minha) educando(a) saia sozinho(a) das instalações do {{atl}} a partir das ______ horas, assumindo total responsabilidade a partir desse momento.\n\nData: ____/____/________\n\nAssinatura do Encarregado de Educação:\n\n___________________________________________`},
+]; }
+// ---------- impressão ----------
+function logoHeaderHTML(){
+  const c=getCfg(); const logo=c.logo? `<img src="${c.logo}" style="max-height:78px;max-width:200px;object-fit:contain">` : '';
+  return `<div style="display:flex;align-items:center;gap:16px;border-bottom:3px solid #0F6E56;padding-bottom:10px;margin-bottom:18px">${logo}<div><div style="font-size:18px;font-weight:800;color:#0F6E56">${esc(c.assocNome||"ARCA d'Ajuda")}</div><div style="font-size:12px;color:#555">ATL ARCAKIDS</div></div></div>`;
+}
+function rodapeImpressaoHTML(){
+  const c=getCfg(); const bits=[]; if(c.assocMorada)bits.push(esc(c.assocMorada)); if(c.assocNif)bits.push('NIF/NIPC: '+esc(c.assocNif)); if(c.assocContacto)bits.push(esc(c.assocContacto));
+  const nome=esc(c.assocNome||''); if(!nome && !bits.length) return '';
+  return `<div style="margin-top:34px;border-top:2px solid #0F6E56;padding-top:8px;font-size:10.5px;color:#555;text-align:center;line-height:1.4"><b style="color:#0F6E56">${nome}</b>${bits.length?'<br>'+bits.join(' · '):''}</div>`;
+}
+function abrirImpressao(titulo, corpoHtml){
+  const w=window.open('','_blank'); if(!w){ toast('Permite pop-ups (janelas) para imprimir.',false); return; }
+  w.document.write(`<html><head><meta charset="utf-8"><title>${esc(titulo)}</title><style>
+    body{font-family:Arial,Helvetica,sans-serif;padding:28px;color:#111;line-height:1.55}
+    h1{font-size:18px;color:#0F6E56;margin:0 0 4px}
+    table{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0 12px}
+    td,th{border:1px solid #bbb;padding:6px 9px;text-align:left;vertical-align:top}
+    th{background:#E1F5EE;width:34%;font-weight:700}
+    .sec{font-weight:700;color:#0F6E56;margin:16px 0 4px;border-bottom:1px solid #ccc;font-size:13px;padding-bottom:2px}
+    .decl{white-space:pre-wrap;font-size:13.5px;margin-top:10px}
+    .btnbar{margin-top:22px}
+    @media print{.btnbar{display:none}}
+  </style></head><body>${logoHeaderHTML()}${corpoHtml}${rodapeImpressaoHTML()}<div class="btnbar"><button onclick="window.print()" style="padding:9px 16px;background:#0F6E56;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">🖨️ Imprimir</button></div></body></html>`);
+  w.document.close(); w.focus(); setTimeout(()=>{try{w.print();}catch(e){}},400);
+}
+function preencherPlaceholders(txt, c){
+  const ed=getEdicao()||{}; const map={
+    '{{nome}}': c?esc(c.nome):'_______________________________',
+    '{{numero}}': c?(c.numero||''):'______',
+    '{{nasc}}': c?fmtData(c.nasc):'____/____/________',
+    '{{doc}}': c?esc(c.cc||''):'____________________',
+    '{{nif}}': c?esc(c.nif||''):'____________________',
+    '{{responsavel}}': c?esc(c.resp||''):'_______________________________',
+    '{{atl}}': esc(ed.nome||''),
+    '{{ano}}': ed.ano||''
+  };
+  return String(txt||'').replace(/\{\{\w+\}\}/g, m=>map[m]!=null?map[m]:m);
+}
+function imprimirDocumento(docId, childId){
+  const dc=getDocs().find(x=>x.id===docId); if(!dc){ toast('Documento não encontrado.',false); return; }
+  const c= childId? getD().criancas.find(x=>x.id===childId):null;
+  abrirImpressao(dc.titulo, `<h1>${esc(dc.titulo)}</h1><div class="decl">${preencherPlaceholders(dc.corpo||'', c)}</div>`);
+}
+function imprimirFicha(id){
+  const c=getD().criancas.find(x=>x.id===id); if(!c) return; const ed=getEdicao()||{};
+  const body=`<h1>Ficha de Inscrição — N.º ${c.numero||'—'}</h1>
+    <div style="font-size:12px;color:#555;margin-bottom:6px">${esc(ed.nome||'')}${ed.ano?(' · '+ed.ano):''}</div>
+    <div class="sec">Criança</div>
+    <table><tr><th>Nome</th><td>${esc(c.nome||'')}</td></tr>
+      <tr><th>Data de nascimento</th><td>${esc(fmtData(c.nasc))} ${c.nasc?('('+idadeATL(c)+')'):''}</td></tr>
+      <tr><th>Documento</th><td>${esc(c.ccTipo||'')} ${esc(c.cc||'')}${c.ccVal?(' — validade '+esc(fmtData(c.ccVal))):''}</td></tr>
+      <tr><th>NIF</th><td>${esc(c.nif||'')}</td></tr>
+      <tr><th>Alergias / intolerâncias</th><td>${esc(c.alergias||'—')}</td></tr>
+      <tr><th>Observações</th><td>${esc(c.obs||'—')}</td></tr></table>
+    <div class="sec">Encarregado de Educação</div>
+    <table><tr><th>Nome</th><td>${esc(c.resp||'')}${c.parentesco?(' ('+esc(c.parentesco)+')'):''}</td></tr>
+      <tr><th>Telemóvel</th><td>${esc(c.tel||'')}</td></tr>
+      <tr><th>Email</th><td>${esc(c.email||'')}</td></tr>
+      <tr><th>Contacto de emergência</th><td>${esc(c.emergencia||'')}</td></tr></table>
+    <div class="sec">Inscrição</div>
+    <table><tr><th>Modalidade</th><td>${esc(detalheInsc(c))}</td></tr>
+      <tr><th>Data da inscrição</th><td>${esc(fmtData(c.dataInscricao))}</td></tr>
+      <tr><th>Valor a pagar</th><td>${fmt(c.valor)}</td></tr>
+      <tr><th>Já pago</th><td>${fmt(c.pago)}</td></tr>
+      <tr><th>Forma de pagamento</th><td>${esc(c.pagamento||'')}</td></tr></table>
+    <div style="margin-top:36px;font-size:13px">Assinatura do Encarregado de Educação: ______________________________&nbsp;&nbsp;&nbsp;Data: ____/____/________</div>`;
+  abrirImpressao('Ficha de Inscrição N.º '+(c.numero||''), body);
+}
+function abrirImprimir(id){
+  const c=getD().criancas.find(x=>x.id===id); if(!c) return; const docs=getDocs();
+  modal('🖨️ Imprimir — '+esc(c.nome), `
+    <div class="muted" style="margin-bottom:12px">Sai com o logótipo da associação no cabeçalho. ${getCfg().logo?'':'<b>(Ainda não definiste o logótipo — fá-lo em Definições.)</b>'}</div>
+    <button class="btn-sm btn-add" style="width:100%;margin-bottom:10px;padding:10px" onclick="imprimirFicha('${id}')">📄 Ficha de inscrição (N.º ${c.numero||'—'})</button>
+    <div class="subt2">Declarações</div>
+    ${docs.length? docs.map(dc=>`<button class="btn-sm btn-neutral" style="width:100%;margin-bottom:6px;text-align:left;padding:9px" onclick="imprimirDocumento('${dc.id}','${id}')">🖊️ ${esc(dc.titulo)}</button>`).join('') : '<div class="muted">Sem declarações — cria em 📄 Documentos.</div>'}
+  `, [ {txt:'Fechar',cls:'btn-neutral',fn:fecharModal} ]);
+}
+
+/* ---------- períodos: dias úteis, semanas ---------- */
+function pad2(n){ return String(n).padStart(2,'0'); }
+function isoDate(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function isFeriado(d){ return FERIADOS.includes(pad2(d.getMonth()+1)+'-'+pad2(d.getDate())); }
+function isDiaUtil(d){ const w=d.getDay(); return w>=1 && w<=5 && !isFeriado(d); }
+function parseD(s){ if(!s) return null; const p=s.split('-'); return new Date(+p[0], +p[1]-1, +p[2]); }
+// datas úteis (Date) de um período qualquer
+function diasUteisDe(ed){
+  if(!ed||!ed.dataInicio||!ed.dataFim) return [];
+  const ini=parseD(ed.dataInicio), fim=parseD(ed.dataFim); const out=[];
+  let d=new Date(ini); let guard=0;
+  while(d<=fim && guard<400){ if(isDiaUtil(d)) out.push(new Date(d)); d.setDate(d.getDate()+1); guard++; }
+  return out;
+}
+function semanasDe(ed){
+  const dias=diasUteisDe(ed); if(!dias.length) return [];
+  const semanas=[]; let atual=null;
+  dias.forEach(d=>{ if(!atual){ atual={dias:[]}; } atual.dias.push(d); if(d.getDay()===5){ semanas.push(atual); atual=null; } });
+  if(atual) semanas.push(atual);
+  return semanas.map((s,i)=>{ const a=s.dias[0], b=s.dias[s.dias.length-1];
+    return { id:'S'+(i+1), num:i+1, label:'Semana '+(i+1), periodo: `${a.getDate()}/${a.getMonth()+1} a ${b.getDate()}/${b.getMonth()+1}`, dias: s.dias.map(isoDate) }; });
+}
+function mesesDe(ed){ const dias=diasUteisDe(ed); const set=[];
+  dias.forEach(d=>{ const key=d.getFullYear()+'-'+d.getMonth(); if(!set.find(x=>x.key===key)) set.push({key, mes:d.getMonth(), ano:d.getFullYear(), nome:MESES[d.getMonth()]+' '+d.getFullYear()}); });
+  return set; }
+// versões do período ativo
+function diasUteisPeriodo(){ return diasUteisDe(getEdicao()); }
+function semanasPeriodo(){ return semanasDe(getEdicao()); }
+function mesesPeriodo(){ return mesesDe(getEdicao()); }
+
+/* ============================================================
+   ARRANQUE / LOGIN
+   ============================================================ */
+window.addEventListener('DOMContentLoaded', ()=>{
+  if((supaSession && supaSession.access_token) || modoLocal){ entrarApp(); }
+});
+async function fazerLogin(){
+  const email=$('lg-email').value.trim(), pass=$('lg-pass').value;
+  if(!email||!pass){ loginMsg('Preenche o email e a palavra-passe.', false); return; }
+  loginMsg('A entrar…');
+  try{ await supaAuthLogin(email, pass); modoLocal=false; LS.set('atl_modo_local', false); await entrarApp(); }
+  catch(e){ loginMsg(e.message||'Falha ao entrar.', false); }
+}
+async function criarConta(){
+  const email=$('lg-email').value.trim(), pass=$('lg-pass').value;
+  if(!email||pass.length<6){ loginMsg('Escreve um email e uma palavra-passe (mín. 6 caracteres).', false); return; }
+  loginMsg('A criar conta…');
+  try{ const d=await supaSignup(email, pass);
+    if(d.access_token){ modoLocal=false; LS.set('atl_modo_local', false); await entrarApp(); }
+    else loginMsg('Conta criada! Confirma o email (se for pedido) e depois carrega em Entrar.', true);
+  }catch(e){ loginMsg(e.message||'Falha ao criar conta.', false); }
+}
+function usarLocal(){ modoLocal=true; LS.set('atl_modo_local', true); entrarApp(); }
+function loginMsg(m, ok){ const el=$('login-msg'); el.textContent=m||''; el.style.color = ok===false?'#C0392B':(ok===true?'#0F6E56':'#5C6B70'); }
+
+async function entrarApp(){
+  $('login-screen').style.display='none'; $('app').style.display='block';
+  marcaCloud(null); await hidratarCloud();
+  if(LS.get('atl_documentos')===null) setDocs(docsDefault());
+  edicoes = LS.get('atl_edicoes') || []; edicaoAtiva = LS.get('atl_edicao_ativa') || null;
+  if(!edicaoAtiva && edicoes.length) edicaoAtiva = edicoes[0].id;
+  popularEdicoes(); showTab('dashboard'); initAjudaFab();
+  if(location.hash.indexOf('inscricao')>=0){ setTimeout(()=>{ showTab('criancas'); abrirFichaPublica(); }, 300); }
+  else verificarFimMes();
+}
+/* ---------- Botão de Ajuda flutuante e móvel ---------- */
+let _ajudaInit=false;
+function initAjudaFab(){
+  const fab=$('ajuda-fab'); if(!fab) return; fab.style.display='inline-flex';
+  const pos=LS.get('atl_ajuda_pos'); if(pos&&pos.left!=null){ fab.style.left=pos.left+'px'; fab.style.top=pos.top+'px'; fab.style.right='auto'; fab.style.bottom='auto'; }
+  if(_ajudaInit) return; _ajudaInit=true;
+  let drag=false, moved=false, sx=0, sy=0, ox=0, oy=0;
+  const down=e=>{ drag=true; moved=false; const p=e.touches?e.touches[0]:e; sx=p.clientX; sy=p.clientY; const r=fab.getBoundingClientRect(); ox=r.left; oy=r.top; };
+  const move=e=>{ if(!drag) return; const p=e.touches?e.touches[0]:e; const dx=p.clientX-sx, dy=p.clientY-sy; if(Math.abs(dx)>4||Math.abs(dy)>4) moved=true; let nl=ox+dx, nt=oy+dy; nl=Math.max(4,Math.min(window.innerWidth-fab.offsetWidth-4,nl)); nt=Math.max(4,Math.min(window.innerHeight-fab.offsetHeight-4,nt)); fab.style.left=nl+'px'; fab.style.top=nt+'px'; fab.style.right='auto'; fab.style.bottom='auto'; if(e.cancelable)e.preventDefault(); };
+  const up=()=>{ if(!drag) return; drag=false; if(moved){ const r=fab.getBoundingClientRect(); LS.set('atl_ajuda_pos',{left:Math.round(r.left),top:Math.round(r.top)}); } };
+  fab.addEventListener('mousedown',down); document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
+  fab.addEventListener('touchstart',down,{passive:true}); document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',up);
+  fab.addEventListener('click',()=>{ if(!moved) abrirAjuda(); });
+}
+function abrirAjuda(){
+  modal('❓ Ajuda — como usar o ATL ARCAKIDS', `
+    <div class="muted" style="margin-bottom:10px">Guia rápido de cada secção. (Podes arrastar este botão de ajuda para onde quiseres.)</div>
+    <div class="subt">Antes de começar</div>
+    <ul style="margin:0 0 8px 18px;font-size:13px;line-height:1.6">
+      <li><b>+ Período</b> (topo): cria cada ATL por <b>datas</b> — semanas e dias úteis geram-se sozinhos. Troca de período no seletor do topo; <b>📅 Todo o ano</b> soma tudo.</li>
+      <li><b>🏷️ Valores</b>: preços das inscrições, alimentação diária (almoço + 2 lanches), descontos (atleta / irmão, editáveis), campanhas, atividades, seguros. Tudo editável.</li>
+    </ul>
+    <div class="subt">No dia a dia</div>
+    <ul style="margin:0 0 8px 18px;font-size:13px;line-height:1.6">
+      <li><b>🧒 Inscrições</b>: nova inscrição, nº automático, procura por Nº/nome/NIF. O <b>grupo (G1/G2)</b> é atribuído aqui pela coordenação. Botões: 🖨️ imprimir ficha/declarações, 🗂️ notas administrativas.</li>
+      <li><b>👪 Ficha pública</b> + <b>🔗 Copiar link</b>: link para os pais se inscreverem; ficam em <b>📥 pré-inscrições</b> para aprovares.</li>
+      <li><b>📆 Mapa</b>: ocupação por dia, e listas por semana (seguradora), <b>alergias (cozinha)</b>, observações e <b>grupos</b> — cada uma imprime-se por semana.</li>
+      <li><b>💸 Despesas</b>: lançamentos manuais (seguros, material, autocarro…), <b>🍽️ Alimentação por dia</b> (automática) e <b>Resumo</b> por dia/semana/mês. Funcionários e atividades também contam.</li>
+      <li><b>🎟️ Atividades</b>: preço × nº de crianças do grupo presentes no dia. <b>🗓️ Mapa por dia</b> mostra G1/G2 por atividade.</li>
+      <li><b>🏦 Conta</b>: saldo do banco, depósitos do cofre e transferências, com saldo corrido.</li>
+      <li><b>📄 Documentos</b>: declarações editáveis + atalhos para as listas. O logótipo e a morada/NIF definem-se em ⚙️ Definições.</li>
+    </ul>
+    <div class="subt">Automático</div>
+    <ul style="margin:0 0 4px 18px;font-size:13px;line-height:1.6">
+      <li>No <b>fim do mês</b> aparece um lembrete para imprimir os movimentos.</li>
+      <li>Tudo é guardado e <b>sincronizado na cloud</b> (☁️ no topo). Podes usar em vários dispositivos.</li>
+    </ul>`,
+    [ {txt:'Repor posição do botão',cls:'btn-neutral',fn:()=>{ LS.del('atl_ajuda_pos'); const f=$('ajuda-fab'); f.style.left='auto';f.style.top='auto';f.style.right='20px';f.style.bottom='20px'; fecharModal(); }},
+      {txt:'Fechar',cls:'btn-add',fn:fecharModal} ]);
+}
+function sair(){ if(!confirm('Sair da conta do ATL neste dispositivo?')) return; LS.del('atl_supa_session'); LS.del('atl_modo_local'); supaSession=null; modoLocal=false; location.reload(); }
+
+/* ============================================================
+   EDIÇÕES / PERÍODOS
+   ============================================================ */
+function popularEdicoes(){
+  const sel=$('ed-sel'); sel.innerHTML='';
+  if(!edicoes.length){ const o=document.createElement('option'); o.value=''; o.textContent='(sem períodos)'; sel.appendChild(o); return; }
+  edicoes.forEach(e=>{ const o=document.createElement('option'); o.value=e.id; o.textContent=`${e.nome}${e.ano?' · '+e.ano:''}`; if(e.id===edicaoAtiva)o.selected=true; sel.appendChild(o); });
+  const oa=document.createElement('option'); oa.value=ANO; oa.textContent='📅 Todo o ano (todos os períodos)'; if(edicaoAtiva===ANO)oa.selected=true; sel.appendChild(oa);
+}
+function onEdicaoChange(id){ edicaoAtiva=id; save('atl_edicao_ativa', id); renderAtual(); }
+
+function abrirModalEdicao(ed){
+  if(ed && ed.id===ANO) ed=null; // não se edita a vista anual
+  const e = ed||{nome:'',ano:new Date().getFullYear(),dataInicio:'',dataFim:''};
+  modal('Período do ATL', `
+    <div class="info">Define o ATL pelas <b>datas</b>. As semanas e os dias úteis (sem fins de semana nem feriados) são gerados automaticamente.</div>
+    <div class="grid2">
+      <div class="fg"><label>Nome *</label><input id="e-nome" value="${esc(e.nome)}" placeholder="Ex: ATL de Verão"></div>
+      <div class="fg"><label>Ano</label><input id="e-ano" type="number" value="${esc(e.ano)}"></div>
+    </div>
+    <div class="grid2">
+      <div class="fg"><label>Data de início *</label><input id="e-ini" type="date" value="${esc(e.dataInicio)}"></div>
+      <div class="fg"><label>Data de fim *</label><input id="e-fim" type="date" value="${esc(e.dataFim)}"></div>
+    </div>`,
+    [ ed?{txt:'Eliminar',cls:'btn-del',fn:()=>eliminarEdicao(ed.id)}:null,
+      {txt:'Guardar',cls:'btn-add',fn:()=>guardarEdicao(ed?ed.id:null)} ]);
+}
+function guardarEdicao(id){
+  const nome=$('e-nome').value.trim(); if(!nome){ toast('Dá um nome ao período.',false); return; }
+  const ini=$('e-ini').value, fim=$('e-fim').value;
+  if(ini&&fim&&parseD(ini)>parseD(fim)){ toast('A data de fim tem de ser depois do início.',false); return; }
+  const obj={ id:id||uid(), nome, ano:parseInt($('e-ano').value)||'', dataInicio:ini, dataFim:fim };
+  if(id){ const i=edicoes.findIndex(e=>e.id===id); if(i>=0) edicoes[i]=obj; } else edicoes.push(obj);
+  edicaoAtiva = obj.id; save('atl_edicoes', edicoes); save('atl_edicao_ativa', edicaoAtiva);
+  if(!id) setD(dadosVazios());
+  fecharModal(); popularEdicoes(); renderAtual(); toast('Período guardado.');
+}
+function eliminarEdicao(id){
+  const e=edicoes.find(x=>x.id===id); const nome=e?e.nome:'';
+  // aviso duplo
+  if(!confirm(`⚠️ ATENÇÃO\n\nVais eliminar o período "${nome}" e TODOS os seus dados (inscrições, despesas, receitas, funcionários…).\n\nEsta ação NÃO pode ser desfeita. Continuar?`)) return;
+  const t=prompt(`Confirmação final.\n\nEscreve APAGAR (em maiúsculas) para eliminar definitivamente o período "${nome}":`);
+  if((t||'').trim().toUpperCase()!=='APAGAR'){ toast('Cancelado — o período NÃO foi eliminado.'); return; }
+  edicoes = edicoes.filter(x=>x.id!==id); del('atl_ed_'+id);
+  if(edicaoAtiva===id) edicaoAtiva = edicoes[0]?edicoes[0].id:null;
+  save('atl_edicoes', edicoes); save('atl_edicao_ativa', edicaoAtiva);
+  fecharModal(); popularEdicoes(); renderAtual(); toast('Período eliminado.');
+}
+
+/* ============================================================
+   NAVEGAÇÃO
+   ============================================================ */
+let tabAtual='dashboard';
+function showTab(t){
+  tabAtual=t;
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===t));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  $('sec-'+t).classList.add('active'); renderAtual();
+}
+const TABS_SO_PERIODO=['semanas','mapa','precos']; // não fazem sentido na vista anual (datas/preços variam por período)
+function renderAtual(){
+  const banner=$('ano-banner'); if(banner) banner.classList.toggle('hidden', !modoAno());
+  if(modoAno() && TABS_SO_PERIODO.includes(tabAtual)){
+    const el=$('sec-'+tabAtual); if(el) el.innerHTML=`<div class="card"><div class="empty">Este ecrã é por período (as datas e os valores variam de período para período).<br><br>Escolhe um período específico no seletor do topo para o ver.</div></div>`;
+    popularEdicoes(); return;
+  }
+  const r={dashboard:renderDashboard,criancas:renderCriancas,semanas:renderSemanas,mapa:renderMapa,despesas:renderDespesas,receitas:renderReceitas,equipa:renderEquipa,atividades:renderAtividades,precos:renderPrecos,conta:renderConta,documentos:renderDocumentos,definicoes:renderDefinicoes}[tabAtual];
+  if(r) r(); popularEdicoes();
+}
+function precisaEdicao(el){
+  if(edicaoAtiva) return false;
+  el.innerHTML = `<div class="card"><div class="empty">Ainda não tens nenhum período do ATL.<br><br><button class="btn btn-primary" style="width:auto;padding:10px 18px" onclick="abrirModalEdicao()">+ Criar primeiro período</button></div></div>`;
+  return true;
+}
+
+/* ---------- totais ---------- */
+function totais(){
+  const d=getD();
+  const totInscrito = d.criancas.reduce((s,c)=>s+(+c.valor||0),0);
+  const totPago = d.criancas.reduce((s,c)=>s+(+c.pago||0),0);
+  const outrasRec = d.receitas.reduce((s,r)=>s+(+r.valor||0),0);
+  const despLancadas = d.despesas.reduce((s,x)=>s+(+x.valor||0),0);
+  const custoEquipa = d.equipa.reduce((s,m)=>s+(+m.remuneracao||0),0);
+  let custoAtiv, custoAlim;
+  if(modoAno()){ custoAlim=edicoes.reduce((s,e)=>s+custoAlimentacaoPeriodo(e.id),0); custoAtiv=edicoes.reduce((s,e)=>s+custoAtividadesPeriodo(e.id),0); }
+  else { custoAlim=custoAlimentacaoTotal(); custoAtiv=custoAtividadesTotal(); }
+  const totDesp = despLancadas + custoEquipa + custoAtiv + custoAlim;
+  const recTotal = totPago + outrasRec;
+  return { d, totInscrito, totPago, outrasRec, despLancadas, custoEquipa, custoAtiv, custoAlim, totDesp, recTotal, pendente: Math.max(0, totInscrito-totPago), saldo: recTotal-totDesp };
+}
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+let chartRV=null;
+function renderDashboard(){
+  const el=$('sec-dashboard'); if(precisaEdicao(el)) return;
+  const t=totais(); const d=t.d; const ed=getEdicao(); const nSem=semanasPeriodo().length; const nDias=diasUteisPeriodo().length;
+  el.innerHTML = `
+    <div class="cards">
+      <div class="metric"><div class="lbl">Crianças</div><div class="val blue">${d.criancas.length}</div><div class="sub">inscritas</div></div>
+      <div class="metric"><div class="lbl">Receita prevista</div><div class="val">${fmt(t.totInscrito)}</div><div class="sub">Recebido: ${fmt(t.totPago)}</div></div>
+      <div class="metric"><div class="lbl">Pendente</div><div class="val amber">${fmt(t.pendente)}</div><div class="sub">${d.criancas.filter(c=>(+c.valor||0)>(+c.pago||0)).length} por pagar</div></div>
+      <div class="metric"><div class="lbl">Despesas</div><div class="val red">${fmt(t.totDesp)}</div><div class="sub">Gerais ${fmt(t.despLancadas)} · Funcion. ${fmt(t.custoEquipa)} · Aliment. ${fmt(t.custoAlim)} · Ativid. ${fmt(t.custoAtiv)}</div></div>
+      <div class="metric" style="border-color:${t.saldo>=0?'var(--teal)':'var(--coral)'}"><div class="lbl">Saldo</div><div class="val ${t.saldo>=0?'green':'red'}">${fmt(t.saldo)}</div><div class="sub">${t.saldo>=0?'Lucro':'Prejuízo'}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">${ed?esc(ed.nome):'ATL'}</div><div class="muted">${modoAno()?`Soma de ${edicoes.length} período(s) do ano`:(ed&&ed.dataInicio?`${ed.dataInicio} → ${ed.dataFim} · ${nSem} semanas · ${nDias} dias úteis`:'Sem datas definidas — edita o período')}</div></div>
+      <div style="max-width:340px;margin:0 auto"><canvas id="ch-rv" height="200"></canvas></div>
+    </div>
+    <div class="card"><div class="card-title" style="margin-bottom:8px">Atalhos</div>
+      <div class="seg">
+        <button onclick="showTab('criancas')">🧒 Inscrições</button>
+        <button onclick="showTab('despesas')">💸 Despesas</button>
+        <button onclick="showTab('precos')">🏷️ Valores</button>
+        <button onclick="abrirModalEdicao(getEdicao())">✏️ Editar período</button>
+      </div>
+    </div>`;
+  try{ if(chartRV) chartRV.destroy();
+    chartRV = new Chart($('ch-rv'), { type:'doughnut', data:{ labels:['Recebido','Pendente','Despesas'], datasets:[{ data:[t.totPago, t.pendente, t.totDesp], backgroundColor:['#1D9E75','#BA7517','#D85A30'], borderWidth:0 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{size:11}}}} } });
+  }catch(e){}
+}
+
+/* ============================================================
+   VALORES DO ATL (tudo editável, por período)
+   ============================================================ */
+function renderPrecos(){
+  const el=$('sec-precos'); if(precisaEdicao(el)) return;
+  const d=getD(); const p=d.precos; const di=p.descontoIrmao||{tipo:'€',valor:0};
+  el.innerHTML=`
+    <div class="info">Todos os valores são deste período e <b>totalmente editáveis</b> — muda-os de ano para ano à vontade. O que definires aqui é usado para calcular automaticamente o valor de cada inscrição.</div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">🎫 Inscrições</div><button class="btn-sm btn-add" onclick="addPacote()">+ Escalão</button></div>
+      <div class="muted" style="margin-bottom:10px">Preço de cada tipo de inscrição e o desconto para <b>atletas da ARCA</b> nesse escalão.</div>
+      <div class="table-wrap"><table><thead><tr><th>Descrição</th><th class="right">Preço (€)</th><th class="right">Desc. atleta ARCA (€)</th><th></th></tr></thead><tbody id="pk-body">
+      ${p.inscricoes.map(pk=>`<tr>
+        <td><input data-pk="${pk.id}" data-f="label" value="${esc(pk.label)}" style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px">${pk.avulso?'<div class="muted" style="margin-top:2px">preço × nº de dias escolhidos</div>':''}</td>
+        <td class="right"><input data-pk="${pk.id}" data-f="preco" type="number" step="0.01" value="${esc(pk.preco)}" style="width:100px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;text-align:right"></td>
+        <td class="right"><input data-pk="${pk.id}" data-f="descontoArca" type="number" step="0.01" value="${esc(pk.descontoArca)}" style="width:100px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;text-align:right"></td>
+        <td class="right"><button class="btn-sm btn-del" onclick="delPacote('${pk.id}')">✕</button></td>
+      </tr>`).join('')}
+      </tbody></table></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🈷️ Preço por mês inteiro</div>
+      <div class="muted" style="margin:6px 0 10px">Usado quando na inscrição se marca um ou mais meses inteiros.</div>
+      <div class="grid2">
+        <div class="fg"><label>Preço por mês (€)</label><input id="pm-preco" type="number" step="0.01" value="${esc(p.precoMes)}"></div>
+        <div class="fg"><label>Desconto atleta ARCA / mês (€)</label><input id="pm-arca" type="number" step="0.01" value="${esc(p.descontoArcaMes)}"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👧👦 Desconto por irmão no ATL</div>
+      <div class="muted" style="margin:6px 0 10px">Aplicado quando a criança tem um irmão a frequentar o ATL ao mesmo tempo.</div>
+      <div class="grid2">
+        <div class="fg"><label>Tipo</label><select id="di-tipo">${['€','€/semana','%'].map(t=>`<option ${t===di.tipo?'selected':''}>${t}</option>`).join('')}</select></div>
+        <div class="fg"><label>Valor do desconto <span class="muted">(€/semana = por cada semana inscrita)</span></label><input id="di-valor" type="number" step="0.01" value="${esc(di.valor)}"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">📣 Campanhas / promoções</div><button class="btn-sm btn-add" onclick="addCampanha()">+ Campanha</button></div>
+      <div class="muted" style="margin-bottom:10px">Desconto em % para quem se inscrever <b>até uma data</b>. Ex.: 10% para 4 semanas até 31/05; 20% para 8 semanas.</div>
+      ${!p.campanhas.length?'<div class="empty" style="padding:14px">Sem campanhas.</div>':
+      `<div class="table-wrap"><table><thead><tr><th>Nome</th><th>Aplica-se a</th><th class="right">Desconto %</th><th>Até (inclusive)</th><th></th></tr></thead><tbody>
+      ${p.campanhas.map(cm=>`<tr>
+        <td><input data-cm="${cm.id}" data-f="nome" value="${esc(cm.nome||'')}" style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px"></td>
+        <td><select data-cm="${cm.id}" data-f="semanas" style="padding:6px 8px;border:1px solid var(--line);border-radius:6px">
+            <option value="" ${cm.semanas===''||cm.semanas==null?'selected':''}>Todas</option>
+            ${p.inscricoes.filter(x=>!x.avulso).map(x=>`<option value="${x.semanas}" ${(+cm.semanas===+x.semanas)?'selected':''}>${esc(x.label)}</option>`).join('')}
+          </select></td>
+        <td class="right"><input data-cm="${cm.id}" data-f="descontoPct" type="number" step="1" value="${esc(cm.descontoPct)}" style="width:80px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;text-align:right"></td>
+        <td><input data-cm="${cm.id}" data-f="dataLimite" type="date" value="${esc(cm.dataLimite||'')}" style="padding:6px 8px;border:1px solid var(--line);border-radius:6px"></td>
+        <td class="right"><button class="btn-sm btn-del" onclick="delCampanha('${cm.id}')">✕</button></td>
+      </tr>`).join('')}
+      </tbody></table></div>`}
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">🎟️ Atividades (preços)</div><button class="btn-sm btn-add" onclick="addExtra('atividades')">+ Atividade</button></div>
+      <div class="table-wrap"><table><tbody id="ativ-body">
+      ${p.atividades.map(a=>linhaExtra('atividades',a)).join('')||'<tr><td class="muted" style="padding:12px">Sem atividades.</td></tr>'}
+      </tbody></table></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🍽️ Alimentação diária (por criança)</div>
+      <div class="muted" style="margin:6px 0 10px">Valor por criança e por dia. O total é calculado automaticamente: (almoço + 2 lanches) × nº de dias que cada criança frequenta.</div>
+      <div class="grid3">
+        <div class="fg"><label>Almoço (€)</label><input id="al-almoco" type="number" step="0.01" value="${esc((p.alimentacaoDiaria||{}).almoco)}"></div>
+        <div class="fg"><label>Lanche da manhã (€)</label><input id="al-lm" type="number" step="0.01" value="${esc((p.alimentacaoDiaria||{}).lancheManha)}"></div>
+        <div class="fg"><label>Lanche da tarde (€)</label><input id="al-lt" type="number" step="0.01" value="${esc((p.alimentacaoDiaria||{}).lancheTarde)}"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">🛡️ Seguros e outros valores</div><button class="btn-sm btn-add" onclick="addExtra('outros')">+ Item</button></div>
+      <div class="muted" style="margin-bottom:8px">Espaço livre para acrescentar tudo o que precisares (seguros, material, camisolas…). Escreve o nome e o valor, e podes adicionar ou apagar linhas.</div>
+      <div class="table-wrap"><table><tbody id="outros-body">
+      ${p.outros.map(a=>linhaExtra('outros',a)).join('')||'<tr><td class="muted" style="padding:12px">Sem itens.</td></tr>'}
+      </tbody></table></div>
+    </div>
+
+    <div style="position:sticky;bottom:0;padding:12px 0"><button class="btn btn-primary" style="width:auto;padding:11px 22px" onclick="guardarValores()">💾 Guardar todos os valores</button></div>`;
+}
+function linhaExtra(grupo,a){
+  return `<tr>
+    <td><input data-ex="${grupo}" data-id="${a.id}" data-f="nome" value="${esc(a.nome||'')}" style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px"></td>
+    <td class="right" style="width:130px"><input data-ex="${grupo}" data-id="${a.id}" data-f="preco" type="number" step="0.01" value="${esc(a.preco)}" style="width:110px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;text-align:right"></td>
+    <td class="right" style="width:40px"><button class="btn-sm btn-del" onclick="delExtra('${grupo}','${a.id}')">✕</button></td>
+  </tr>`;
+}
+function lerValoresDoDOM(){
+  const d=getD(); const p=d.precos;
+  document.querySelectorAll('[data-pk]').forEach(inp=>{ const pk=p.inscricoes.find(x=>x.id===inp.dataset.pk); if(!pk) return; const f=inp.dataset.f; pk[f]= f==='label'?inp.value : (parseFloat(inp.value)||0); });
+  document.querySelectorAll('[data-cm]').forEach(inp=>{ const cm=p.campanhas.find(x=>x.id===inp.dataset.cm); if(!cm) return; const f=inp.dataset.f; if(f==='descontoPct')cm[f]=parseFloat(inp.value)||0; else if(f==='semanas')cm[f]=inp.value===''?'':(+inp.value); else cm[f]=inp.value; });
+  document.querySelectorAll('[data-ex]').forEach(inp=>{ const grp=inp.dataset.ex; const a=p[grp].find(x=>x.id===inp.dataset.id); if(!a) return; a[inp.dataset.f]= inp.dataset.f==='preco'?(parseFloat(inp.value)||0):inp.value; });
+  const dt=$('di-tipo'), dv=$('di-valor'); if(dt&&dv) p.descontoIrmao={tipo:dt.value, valor:parseFloat(dv.value)||0};
+  const pmp=$('pm-preco'), pma=$('pm-arca'); if(pmp) p.precoMes=parseFloat(pmp.value)||0; if(pma) p.descontoArcaMes=parseFloat(pma.value)||0;
+  const aa=$('al-almoco'), alm=$('al-lm'), alt=$('al-lt'); if(aa) p.alimentacaoDiaria={almoco:parseFloat(aa.value)||0, lancheManha:parseFloat(alm.value)||0, lancheTarde:parseFloat(alt.value)||0};
+  return d;
+}
+function guardarValores(){ const d=lerValoresDoDOM(); setD(d); toast('Valores guardados.'); }
+function addPacote(){ const d=lerValoresDoDOM(); d.precos.inscricoes.push({id:uid(),label:'Novo escalão',semanas:0,avulso:false,preco:0,descontoArca:0}); setD(d); renderPrecos(); }
+function delPacote(id){ const d=lerValoresDoDOM(); d.precos.inscricoes=d.precos.inscricoes.filter(x=>x.id!==id); setD(d); renderPrecos(); }
+function addCampanha(){ const d=lerValoresDoDOM(); d.precos.campanhas.push({id:uid(),nome:'Campanha',semanas:'',descontoPct:10,dataLimite:''}); setD(d); renderPrecos(); }
+function delCampanha(id){ const d=lerValoresDoDOM(); d.precos.campanhas=d.precos.campanhas.filter(x=>x.id!==id); setD(d); renderPrecos(); }
+function addExtra(grupo){ const d=lerValoresDoDOM(); d.precos[grupo].push({id:uid(),nome:'',preco:0}); setD(d); renderPrecos(); }
+function delExtra(grupo,id){ const d=lerValoresDoDOM(); d.precos[grupo]=d.precos[grupo].filter(x=>x.id!==id); setD(d); renderPrecos(); }
+
+// preços por unidade
+function precoDiaAvulso(){ const a=(getD().precos.inscricoes||[]).find(x=>x.avulso); return a?(+a.preco||0):0; }
+function precoSemanas(n){ if(n<=0)return 0; const insc=getD().precos.inscricoes||[]; const e=insc.find(x=>!x.avulso&&+x.semanas===n); if(e)return +e.preco||0; const one=insc.find(x=>!x.avulso&&+x.semanas===1); return n*((one?+one.preco:0)||0); }
+function descArcaSemanas(n){ if(n<=0)return 0; const e=(getD().precos.inscricoes||[]).find(x=>!x.avulso&&+x.semanas===n); return e?(+e.descontoArca||0):0; }
+// campanha aplicável (pela contagem de semanas marcadas)
+function campanhaAplicavel(c, ctx){
+  const p=getD().precos; const dins = c.dataInscricao || hoje(); const nSem = ctx?ctx.semanas:(c.semanasSel||[]).length;
+  return (p.campanhas||[]).find(cm=>{
+    if(cm.dataLimite && dins > cm.dataLimite) return false;
+    if(cm.semanas!=='' && cm.semanas!=null && +cm.semanas!==+nSem) return false;
+    return true;
+  });
+}
+// decomposição do valor
+function breakdown(c){
+  const p=getD().precos;
+  const nDias=(c.avulsoDias||[]).length, nSem=(c.semanasSel||[]).length, nMes=(c.mesesSel||[]).length;
+  const subtotal = nDias*precoDiaAvulso() + precoSemanas(nSem) + nMes*(+p.precoMes||0);
+  // candidatos a desconto (não acumuláveis)
+  const dAtleta = c.atleta ? (descArcaSemanas(nSem) + nMes*(+p.descontoArcaMes||0)) : 0;
+  const di=p.descontoIrmao||{};
+  const dIrmao = c.temIrmao ? (di.tipo==='%'? subtotal*((+di.valor||0)/100) : di.tipo==='€/semana'? (+di.valor||0)*nSem : (+di.valor||0)) : 0;
+  let desconto=0, descontoLabel='';
+  if(c.atleta && c.temIrmao){ if(dAtleta>=dIrmao){desconto=dAtleta;descontoLabel='atleta (o mais vantajoso)';} else {desconto=dIrmao;descontoLabel='irmão (o mais vantajoso)';} }
+  else if(c.atleta){ desconto=dAtleta; descontoLabel='atleta'; }
+  else if(c.temIrmao){ desconto=dIrmao; descontoLabel='irmão'; }
+  let total = subtotal - desconto;
+  let campanhaTxt='';
+  const camp=campanhaAplicavel(c,{semanas:nSem});
+  if(camp && (+camp.descontoPct||0)){ const dc=subtotal*((+camp.descontoPct||0)/100); total-=dc; campanhaTxt='−'+camp.descontoPct+'% '+(esc(camp.nome||'campanha')); }
+  desconto = Math.round(desconto*100)/100;
+  total = Math.max(0, Math.round(total*100)/100);
+  return {subtotal:Math.round(subtotal*100)/100, desconto, descontoLabel, total, campanhaTxt, pendente:(c.atleta||c.temIrmao)&&!c.descontoVerificado};
+}
+function calcValor(c){ return breakdown(c).total; }
+// conjunto de dias (iso) que uma criança frequenta: avulso + semanas + meses
+function diasDaCriancaEm(c, semanas, diasUteis){
+  const set=new Set(c.avulsoDias||[]);
+  (c.semanasSel||[]).forEach(sid=>{ const s=semanas.find(x=>x.id===sid); if(s) s.dias.forEach(d=>set.add(d)); });
+  if((c.mesesSel||[]).length){ diasUteis.forEach(d=>{ if((c.mesesSel||[]).includes(d.getMonth())) set.add(isoDate(d)); }); }
+  return set;
+}
+function diasDaCrianca(c){ return diasDaCriancaEm(c, semanasPeriodo(), diasUteisPeriodo()); }
+// ---------- custos automáticos: alimentação e atividades ----------
+function precoDiaAlimentacaoDe(p){ const a=(p&&p.alimentacaoDiaria)||{}; return (+a.almoco||0)+(+a.lancheManha||0)+(+a.lancheTarde||0); }
+function precoDiaAlimentacao(){ return precoDiaAlimentacaoDe(getD().precos); }
+function custoAlimentacaoTotal(){ const d=getD(); const pd=precoDiaAlimentacao(); if(!pd) return 0; return d.criancas.reduce((s,c)=>s+pd*diasDaCrianca(c).size,0); }
+// crianças do grupo QUE ESTÃO PRESENTES na data da atividade (se não estão, não contam)
+function nCriancasAtividade(a){ const d=getD(); const grupo=a.grupo||'Todos'; return d.criancas.filter(c=>{ if(grupo!=='Todos' && (c.grupo||'')!==grupo) return false; return a.data && diasDaCrianca(c).has(a.data); }).length; }
+function custoAtividade(a){ return (+a.precoCrianca||0)*nCriancasAtividade(a); }
+function custoAtividadesTotal(){ return getD().atividades.reduce((s,a)=>s+custoAtividade(a),0); }
+// versões por período (para a vista anual)
+function custoAlimentacaoPeriodo(edId){
+  const ed=edicoes.find(e=>e.id===edId); const d=LS.get('atl_ed_'+edId); if(!ed||!d) return 0;
+  const p=normalizaPrecos(d.precos||{}); const pd=precoDiaAlimentacaoDe(p); if(!pd) return 0;
+  const sem=semanasDe(ed), du=diasUteisDe(ed);
+  return (d.criancas||[]).reduce((s,c)=>s+pd*diasDaCriancaEm(c,sem,du).size,0);
+}
+function custoAtividadesPeriodo(edId){
+  const ed=edicoes.find(e=>e.id===edId); const d=LS.get('atl_ed_'+edId); if(!ed||!d) return 0;
+  const sem=semanasDe(ed), du=diasUteisDe(ed);
+  return (d.atividades||[]).reduce((s,a)=>{ const grupo=a.grupo||'Todos';
+    const n=(d.criancas||[]).filter(c=>{ if(grupo!=='Todos'&&(c.grupo||'')!==grupo) return false; return a.data && diasDaCriancaEm(c,sem,du).has(a.data); }).length;
+    return s+(+a.precoCrianca||0)*n; },0);
+}
+
+/* ============================================================
+   SEMANAS (geradas automaticamente do período)
+   ============================================================ */
+function renderSemanas(){
+  const el=$('sec-semanas'); if(precisaEdicao(el)) return;
+  const ed=getEdicao(); const semanas=semanasPeriodo(); const d=getD(); const meta=d.semanasMeta||{};
+  if(!ed.dataInicio){ el.innerHTML=`<div class="card"><div class="empty">Este período não tem datas.<br><br><button class="btn btn-primary" style="width:auto;padding:10px 18px" onclick="abrirModalEdicao(getEdicao())">✏️ Definir datas</button></div></div>`; return; }
+  el.innerHTML=`<div class="card">
+    <div class="card-head"><div class="card-title">Semanas · ${semanas.length}</div><div class="muted">Geradas automaticamente (só dias úteis)</div></div>
+    ${!semanas.length?'<div class="empty">Sem dias úteis no período.</div>':
+    `<div class="table-wrap"><table><thead><tr><th>Semana</th><th>Período</th><th>Dias úteis</th><th>Tema</th><th>Monitores</th><th></th></tr></thead><tbody>
+    ${semanas.map(s=>{ const m=meta[s.id]||{}; return `<tr><td><b>${s.label}</b></td><td>${s.periodo}</td><td>${s.dias.length}</td><td class="muted">${esc(m.tema||'')}</td><td>${esc(m.monitores||'')}</td>
+      <td class="right"><button class="btn-sm btn-edit" onclick="editarMetaSemana('${s.id}')">✏️ Tema</button></td></tr>`; }).join('')}
+    </tbody></table></div>`}
+  </div>`;
+}
+function editarMetaSemana(sid){
+  const d=getD(); const meta=(d.semanasMeta||{})[sid]||{};
+  modal('Semana — tema e monitores',`
+    <div class="fg"><label>Tema</label><input id="sm-tema" value="${esc(meta.tema||'')}"></div>
+    <div class="fg"><label>Monitores</label><input id="sm-mon" value="${esc(meta.monitores||'')}"></div>`,
+    [ {txt:'Guardar',cls:'btn-add',fn:()=>{ const dd=getD(); dd.semanasMeta=dd.semanasMeta||{}; dd.semanasMeta[sid]={tema:$('sm-tema').value.trim(),monitores:$('sm-mon').value.trim()}; setD(dd); fecharModal(); renderSemanas(); toast('Semana atualizada.'); }} ]);
+}
+
+/* ============================================================
+   MAPA DE OCUPAÇÃO (crianças por dia)
+   ============================================================ */
+let mapaView='ocupacao';
+function byNome(a,b){ return (a.nome||'').localeCompare(b.nome||''); }
+function fmtData(iso){ if(!iso) return ''; const p=String(iso).split('-'); if(p.length<3) return iso; return p[2]+'/'+p[1]+'/'+p[0]; }
+function idadeATL(c){ const a=idadeEm(c.nasc, refIdadeISO()); return a==null?'—':a+' anos'; }
+function renderMapa(){
+  const el=$('sec-mapa'); if(precisaEdicao(el)) return;
+  const ed=getEdicao();
+  if(!ed.dataInicio){ el.innerHTML=`<div class="card"><div class="empty">Este período não tem datas.<br><br><button class="btn btn-primary" style="width:auto;padding:10px 18px" onclick="abrirModalEdicao(getEdicao())">✏️ Definir datas</button></div></div>`; return; }
+  const seg=`<div class="seg" style="margin-bottom:14px">
+    <button class="${mapaView==='ocupacao'?'on':''}" onclick="mapaView='ocupacao';renderMapa()">📆 Ocupação por dia</button>
+    <button class="${mapaView==='nomes'?'on':''}" onclick="mapaView='nomes';renderMapa()">🧾 Nomes por semana</button>
+    <button class="${mapaView==='alergias'?'on':''}" onclick="mapaView='alergias';renderMapa()">🍽️ Alergias (cozinha)</button>
+    <button class="${mapaView==='obs'?'on':''}" onclick="mapaView='obs';renderMapa()">💊 Observações</button>
+    <button class="${mapaView==='grupos'?'on':''}" onclick="mapaView='grupos';renderMapa()">👥 Grupos</button></div>`;
+  let corpo;
+  if(mapaView==='nomes') corpo=renderListaSemanal('nomes');
+  else if(mapaView==='alergias') corpo=renderListaSemanal('alergias');
+  else if(mapaView==='obs') corpo=renderListaSemanal('obs');
+  else if(mapaView==='grupos') corpo=renderListaGrupos();
+  else corpo=renderMapaOcupacao();
+  el.innerHTML = seg + corpo;
+}
+// listas por semana (nomes / alergias / observações) — impressão total ou semana a semana
+const LISTAS={
+  nomes:{ icon:'🧾', titulo:'Mapa de nomes por semana', colH:'Validade doc.', val:c=>esc(fmtData(c.ccVal)||'—'), filtro:()=>true, subt:'nome completo, idade, NIF e validade do documento — para a seguradora, etc.', aviso:'' },
+  alergias:{ icon:'🍽️', titulo:'Lista de alergias / intolerâncias', colH:'Alergias / intolerâncias', val:c=>esc(c.alergias||''), filtro:c=>(c.alergias||'').trim(), subt:'crianças com alergias ou intolerâncias assinaladas', aviso:'<div class="info" style="background:#FDECEA;border-color:#F0855F;color:#7a2e12"><b>⚠️ Importante enviar à cozinha</b> — todas as sextas, ao final da tarde, a lista da semana seguinte.</div>' },
+  obs:{ icon:'💊', titulo:'Observações (medicação / cuidados especiais)', colH:'Observações', val:c=>esc(c.obs||''), filtro:c=>(c.obs||'').trim(), subt:'crianças com observações, medicação ou cuidados especiais', aviso:'' }
+};
+function gruposLista(kind){ const f=LISTAS[kind].filtro; return criancasPorSemana().map(g=>({ s:g.s, lista:g.lista.filter(f) })); }
+function tabelaListaHTML(kind,lista){ const cfg=LISTAS[kind];
+  return `<div class="table-wrap"><table><thead><tr><th>Nome completo</th><th>Idade</th><th>NIF</th><th>${esc(cfg.colH)}</th></tr></thead><tbody>
+    ${lista.map(c=>`<tr><td><b>${esc(c.nome)}</b></td><td>${idadeATL(c)}</td><td>${esc(c.nif||'—')}</td><td>${cfg.val(c)}</td></tr>`).join('')}
+    </tbody></table></div>`;
+}
+function renderListaSemanal(kind){
+  const cfg=LISTAS[kind]; const grupos=gruposLista(kind);
+  let html=`${cfg.aviso}<div class="card">
+    <div class="card-head"><div class="card-title">${cfg.icon} ${esc(cfg.titulo)}</div><button class="btn-sm btn-add" onclick="imprimirListaSemanal('${kind}')">🖨️ Imprimir tudo</button></div>
+    <div class="muted" style="margin-bottom:6px">Sempre atualizada (${cfg.subt}). Imprime <b>cada semana em separado</b> — envia-se uma a uma às entidades.</div>`;
+  if(!grupos.length){ html+='<div class="empty">Sem semanas — define as datas do período.</div></div>'; return html; }
+  grupos.forEach((g,i)=>{
+    html+=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <div class="subt2" style="margin:0">${g.s.label} <span class="muted">(${g.s.periodo}) · ${g.lista.length} criança(s)</span></div>
+      ${g.lista.length?`<button class="btn-sm btn-neutral" onclick="imprimirListaSemanal('${kind}',${i})">🖨️ Imprimir esta semana</button>`:''}</div>`;
+    html+= g.lista.length? tabelaListaHTML(kind,g.lista) : '<div class="muted" style="padding:4px 0 6px">Sem crianças nesta semana.</div>';
+  });
+  html+='</div>';
+  return html;
+}
+function imprimirListaSemanal(kind, idx){
+  const cfg=LISTAS[kind]; const ed=getEdicao()||{}; let grupos=gruposLista(kind);
+  if(idx!=null){ if(!grupos[idx]) return; grupos=[grupos[idx]]; }
+  let body='';
+  grupos.forEach(g=>{
+    body+=`<h2 style="font-size:14px;margin:16px 0 6px;border-bottom:2px solid #0F6E56;padding-bottom:3px;color:#0F6E56">${esc(g.s.label)} (${esc(g.s.periodo)}) — ${g.lista.length} criança(s)</h2>`;
+    body+= g.lista.length? '<table><thead><tr><th>Nome completo</th><th>Idade</th><th>NIF</th><th>'+esc(cfg.colH)+'</th></tr></thead><tbody>'+g.lista.map(c=>`<tr><td>${esc(c.nome)}</td><td>${idadeATL(c)}</td><td>${esc(c.nif||'')}</td><td>${cfg.val(c)}</td></tr>`).join('')+'</tbody></table>' : '<p>Sem crianças.</p>';
+  });
+  const sufixo = idx!=null? ' — '+esc(grupos[0].s.label)+' ('+esc(grupos[0].s.periodo)+')' : '';
+  abrirImpressao(cfg.titulo+(idx!=null?(' '+grupos[0].s.label):''), `<h1>${esc(cfg.titulo)}</h1><div style="font-size:12px;color:#555;margin-bottom:8px">${esc(ed.nome||'')}${ed.ano?(' · '+ed.ano):''}${sufixo}</div>${body}`);
+}
+// listas por grupo (G1 / G2) — para a seguradora, coordenação, etc.
+function criancasDoGrupo(g){ return getD().criancas.filter(c=> g==='Sem'? !(c.grupo) : (c.grupo||'')===g).sort(byNome); }
+function primeiroUltimo(nome){ const p=(nome||'').trim().split(/\s+/).filter(Boolean); if(!p.length) return ''; return p.length===1?p[0]:(p[0]+' '+p[p.length-1]); }
+function tabelaGrupoHTML(lista){ return `<div class="table-wrap"><table><thead><tr><th>Nome completo</th><th>Idade</th><th>NIF</th><th>Validade</th><th>Enc. Educação</th><th>Contacto</th><th>Emergência (nome + tel)</th></tr></thead><tbody>
+  ${lista.map(c=>`<tr><td><b>${esc(c.nome)}</b></td><td>${idadeATL(c)}</td><td>${esc(c.nif||'—')}</td><td>${esc(fmtData(c.ccVal)||'—')}</td><td>${esc(primeiroUltimo(c.resp)||'—')}</td><td>${esc(c.tel||'—')}</td><td>${esc(c.emergencia||'—')}</td></tr>`).join('')}
+  </tbody></table></div>`; }
+function renderListaGrupos(){
+  const gs=[{k:'G1',lbl:'Grupo 1'},{k:'G2',lbl:'Grupo 2'}];
+  let html=`<div class="card"><div class="card-title">👥 Listas por grupo</div>
+    <div class="muted" style="margin-bottom:6px">Crianças de cada grupo (atribuído pela coordenação na lista de inscrições). Imprime o <b>Grupo 1</b> e o <b>Grupo 2</b> em separado — com logótipo e rodapé.</div>`;
+  gs.forEach(g=>{ const lista=criancasDoGrupo(g.k);
+    html+=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <div class="subt2" style="margin:0">${g.lbl} <span class="muted">· ${lista.length} criança(s)</span></div>
+      <button class="btn-sm btn-add" onclick="imprimirGrupo('${g.k}')">🖨️ Imprimir ${g.lbl}</button></div>`;
+    html+= lista.length? tabelaGrupoHTML(lista) : '<div class="muted" style="padding:4px 0 6px">Sem crianças neste grupo.</div>';
+  });
+  const semG=criancasDoGrupo('Sem');
+  if(semG.length){ html+=`<div class="subt2" style="margin-top:16px">⚠️ Sem grupo atribuído <span class="muted">· ${semG.length} criança(s)</span></div>`+tabelaGrupoHTML(semG); }
+  html+='</div>'; return html;
+}
+function imprimirGrupo(g){
+  const lbl=g==='G1'?'Grupo 1':g==='G2'?'Grupo 2':'Sem grupo'; const lista=criancasDoGrupo(g); const ed=getEdicao()||{};
+  const body=lista.length? '<table><thead><tr><th>Nome completo</th><th>Idade</th><th>NIF</th><th>Validade</th><th>Enc. Educação</th><th>Contacto</th><th>Emergência (nome + tel)</th></tr></thead><tbody>'+lista.map(c=>`<tr><td>${esc(c.nome)}</td><td>${idadeATL(c)}</td><td>${esc(c.nif||'')}</td><td>${esc(fmtData(c.ccVal))}</td><td>${esc(primeiroUltimo(c.resp))}</td><td>${esc(c.tel||'')}</td><td>${esc(c.emergencia||'')}</td></tr>`).join('')+'</tbody></table>' : '<p>Sem crianças neste grupo.</p>';
+  abrirImpressao('Lista — '+lbl, `<h1>Lista de crianças — ${esc(lbl)}</h1><div style="font-size:12px;color:#555;margin-bottom:8px">${esc(ed.nome||'')}${ed.ano?(' · '+ed.ano):''} · ${lista.length} criança(s)</div>${body}`);
+}
+function renderMapaOcupacao(){
+  const semanas=semanasPeriodo();
+  const colDias=[]; semanas.forEach(s=>s.dias.forEach(iso=>colDias.push(iso)));
+  const d=getD(); const criancas=d.criancas.slice().sort(byNome);
+  if(!colDias.length){ return '<div class="card"><div class="empty">Sem dias úteis no período.</div></div>'; }
+  const att = criancas.map(c=>({c, dias:diasDaCrianca(c)}));
+  const countDia = {}; colDias.forEach(iso=>{ countDia[iso]=att.filter(a=>a.dias.has(iso)).length; });
+  const maxC = Math.max(1, ...Object.values(countDia));
+  const totalPresencas = Object.values(countDia).reduce((s,x)=>s+x,0);
+  const pico = Math.max(0, ...Object.values(countDia));
+  const dd=iso=>{ const p=iso.split('-'); return (+p[2])+'/'+(+p[1]); };
+  const letra=iso=>DIAS_SEM[parseD(iso).getDay()];
+  const heat=n=> n<=0?'transparent':`rgba(29,158,117,${(0.18+0.62*n/maxC).toFixed(2)})`;
+  return `
+    <div class="cards">
+      <div class="metric"><div class="lbl">Crianças inscritas</div><div class="val blue">${criancas.length}</div></div>
+      <div class="metric"><div class="lbl">Pico num dia</div><div class="val green">${pico}</div><div class="sub">máximo em simultâneo</div></div>
+      <div class="metric"><div class="lbl">Presenças-dia</div><div class="val amber">${totalPresencas}</div><div class="sub">soma de todos os dias</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">📆 Mapa de ocupação</div><div class="muted">Nº de crianças por dia · dias avulso + semanas + meses</div></div>
+      <div class="mapa-wrap">
+        <table class="mapa">
+          <thead>
+            <tr><th class="stick corner"></th>${semanas.map(s=>`<th class="wk" colspan="${s.dias.length}">${s.label}</th>`).join('')}</tr>
+            <tr><th class="stick corner">Dia →</th>${colDias.map(iso=>`<th class="dcol"><div>${dd(iso)}</div><div class="lt">${letra(iso)}</div></th>`).join('')}</tr>
+          </thead>
+          <tbody>
+            <tr class="totrow"><td class="stick"><b>Nº de crianças</b></td>${colDias.map(iso=>{const n=countDia[iso];return `<td class="cnt" style="background:${heat(n)}">${n||''}</td>`;}).join('')}</tr>
+            ${criancas.length? att.map(a=>`<tr><td class="stick nm">${esc(a.c.nome)}</td>${colDias.map(iso=>`<td class="cell ${a.dias.has(iso)?'on':''}"></td>`).join('')}</tr>`).join('')
+              : `<tr><td class="stick nm muted">Sem inscrições</td>${colDias.map(()=>'<td class="cell"></td>').join('')}</tr>`}
+          </tbody>
+        </table>
+      </div>
+      <div class="muted" style="margin-top:8px">Dica: a primeira linha (a verde) conta quantas crianças estão em cada dia; quanto mais escuro, mais crianças.</div>
+    </div>`;
+}
+// lista de crianças por semana (interseção dos dias frequentados com a semana)
+function criancasPorSemana(){
+  const semanas=semanasPeriodo(); const d=getD();
+  const att=d.criancas.map(c=>({c,dias:diasDaCrianca(c)}));
+  return semanas.map(s=>({ s, lista: att.filter(a=>s.dias.some(dia=>a.dias.has(dia))).map(a=>a.c).sort(byNome) }));
+}
+
+/* ============================================================
+   INSCRIÇÕES / CRIANÇAS
+   ============================================================ */
+let fCri={busca:'',pago:''};
+function filtraCri(){
+  const d=getD(); let lista=d.criancas.slice();
+  if(fCri.busca){ const q=fCri.busca.toLowerCase().trim(); lista=lista.filter(c=>(c.nome||'').toLowerCase().includes(q)||(c.resp||'').toLowerCase().includes(q)||String(c.numero||'')===q||(q.length>=3&&(c.nif||'').includes(q))); }
+  if(fCri.pago==='sim') lista=lista.filter(c=>(+c.pago||0)>=(+c.valor||0)&&(+c.valor||0)>0);
+  if(fCri.pago==='nao') lista=lista.filter(c=>(+c.pago||0)<(+c.valor||0));
+  return lista;
+}
+function renderCriancas(){
+  const el=$('sec-criancas'); if(precisaEdicao(el)) return;
+  const d=getD(); const pend=(d.preInscricoes||[]);
+  const cardPre = pend.length? `<div class="card" style="border:2px solid var(--amber)">
+    <div class="card-head"><div class="card-title">📥 Pré-inscrições online · ${pend.length} por aprovar</div></div>
+    <div class="muted" style="margin-bottom:10px">Inscrições feitas pelos pais. Confirma os dados, atribui o grupo depois de aprovar e valida os descontos.</div>
+    <div class="table-wrap"><table><thead><tr><th>Criança</th><th>Responsável</th><th>Inscrição</th><th>Pedidos</th><th>Anexos</th><th class="right">Valor</th><th></th></tr></thead><tbody>
+    ${pend.map(p=>{ const ax=p.anexos||{}; const anexTag=(k,l)=> (ax[k]&&ax[k].dataUrl)?`<span class="chip green" style="cursor:pointer" onclick="verAnexo('${p.id}','${k}',true)" title="Abrir">✓ ${l}</span> `:`<span class="chip red">✗ ${l}</span> `;
+      return `<tr>
+      <td><b>${esc(p.nome)}</b>${p.nasc?`<div class="muted">${idade(p.nasc)}</div>`:''}</td>
+      <td>${esc(p.resp||'')}${p.tel?`<div class="muted">${esc(p.tel)}</div>`:''}</td>
+      <td class="muted">${esc(detalheInsc(p))}</td>
+      <td>${p.atleta?'<span class="chip blue">🏅 atleta</span> ':''}${p.temIrmao?'<span class="chip amber">👧👦 irmão</span>':''}${!p.atleta&&!p.temIrmao?'<span class="muted">—</span>':''}</td>
+      <td style="font-size:10.5px">${anexTag('comprovativo','compr.')}${anexTag('ccFrente','CC F')}${anexTag('ccVerso','CC V')}</td>
+      <td class="right">${fmt(p.valor)}</td>
+      <td class="right" style="white-space:nowrap"><button class="btn-sm btn-add" onclick="aprovarPreInscricao('${p.id}')">✔️ Aprovar</button> <button class="btn-sm btn-del" onclick="rejeitarPreInscricao('${p.id}')">✕</button></td>
+    </tr>`; }).join('')}
+    </tbody></table></div>
+  </div>`:'';
+  el.innerHTML = cardPre + `<div class="card">
+    <div class="card-head"><div class="card-title">Inscrições · ${d.criancas.length} criança(s)</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${modoAno()?'':'<button class="btn-sm btn-neutral" onclick="copiarLinkInscricao()">🔗 Copiar link p/ pais</button><button class="btn-sm btn-neutral" onclick="abrirFichaPublica()">👪 Ficha pública (pré-visualizar)</button><button class="btn-sm btn-add" onclick="abrirModalCrianca()">+ Nova inscrição</button>'}</div></div>
+    <div class="filters">
+      <input placeholder="🔍 procurar por Nº, nome, responsável ou NIF" value="${esc(fCri.busca)}" oninput="fCri.busca=this.value;renderCriancasTabela()">
+      <select onchange="fCri.pago=this.value;renderCriancasTabela()"><option value="">Todas</option><option value="sim" ${fCri.pago==='sim'?'selected':''}>Pagas</option><option value="nao" ${fCri.pago==='nao'?'selected':''}>Por pagar</option></select>
+    </div>
+    <div id="cri-tabela"></div>
+  </div>`;
+  renderCriancasTabela();
+}
+/* ---------- Ficha pública (pré-visualização) ---------- */
+function abrirFichaPublica(){
+  const lim=limitesNasc(); const di=getD().precos.descontoIrmao||{};
+  const descIrmaoTxt = di.tipo==='€/semana'? `${fmt(di.valor)} por irmão, por cada semana inscrita` : di.tipo==='%'? `${di.valor}% por irmão` : `${fmt(di.valor)} por irmão`;
+  _cCur={avulsoDias:[],semanasSel:[],mesesSel:[],atleta:false,temIrmao:false,dataInscricao:hoje()};
+  _valorManual=false; _modalCriancaNovo=false;
+  const c=_cCur;
+  modal('👪 Ficha de Inscrição — ATL ARCAKIDS', `
+    <div class="info">Pré-visualização da ficha que os pais vão preencher. Idade permitida: <b>6 a 12 anos</b>. O valor é calculado automaticamente.</div>
+    <div class="subt">Dados da criança</div>
+    <div class="grid2">
+      <div class="fg"><label>Nome completo *</label><input id="c-nome"></div>
+      <div class="fg"><label>Data de nascimento *</label><input id="c-nasc" type="date" min="${lim.min}" max="${lim.max}" oninput="verIdade()"><div class="muted" id="c-idade-info" style="margin-top:3px"></div></div>
+    </div>
+    <div class="fg"><label>Tipo de documento</label><select id="c-cctipo">${['Cartão de Cidadão','Passaporte','Outro'].map(o=>`<option>${o}</option>`).join('')}</select></div>
+    <div class="grid3">
+      <div class="fg"><label>Nº documento</label><input id="c-cc"></div>
+      <div class="fg"><label>NIF</label><input id="c-nif"></div>
+      <div class="fg"><label>Validade</label><input id="c-ccval" type="date"></div>
+    </div>
+    <div class="fg"><label>Alergias / intolerâncias</label><textarea id="c-alergias" rows="2"></textarea></div>
+    <div class="fg"><label>Observações (medicação, cuidados especiais)</label><textarea id="c-obs" rows="2"></textarea></div>
+    <div class="subt">Encarregado de educação</div>
+    <div class="grid3">
+      <div class="fg"><label>Nome *</label><input id="c-resp"></div>
+      <div class="fg"><label>Parentesco</label><select id="c-parent">${['','Pai','Mãe','Avó','Avô','Tutor(a)','Outro'].map(o=>`<option>${o}</option>`).join('')}</select></div>
+      <div class="fg"><label>Telemóvel *</label><input id="c-tel"></div>
+    </div>
+    <div class="grid2">
+      <div class="fg"><label>Email</label><input id="c-email" type="email"></div>
+      <div class="fg"><label>Contacto de emergência (nome + tel) *</label><input id="c-emerg"></div>
+    </div>
+    <div class="subt">Inscrição</div>
+    <div class="muted" style="margin-bottom:8px">Escolhe os dias avulso, semanas inteiras e/ou meses.</div>
+    <div id="c-blocos"></div>
+    <div class="subt">Descontos</div>
+    <div class="info" style="background:#FFF3D6;border-color:#E6B800;color:#6b4e00">
+      ⚠️ <b>Assinala apenas se</b> uma destas situações se aplicar: o teu educando é <b>atleta da ARCA</b>, ou tem um(a) <b>irmão(ã) que já frequenta o ATL</b>, ou que <b>vai frequentar no mesmo período</b>.<br>
+      Nesse caso há um desconto de <b>${descIrmaoTxt}</b> (aplicado na inscrição de cada irmão). Os descontos <b>não são acumuláveis</b> (aplica-se o mais vantajoso) e ficam <b>sujeitos a confirmação da coordenação</b>.
+    </div>
+    <label class="sem-check"><input type="radio" name="c-desc" value="nenhum" checked onchange="setDescontoOpcao('nenhum')"> ✅ Não se aplica — o meu educando <b>não é atleta da ARCA</b> e <b>não tem irmão(ã)</b> a frequentar (ou que vá frequentar) o ATL no mesmo período</label>
+    <label class="sem-check"><input type="radio" name="c-desc" value="atleta" onchange="setDescontoOpcao('atleta')"> 🏅 É <b>atleta da ARCA</b></label>
+    <label class="sem-check"><input type="radio" name="c-desc" value="irmao" onchange="setDescontoOpcao('irmao')"> 👧👦 Tem <b>irmão(ã)</b> que já frequenta ou vai frequentar o ATL no mesmo período</label>
+    <div class="card" style="background:var(--teal-l);border-color:#bfe6d8;margin-top:12px">
+      <div style="font-size:13px;color:var(--teal-d)">Valor a pagar</div>
+      <div style="font-size:26px;font-weight:800;color:var(--teal-d)" id="c-valor-pub">€ 0,00</div>
+      <input type="hidden" id="c-valor">
+      <div class="muted" id="c-sugestao" style="margin-top:2px"></div>
+      <div class="muted" style="margin-top:4px">Os descontos serão confirmados pela coordenação. Pode pagar a pré-inscrição (40€) e o restante depois.</div>
+    </div>
+    <div class="subt">Documentos a anexar</div>
+    <div class="muted" style="margin-bottom:8px">Anexa o comprovativo de pagamento e o Cartão de Cidadão da criança (frente e verso).</div>
+    <div class="fg"><label>💳 Comprovativo de pagamento</label><input id="c-anexo-comp" type="file" accept="image/*,application/pdf"></div>
+    <div class="grid2">
+      <div class="fg"><label>🪪 CC da criança — frente</label><input id="c-anexo-ccf" type="file" accept="image/*,application/pdf"></div>
+      <div class="fg"><label>🪪 CC da criança — verso</label><input id="c-anexo-ccv" type="file" accept="image/*,application/pdf"></div>
+    </div>`,
+    [ {txt:'Enviar inscrição', cls:'btn-add', fn:guardarPreInscricao} ]);
+  renderBlocosInsc(); verIdade(); refDescontoRadio(); atualizaSugestaoPublica();
+}
+function atualizaSugestaoPublica(){ atualizaSugestao(false); const v=calcValor(_cCur); const el=$('c-valor-pub'); if(el) el.textContent=fmt(v); }
+async function guardarPreInscricao(){
+  const nome=$('c-nome').value.trim(); if(!nome){ toast('Indica o nome da criança.',false); return; }
+  const resp=$('c-resp').value.trim(); const tel=$('c-tel').value.trim();
+  if(!resp||!tel){ toast('Indica o nome e o telemóvel do encarregado.',false); return; }
+  const nascV=$('c-nasc').value;
+  if(nascV){ const a=idadeEm(nascV, refIdadeISO()); if(a==null||a<6||a>12){ toast('Idade fora do limite (6 a 12 anos à data de início do ATL).',false); return; } }
+  _cCur.semanasSel=[...document.querySelectorAll('.ck-sem:checked')].map(x=>x.value);
+  _cCur.mesesSel=[...document.querySelectorAll('.ck-mes:checked')].map(x=>+x.value);
+  toast('A processar anexos…');
+  const [comprovativo,ccFrente,ccVerso]=await Promise.all([ comprimirFicheiro($('c-anexo-comp').files[0]), comprimirFicheiro($('c-anexo-ccf').files[0]), comprimirFicheiro($('c-anexo-ccv').files[0]) ]);
+  const d=getD();
+  const obj={ id:uid(), submetido:hoje(), nome,
+    nasc:nascV, ccTipo:$('c-cctipo').value, cc:$('c-cc').value.trim(), nif:$('c-nif').value.trim(), ccVal:$('c-ccval').value,
+    alergias:$('c-alergias').value.trim(), obs:$('c-obs').value.trim(),
+    resp, parentesco:$('c-parent').value, tel, email:$('c-email').value.trim(), emergencia:$('c-emerg').value.trim(),
+    dataInscricao:hoje(), avulsoDias:_cCur.avulsoDias||[], semanasSel:_cCur.semanasSel||[], mesesSel:_cCur.mesesSel||[],
+    atleta:!!_cCur.atleta, temIrmao:!!_cCur.temIrmao, valor:calcValor(_cCur),
+    anexos:{ comprovativo, ccFrente, ccVerso } };
+  d.preInscricoes=d.preInscricoes||[]; d.preInscricoes.push(obj); setD(d);
+  fecharModal(); renderCriancas(); toast('Inscrição enviada! Fica a aguardar aprovação da coordenação. ✅');
+}
+function aprovarPreInscricao(id){
+  const d=getD(); const p=(d.preInscricoes||[]).find(x=>x.id===id); if(!p) return;
+  const numero=proximoNumero();
+  const c=Object.assign({}, p, {id:uid(), numero, grupo:'', descontoVerificado:false, pago:0, pagamento:'', notaInscricao:'Inscrição feita online — validar dados e descontos.', lembrete:''});
+  delete c.submetido;
+  d.criancas.push(c); d.preInscricoes=(d.preInscricoes||[]).filter(x=>x.id!==id); setD(d);
+  renderCriancas(); toast('Pré-inscrição aprovada (Nº '+numero+'). Atribui o grupo e confirma os descontos.');
+}
+function rejeitarPreInscricao(id){ if(!confirm('Rejeitar/eliminar esta pré-inscrição?'))return; const d=getD(); d.preInscricoes=(d.preInscricoes||[]).filter(x=>x.id!==id); setD(d); renderCriancas(); toast('Pré-inscrição removida.'); }
+/* ---------- descontos: escolha única (nenhum / atleta / irmão) ---------- */
+function setDescontoOpcao(v){ _cCur.atleta=(v==='atleta'); _cCur.temIrmao=(v==='irmao'); atualizaSugestao(true); }
+function refDescontoRadio(){ const v=_cCur.atleta?'atleta':_cCur.temIrmao?'irmao':'nenhum'; const el=document.querySelector('input[name="c-desc"][value="'+v+'"]'); if(el) el.checked=true; }
+function copiarLinkInscricao(){ const url=location.href.split('#')[0]+'#inscricao'; if(navigator.clipboard){ navigator.clipboard.writeText(url).then(()=>toast('🔗 Link copiado! Envia aos pais.')).catch(()=>prompt('Copia o link da inscrição:', url)); } else prompt('Copia o link da inscrição:', url); }
+/* ---------- anexos: comprimir imagem (baixa qualidade) e ver ---------- */
+function comprimirFicheiro(file){
+  return new Promise(res=>{
+    if(!file) return res(null);
+    if(!(file.type||'').startsWith('image/')){ if(file.size>3*1024*1024){ toast('“'+file.name+'” é grande demais — envia uma foto.',false); return res(null); } const r=new FileReader(); r.onload=e=>res({name:file.name,dataUrl:e.target.result}); r.onerror=()=>res(null); r.readAsDataURL(file); return; }
+    const r=new FileReader(); r.onload=e=>{ const orig=e.target.result; const img=new Image(); img.onload=()=>{ try{ const max=1200; let w=img.width,h=img.height; if(w>max||h>max){ if(w>=h){ h=Math.round(h*max/w); w=max; } else { w=Math.round(w*max/h); h=max; } } const cv=document.createElement('canvas'); cv.width=w||1; cv.height=h||1; cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height); res({name:file.name.replace(/\.[^.]+$/,'')+'.jpg', dataUrl:cv.toDataURL('image/jpeg',0.55)}); }catch(err){ res({name:file.name, dataUrl:orig}); } }; img.onerror=()=>res({name:file.name, dataUrl:orig}); img.src=orig; }; r.onerror=()=>res(null); r.readAsDataURL(file);
+  });
+}
+function anexosIcons(id,pre){
+  const d=getD(); const c=(pre?(d.preInscricoes||[]):d.criancas).find(x=>x.id===id); const ax=(c&&c.anexos)||{};
+  const it=[]; const tag=(k,lbl,cls)=>{ if(ax[k]&&ax[k].dataUrl) it.push(`<span class="chip ${cls}" style="cursor:pointer;font-size:10px" onclick="verAnexo('${id}','${k}',${pre?'true':'false'})" title="Abrir ${esc(ax[k].name||lbl)}">${lbl}</span>`); };
+  tag('comprovativo','💳 comprov.','green'); tag('ccFrente','🪪 CC F','blue'); tag('ccVerso','🪪 CC V','blue');
+  return it.length?`<div style="margin-top:3px;display:flex;gap:3px;flex-wrap:wrap">${it.join('')}</div>`:'';
+}
+function verAnexo(id,key,pre){
+  const d=getD(); const c=(pre?(d.preInscricoes||[]):d.criancas).find(x=>x.id===id); const ax=(c&&c.anexos&&c.anexos[key]); if(!ax||!ax.dataUrl){ toast('Sem anexo.',false); return; }
+  const w=window.open('','_blank'); if(!w){ toast('Permite pop-ups (janelas) para ver o anexo.',false); return; }
+  const isCC = key==='ccFrente'||key==='ccVerso';
+  const isPdf=(ax.dataUrl||'').indexOf('application/pdf')>=0;
+  const titulo = key==='comprovativo'?'Comprovativo de pagamento':key==='ccFrente'?'CC — frente':'CC — verso';
+  const printCss = isCC
+    ? '@media print{body{margin:0;background:#fff}.bar{display:none}img{width:85.6mm;height:54mm;object-fit:contain;display:block;margin:8mm auto}}'
+    : '@media print{body{margin:0;background:#fff}.bar{display:none}img{max-width:100%;max-height:100%;display:block;margin:0 auto}}';
+  const conteudo = isPdf? `<iframe src="${ax.dataUrl}" style="width:100%;height:88vh;border:0;background:#fff"></iframe>` : `<img src="${ax.dataUrl}" style="max-width:100%;max-height:86vh;box-shadow:0 4px 18px rgba(0,0,0,.4)">`;
+  w.document.write(`<html><head><meta charset="utf-8"><title>${esc(titulo)} — ${esc(c.nome||'')}</title>
+    <style>body{margin:0;background:#2b2b2b;font-family:Arial,Helvetica,sans-serif}
+    .bar{position:sticky;top:0;background:#0F6E56;color:#fff;padding:9px 12px;display:flex;align-items:center;gap:12px;justify-content:center}
+    .bar b{font-size:13px} .bar button{padding:7px 14px;background:#fff;color:#0F6E56;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+    .wrap{display:flex;align-items:center;justify-content:center;min-height:88vh;padding:14px}
+    ${printCss}</style></head><body>
+    <div class="bar"><b>${esc(titulo)} · ${esc(c.nome||'')}</b><button onclick="window.print()">🖨️ Imprimir${isCC?' (tamanho CC)':''}</button></div>
+    <div class="wrap">${conteudo}</div></body></html>`);
+  w.document.close();
+}
+function detalheInsc(c){
+  const parts=[];
+  if((c.avulsoDias||[]).length) parts.push(c.avulsoDias.length+' dia(s)');
+  if((c.semanasSel||[]).length) parts.push(c.semanasSel.length+' semana(s)');
+  if((c.mesesSel||[]).length) parts.push(c.mesesSel.length+' mês(es)');
+  let s = parts.join(' + ')||'—';
+  const m=[]; if(c.atleta)m.push('🏅atleta'); if(c.temIrmao)m.push('👧👦irmão');
+  return s + (m.length?' · '+m.join(', '):'');
+}
+function statusDescontoBadge(c){
+  if(!(c.atleta||c.temIrmao)) return '';
+  return c.descontoVerificado
+    ? ` · <b style="color:var(--teal)">✓ verificado</b>`
+    : ` · <b style="color:var(--coral)">⏳ por verificar</b>`;
+}
+function renderCriancasTabela(){
+  const lista=filtraCri(); const box=$('cri-tabela');
+  if(!lista.length){ box.innerHTML='<div class="empty">Sem inscrições para mostrar.</div>'; return; }
+  box.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Nº</th><th>Nome</th><th>Responsável</th><th>Inscrição</th><th title="Atribuído pela coordenação">Grupo</th><th class="right">Valor</th><th class="right">Pago</th><th>Estado</th><th></th></tr></thead><tbody>
+    ${lista.map(c=>{ const val=+c.valor||0,pg=+c.pago||0; const estado= val>0&&pg>=val?'<span class="chip green">Pago</span>':pg>0?'<span class="chip amber">Parcial</span>':'<span class="chip red">Por pagar</span>';
+      return `<tr>
+        <td><b>${c.numero||'—'}</b></td>
+        <td><b>${esc(c.nome)}</b>${c.nasc?`<div class="muted">${idade(c.nasc)}</div>`:''}${modoAno()&&c._ed?`<div><span class="chip blue" style="font-size:10px">${esc(c._ed)}</span></div>`:''}${anexosIcons(c.id,false)}</td>
+        <td>${esc(c.resp||'')}${c.tel?`<div class="muted">${esc(c.tel)}</div>`:''}</td>
+        <td class="muted">${esc(detalheInsc(c))}${statusDescontoBadge(c)}</td>
+        <td>${modoAno()? `<span class="chip ${c.grupo==='G1'?'blue':c.grupo==='G2'?'amber':'green'}">${esc(c.grupo||'—')}</span>` : `<select onchange="setGrupo('${c.id}',this.value)" style="padding:5px 7px;border:1.5px solid var(--line);border-radius:7px;font-weight:700">${['—','G1','G2'].map(g=>`<option value="${g==='—'?'':g}" ${((c.grupo||'')===(g==='—'?'':g))?'selected':''}>${g}</option>`).join('')}</select>`}</td>
+        <td class="right">${fmt(val)}</td>
+        <td class="right">${fmt(pg)}</td>
+        <td>${estado}${c.notaInscricao?` <span class="tag-nota" title="${esc(c.notaInscricao)}">📝 Nota</span>`:''}${c.lembrete?` <span class="tag-lembrete" title="${esc(c.lembrete)}">🔔 Lembrete</span>`:''}</td>
+        <td class="right" style="white-space:nowrap"><button class="btn-sm btn-neutral" title="Imprimir ficha e declarações" onclick="abrirImprimir('${c.id}')">🖨️</button> <button class="btn-sm btn-neutral" title="Gestão administrativa (verificação e notas)" onclick="abrirAdminInscricao('${c.id}')">🗂️</button> <button class="btn-sm btn-edit" onclick="abrirModalCrianca('${c.id}')">✏️</button> <button class="btn-sm btn-del" onclick="eliminarCrianca('${c.id}')">🗑️</button></td>
+      </tr>`; }).join('')}
+    </tbody></table></div>`;
+}
+function idade(nasc){ if(!nasc) return ''; const b=new Date(nasc); if(isNaN(b)) return ''; const n=new Date(); let a=n.getFullYear()-b.getFullYear(); const m=n.getMonth()-b.getMonth(); if(m<0||(m===0&&n.getDate()<b.getDate()))a--; return a+' anos'; }
+function setGrupo(id,val){ if(guardaModoAno()) return; const d=getD(); const c=d.criancas.find(x=>x.id===id); if(c){ c.grupo=val; setD(d); renderCriancasTabela(); } }
+// idade / elegibilidade (6 a 12 anos à data de início do ATL)
+function refIdadeISO(){ const ed=getEdicao(); return (ed&&ed.dataInicio)?ed.dataInicio:hoje(); }
+function idadeEm(nascIso, refIso){ const b=parseD(nascIso), r=parseD(refIso); if(!b||!r||isNaN(b)||isNaN(r)) return null; let a=r.getFullYear()-b.getFullYear(); const m=r.getMonth()-b.getMonth(); if(m<0||(m===0&&r.getDate()<b.getDate()))a--; return a; }
+function limitesNasc(){ const r=parseD(refIdadeISO())||new Date();
+  const max=new Date(r.getFullYear()-6, r.getMonth(), r.getDate());        // idade >= 6
+  const min=new Date(r.getFullYear()-13, r.getMonth(), r.getDate()); min.setDate(min.getDate()+1); // idade <= 12
+  return {min:isoDate(min), max:isoDate(max)}; }
+function verIdade(){ const el=$('c-idade-info'); if(!el) return; const nasc=$('c-nasc').value;
+  if(!nasc){ el.innerHTML='<span class="muted">Idade permitida: 6 a 12 anos (à data de início do ATL).</span>'; return; }
+  const a=idadeEm(nasc, refIdadeISO()); const ok=a!=null&&a>=6&&a<=12;
+  el.innerHTML = ok? `<span style="color:var(--teal);font-weight:600">✓ ${a} anos — elegível</span>` : `<span style="color:var(--coral-d);font-weight:600">⚠️ ${a} anos — fora do limite (6 a 12 à data de início do ATL)</span>`; }
+
+let _cCur=null; // criança em edição (estado temporário do modal)
+let _valorManual=false; // admin alterou o valor à mão?
+let _modalCriancaNovo=false; // está aberto o modal de NOVA inscrição?
+let _listenersRascunho=false;
+// rascunho automático da inscrição nova (só local, temporário)
+function capturarRascunhoInsc(){
+  if(!_modalCriancaNovo) return;
+  const g=id=>{ const e=$(id); return e?e.value:''; };
+  const r={ ed:edicaoAtiva, nome:g('c-nome'), nasc:g('c-nasc'), ccTipo:g('c-cctipo'), cc:g('c-cc'), nif:g('c-nif'), ccVal:g('c-ccval'),
+    alergias:g('c-alergias'), obs:g('c-obs'), resp:g('c-resp'), parentesco:g('c-parent'), tel:g('c-tel'), email:g('c-email'), emergencia:g('c-emerg'),
+    dataInscricao:g('c-datains'), valor:g('c-valor'), pago:g('c-pago'), pagamento:g('c-pag'),
+    avulsoDias:_cCur.avulsoDias||[], semanasSel:_cCur.semanasSel||[], mesesSel:_cCur.mesesSel||[], atleta:!!_cCur.atleta, temIrmao:!!_cCur.temIrmao };
+  const algo = r.nome||r.nasc||r.cc||r.nif||r.resp||r.tel||r.avulsoDias.length||r.semanasSel.length||r.mesesSel.length;
+  if(algo) LS.set('atl_rascunho_insc', r);
+}
+function verificarRascunho(){
+  const r=LS.get('atl_rascunho_insc');
+  if(!r || r.ed!==edicaoAtiva) return;
+  const resumo = r.nome? `a inscrição de "${r.nome}"` : 'uma inscrição por terminar';
+  if(confirm(`Ficou ${resumo} por guardar da última vez.\n\nRecuperar o que tinhas escrito?\n(OK = recuperar · Cancelar = começar em branco)`)) aplicarRascunho(r);
+  else LS.del('atl_rascunho_insc');
+}
+function aplicarRascunho(r){
+  const set=(id,v)=>{ const e=$(id); if(e&&v!=null) e.value=v; };
+  set('c-nome',r.nome); set('c-nasc',r.nasc); set('c-cctipo',r.ccTipo); set('c-cc',r.cc); set('c-nif',r.nif); set('c-ccval',r.ccVal);
+  set('c-alergias',r.alergias); set('c-obs',r.obs); set('c-resp',r.resp); set('c-parent',r.parentesco); set('c-tel',r.tel); set('c-email',r.email); set('c-emerg',r.emergencia);
+  set('c-datains',r.dataInscricao); set('c-valor',r.valor); set('c-pago',r.pago); set('c-pag',r.pagamento);
+  _cCur.avulsoDias=r.avulsoDias||[]; _cCur.semanasSel=r.semanasSel||[]; _cCur.mesesSel=r.mesesSel||[]; _cCur.atleta=!!r.atleta; _cCur.temIrmao=!!r.temIrmao;
+  if(r.valor) _valorManual=true;
+  renderBlocosInsc(); verIdade(); refDescontoRadio(); atualizaSugestao(false);
+}
+function abrirModalCrianca(id){ if(guardaModoAno()) return;
+  const d=getD(); const p=d.precos;
+  const base = {avulsoDias:[],semanasSel:[],mesesSel:[],atleta:false,temIrmao:false,grupo:'',descontoVerificado:false,dataInscricao:hoje(),notaInscricao:'',lembrete:'',valor:'',pago:''};
+  _cCur = id? Object.assign(base, d.criancas.find(x=>x.id===id)) : base;
+  const c=_cCur; const lim=limitesNasc();
+  modal(id?'Editar inscrição':'Nova inscrição', `
+    <div class="subt">Criança</div>
+    <div class="grid2">
+      <div class="fg"><label>Nome *</label><input id="c-nome" value="${esc(c.nome||'')}"></div>
+      <div class="fg"><label>Data de nascimento</label><input id="c-nasc" type="date" value="${esc(c.nasc||'')}" min="${lim.min}" max="${lim.max}" oninput="verIdade()"><div class="muted" id="c-idade-info" style="margin-top:3px"></div></div>
+    </div>
+    <div class="fg"><label>Tipo de documento</label><select id="c-cctipo">${['Cartão de Cidadão','Passaporte','Outro'].map(o=>`<option ${o===c.ccTipo?'selected':''}>${o}</option>`).join('')}</select></div>
+    <div class="grid3">
+      <div class="fg"><label>Nº documento</label><input id="c-cc" value="${esc(c.cc||'')}"></div>
+      <div class="fg"><label>NIF</label><input id="c-nif" value="${esc(c.nif||'')}"></div>
+      <div class="fg"><label>Validade</label><input id="c-ccval" type="date" value="${esc(c.ccVal||'')}"></div>
+    </div>
+    <div class="fg"><label>Alergias / intolerâncias</label><textarea id="c-alergias" rows="2">${esc(c.alergias||'')}</textarea></div>
+    <div class="fg"><label>Observações (medicação, cuidados especiais, etc.)</label><textarea id="c-obs" rows="3">${esc(c.obs||'')}</textarea></div>
+    <div class="subt">Responsável</div>
+    <div class="grid3">
+      <div class="fg"><label>Nome</label><input id="c-resp" value="${esc(c.resp||'')}"></div>
+      <div class="fg"><label>Parentesco</label><select id="c-parent">${['','Pai','Mãe','Avó','Avô','Tutor(a)','Outro'].map(o=>`<option ${o===c.parentesco?'selected':''}>${o}</option>`).join('')}</select></div>
+      <div class="fg"><label>Telemóvel</label><input id="c-tel" value="${esc(c.tel||'')}"></div>
+    </div>
+    <div class="grid2">
+      <div class="fg"><label>Email</label><input id="c-email" type="email" value="${esc(c.email||'')}"></div>
+      <div class="fg"><label>Contacto emergência (nome + tel)</label><input id="c-emerg" value="${esc(c.emergencia||'')}"></div>
+    </div>
+    <div class="subt">Inscrição</div>
+    <div class="fg" style="max-width:220px"><label>Data da inscrição</label><input id="c-datains" type="date" value="${esc(c.dataInscricao||hoje())}" onchange="_cCur.dataInscricao=this.value;atualizaSugestao(true)"></div>
+    <div class="muted" style="margin-bottom:8px">Podes combinar livremente: dias avulso, semanas inteiras e/ou meses.</div>
+    <div id="c-blocos"></div>
+    <div class="subt">Descontos</div>
+    <div class="info">Os descontos <b>não são acumuláveis</b> (aplica-se o mais vantajoso) e ficam <b>sujeitos a confirmação da administração</b> (atleta, ou irmão a frequentar o ATL no mesmo período).</div>
+    <label class="sem-check"><input type="radio" name="c-desc" value="nenhum" ${!c.atleta&&!c.temIrmao?'checked':''} onchange="setDescontoOpcao('nenhum')"> ✅ Não se aplica (sem desconto)</label>
+    <label class="sem-check"><input type="radio" name="c-desc" value="atleta" ${c.atleta?'checked':''} onchange="setDescontoOpcao('atleta')"> 🏅 Atleta da ARCA</label>
+    <label class="sem-check"><input type="radio" name="c-desc" value="irmao" ${c.temIrmao?'checked':''} onchange="setDescontoOpcao('irmao')"> 👧👦 Tem irmão a frequentar o ATL no mesmo período</label>
+    <div class="subt">Pagamento</div>
+    <div class="grid3">
+      <div class="fg"><label>Valor a pagar (€) <span class="muted">— calculado automaticamente</span></label><input id="c-valor" type="number" step="0.01" value="${esc(c.valor)}" oninput="_valorManual=true"><div class="muted" id="c-sugestao" style="margin-top:3px"></div></div>
+      <div class="fg"><label>Já pago (€)</label><input id="c-pago" type="number" step="0.01" value="${esc(c.pago)}"></div>
+      <div class="fg"><label>Forma de pagamento</label><select id="c-pag">${FORMAS_PAG.map(o=>`<option ${o===c.pagamento?'selected':''}>${o}</option>`).join('')}</select></div>
+    </div>`,
+    [ {txt:'Guardar', cls:'btn-add', fn:()=>guardarCrianca(id)} ]);
+  _valorManual=false; _modalCriancaNovo=!id;
+  if(!_listenersRascunho){ $('ov-body').addEventListener('input', capturarRascunhoInsc); $('ov-body').addEventListener('change', capturarRascunhoInsc); _listenersRascunho=true; }
+  renderBlocosInsc(); verIdade(); refDescontoRadio(); atualizaSugestao(false);
+  if(!id) verificarRascunho();
+}
+function renderBlocosInsc(){
+  const box=$('c-blocos'); if(!box) return;
+  const semanas=semanasPeriodo(), meses=mesesPeriodo();
+  box.innerHTML = `
+    <div class="subt2">🗓️ Dias avulso</div>
+    <div id="c-cal">${calendarioDias(_cCur.avulsoDias||[])}</div>
+    <div class="subt2" style="margin-top:12px">📅 Semanas inteiras</div>
+    ${semanas.length? semanas.map(s=>`<label class="sem-check"><input type="checkbox" class="ck-sem" value="${s.id}" ${(_cCur.semanasSel||[]).includes(s.id)?'checked':''} onchange="onSemanaSelChange()"> ${s.label} <span class="muted">(${s.periodo})</span></label>`).join('') : '<div class="muted">Sem semanas — define as datas do período.</div>'}
+    <div class="subt2" style="margin-top:12px">🈷️ Meses inteiros</div>
+    ${meses.length? meses.map(m=>`<label class="sem-check"><input type="checkbox" class="ck-mes" value="${m.mes}" ${(_cCur.mesesSel||[]).includes(m.mes)?'checked':''} onchange="onMesSelChange()"> ${m.nome}</label>`).join('') : '<div class="muted">Sem meses no período.</div>'}`;
+}
+function onSemanaSelChange(){ _cCur.semanasSel=[...document.querySelectorAll('.ck-sem:checked')].map(x=>x.value); atualizaSugestao(true); }
+function onMesSelChange(){ _cCur.mesesSel=[...document.querySelectorAll('.ck-mes:checked')].map(x=>+x.value); atualizaSugestao(true); }
+function calendarioDias(sel){
+  const dias=diasUteisPeriodo(); if(!dias.length) return '<div class="muted">Sem dias úteis — define as datas do período.</div>';
+  const porMes={};
+  dias.forEach(d=>{ const k=d.getFullYear()+'-'+d.getMonth(); (porMes[k]=porMes[k]||[]).push(d); });
+  const uteisSet=new Set(dias.map(isoDate));
+  let h='<div class="cal-flow">';
+  Object.keys(porMes).forEach(k=>{
+    const arr=porMes[k]; const first=arr[0]; const y=first.getFullYear(), mo=first.getMonth();
+    h+=`<div class="cal-block"><div class="cal-mes">${MESES[mo].slice(0,3)} ${y}</div><div class="cal mini">`;
+    for(let i=0;i<7;i++) h+=`<div class="h">${DIAS_SEM[i]}</div>`;
+    const primeiro=new Date(y,mo,1); const offset=primeiro.getDay(); const ndias=new Date(y,mo+1,0).getDate();
+    for(let i=0;i<offset;i++) h+='<div class="d off"></div>';
+    for(let dia=1;dia<=ndias;dia++){ const iso=y+'-'+pad2(mo+1)+'-'+pad2(dia); const util=uteisSet.has(iso); const on=sel.includes(iso);
+      h+=`<div class="d ${util?(on?'on':''):'na'}" ${util?`onclick="toggleDia('${iso}')"`:''}>${dia}</div>`; }
+    h+='</div></div>';
+  });
+  return h+'</div>';
+}
+function toggleDia(iso){ _cCur.avulsoDias=_cCur.avulsoDias||[]; const i=_cCur.avulsoDias.indexOf(iso); if(i>=0)_cCur.avulsoDias.splice(i,1); else _cCur.avulsoDias.push(iso); $('c-cal').innerHTML=calendarioDias(_cCur.avulsoDias); atualizaSugestao(true); }
+function atualizaSugestao(preencher){
+  const s=$('c-sugestao'); const vi=$('c-valor'); if(!s) return;
+  const b=breakdown(_cCur);
+  // preenche automaticamente o "valor a pagar" (a não ser que a admin o tenha alterado à mão)
+  if(preencher && !_valorManual && vi){ vi.value = b.total>0? b.total : ''; }
+  const pub=$('c-valor-pub'); if(pub){ pub.textContent=fmt(b.total); if(vi) vi.value=b.total; }
+  if(b.subtotal<=0 && !b.desconto){ s.innerHTML='<span class="muted">Marca dias, semanas ou meses para calcular.</span>'; return; }
+  const parts=['subtotal '+fmt(b.subtotal)];
+  if(b.desconto>0) parts.push('−'+fmt(b.desconto)+' '+b.descontoLabel);
+  if(b.campanhaTxt) parts.push(b.campanhaTxt);
+  const dif = vi && (parseFloat(vi.value)||0)!==b.total;
+  s.innerHTML=`Valor calculado: <b>${fmt(b.total)}</b>${dif?` <button type="button" class="btn-sm btn-neutral" style="padding:2px 6px" onclick="aplicarSugestao()">usar este valor</button>`:''}<div style="margin-top:2px">${parts.join(' · ')}</div>`;
+  if(_modalCriancaNovo) capturarRascunhoInsc();
+}
+function aplicarSugestao(){ _valorManual=false; $('c-valor').value = calcValor(_cCur); atualizaSugestao(false); }
+function guardarCrianca(id){
+  const nome=$('c-nome').value.trim(); if(!nome){ toast('Indica o nome.',false); return; }
+  const nascV=$('c-nasc').value;
+  if(nascV){ const a=idadeEm(nascV, refIdadeISO()); if(a==null||a<6||a>12){ if(!confirm(`Atenção: à data de início do ATL a criança teria ${a} anos. O limite é 6 a 12 anos (inclusive). Guardar mesmo assim?`)) return; } }
+  const d=getD();
+  _cCur.semanasSel=[...document.querySelectorAll('.ck-sem:checked')].map(x=>x.value);
+  _cCur.mesesSel=[...document.querySelectorAll('.ck-mes:checked')].map(x=>+x.value);
+  const numero = id ? (_cCur.numero || proximoNumero()) : proximoNumero();
+  const obj={ id:id||uid(), numero, nome,
+    nasc:$('c-nasc').value, ccTipo:$('c-cctipo').value, cc:$('c-cc').value.trim(), nif:$('c-nif').value.trim(), ccVal:$('c-ccval').value,
+    alergias:$('c-alergias').value.trim(), obs:$('c-obs').value.trim(),
+    resp:$('c-resp').value.trim(), parentesco:$('c-parent').value, tel:$('c-tel').value.trim(), email:$('c-email').value.trim(), emergencia:$('c-emerg').value.trim(),
+    dataInscricao:$('c-datains').value||hoje(), avulsoDias:_cCur.avulsoDias||[], semanasSel:_cCur.semanasSel||[], mesesSel:_cCur.mesesSel||[],
+    atleta:!!_cCur.atleta, temIrmao:!!_cCur.temIrmao, grupo:_cCur.grupo||'',
+    descontoVerificado:!!_cCur.descontoVerificado, notaInscricao:_cCur.notaInscricao||'', lembrete:_cCur.lembrete||'',
+    valor:parseFloat($('c-valor').value)||0, pago:parseFloat($('c-pago').value)||0, pagamento:$('c-pag').value };
+  if(id){ const i=d.criancas.findIndex(x=>x.id===id); if(i>=0) d.criancas[i]=obj; } else d.criancas.push(obj);
+  setD(d); LS.del('atl_rascunho_insc'); _modalCriancaNovo=false; fecharModal(); renderCriancas(); toast('Inscrição guardada.');
+}
+function eliminarCrianca(id){ if(!confirm('Eliminar esta inscrição?')) return; const d=getD(); d.criancas=d.criancas.filter(x=>x.id!==id); setD(d); renderCriancas(); toast('Inscrição eliminada.'); }
+// gestão administrativa da inscrição (só a admin) — verificação + notas
+function abrirAdminInscricao(id){ if(guardaModoAno()) return;
+  const d=getD(); const c=d.criancas.find(x=>x.id===id); if(!c) return;
+  const b=breakdown(c); const pend=(c.atleta||c.temIrmao)&&!c.descontoVerificado;
+  modal('🗂️ Gestão administrativa — '+esc(c.nome), `
+    <div class="muted" style="margin-bottom:10px">Área só para a administração. Não aparece na ficha de inscrição.</div>
+    ${(c.atleta||c.temIrmao)?`<div class="info">Desconto pedido: ${c.atleta?'🏅 atleta ':''}${c.temIrmao?'👧👦 irmão ':''}— ${pend?'<b>por confirmar</b>':'confirmado'}. Valor calculado atual: <b>${fmt(b.total)}</b>${b.desconto>0?' (desconto '+fmt(b.desconto)+')':''}.</div>`:'<div class="muted" style="margin-bottom:8px">Sem desconto pedido nesta inscrição.</div>'}
+    <label class="sem-check" style="border-color:var(--amber)"><input type="checkbox" id="ai-verif" ${c.descontoVerificado?'checked':''}> ✅ Desconto <b>verificado / confirmado</b> pela administração</label>
+    <div class="fg" style="margin-top:10px"><label>📝 Nota da inscrição <span class="muted">(ex.: pagou só os 40€ de pré-inscrição / pago na totalidade)</span></label><textarea id="ai-nota" rows="3">${esc(c.notaInscricao||'')}</textarea></div>
+    <div class="fg"><label>🔔 Lembrete administrativo <span class="muted">(situação a ter em conta — editável a qualquer altura)</span></label><textarea id="ai-lembrete" rows="3">${esc(c.lembrete||'')}</textarea></div>`,
+    [ {txt:'Guardar', cls:'btn-add', fn:()=>{ const dd=getD(); const cc=dd.criancas.find(x=>x.id===id); if(cc){ cc.descontoVerificado=$('ai-verif').checked; cc.notaInscricao=$('ai-nota').value.trim(); cc.lembrete=$('ai-lembrete').value.trim(); setD(dd); } fecharModal(); renderCriancas(); toast('Gestão administrativa guardada.'); }} ]);
+}
+
+/* ============================================================
+   DESPESAS
+   ============================================================ */
+let fDesp={cat:''};
+let fRec={cat:''};
+let despView='lancamentos';
+function renderDespesas(){
+  const el=$('sec-despesas'); if(precisaEdicao(el)) return;
+  const seg=`<div class="seg" style="margin-bottom:14px">
+    <button class="${despView==='lancamentos'?'on':''}" onclick="despView='lancamentos';renderDespesas()">📋 Lançamentos</button>
+    <button class="${despView==='alimentacao'?'on':''}" onclick="despView='alimentacao';renderDespesas()">🍽️ Alimentação (por dia)</button>
+    <button class="${despView==='resumo'?'on':''}" onclick="despView='resumo';renderDespesas()">📊 Resumo (dia · semana · mês)</button></div>`;
+  el.innerHTML = seg + (despView==='resumo'? renderDespesasResumo() : despView==='alimentacao'? renderDespesasAlimentacao() : renderDespesasLista());
+}
+function renderDespesasLista(){
+  const d=getD(); const cats=d.categorias||CATEGORIAS_DEFAULT;
+  let lista=d.despesas.slice(); if(fDesp.cat) lista=lista.filter(x=>x.cat===fDesp.cat);
+  const tot=lista.reduce((s,x)=>s+(+x.valor||0),0);
+  const cAlim=modoAno()?edicoes.reduce((s,e)=>s+custoAlimentacaoPeriodo(e.id),0):custoAlimentacaoTotal();
+  const cAtiv=modoAno()?edicoes.reduce((s,e)=>s+custoAtividadesPeriodo(e.id),0):custoAtividadesTotal();
+  const avisoAuto=`<div class="info" style="background:var(--teal-l);border-color:#bfe6d8;color:var(--teal-d)">
+    ⚙️ <b>Calculadas automaticamente</b> (não precisam de lançamento): 🍽️ <b>Alimentação ${fmt(cAlim)}</b>${cAlim===0?' <span class="muted">— define os valores em Valores → Alimentação diária</span>':''} · 🎟️ <b>Atividades ${fmt(cAtiv)}</b>${cAtiv===0?' <span class="muted">— cria em Atividades</span>':''}. Já contam no <b>Resumo</b> e no <b>Painel</b>.</div>`;
+  return `${avisoAuto}<div class="card">
+    <div class="card-head"><div class="card-title">Despesas lançadas por ti · ${fmt(tot)}</div>
+      <div style="display:flex;gap:6px">${modoAno()?'':'<button class="btn-sm btn-neutral" onclick="gerirCategorias()">🏷️ Categorias</button><button class="btn-sm btn-add" onclick="abrirModalDespesa()">+ Nova despesa</button>'}</div></div>
+    <div class="muted" style="margin-bottom:8px">Aqui lanças manualmente: seguros, material, autocarro, professores convidados, etc. (a alimentação e as atividades são automáticas — ver acima).</div>
+    <div class="filters"><select onchange="fDesp.cat=this.value;renderDespesas()"><option value="">Todas as categorias</option>${cats.map(c=>`<option ${c===fDesp.cat?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+    ${!lista.length?'<div class="empty">Sem despesas.</div>':
+    `<div class="table-wrap"><table><thead><tr><th>Data</th><th>Categoria</th><th>Descrição</th><th>Pagamento</th><th class="right">Valor</th><th></th></tr></thead><tbody>
+    ${lista.map(x=>`<tr><td>${esc(x.data||'')}</td><td><span class="chip blue">${esc(x.cat||'')}</span></td><td>${esc(x.desc||'')}${modoAno()&&x._ed?`<div class="muted">${esc(x._ed)}</div>`:''}</td><td class="muted">${esc(x.pagamento||'')}</td><td class="right">${fmt(x.valor)}</td>
+      <td class="right" style="white-space:nowrap">${modoAno()?'':`<button class="btn-sm btn-edit" onclick="abrirModalDespesa('${x.id}')">✏️</button> <button class="btn-sm btn-del" onclick="eliminarDespesa('${x.id}')">🗑️</button>`}</td></tr>`).join('')}
+    </tbody></table></div>`}
+  </div>`;
+}
+function renderDespesasAlimentacao(){
+  const d=getD(); const p=d.precos.alimentacaoDiaria||{}; const pd=precoDiaAlimentacao();
+  if(modoAno()) return `<div class="card"><div class="empty">A alimentação por dia é por período (as datas variam). Escolhe um período específico no seletor do topo.</div></div>`;
+  const dias=diasUteisPeriodo();
+  if(!dias.length) return `<div class="card"><div class="empty">Este período não tem datas. Define-as no período.</div></div>`;
+  const att=d.criancas.map(diasDaCrianca);
+  const rows=dias.map(dt=>{ const iso=isoDate(dt); const n=att.filter(s=>s.has(iso)).length; return {iso,n,custo:n*pd}; });
+  const comGente=rows.filter(r=>r.n>0);
+  const total=rows.reduce((s,r)=>s+r.custo,0);
+  const totalCriancasDia=rows.reduce((s,r)=>s+r.n,0);
+  return `
+    <div class="cards">
+      <div class="metric"><div class="lbl">Valor por criança/dia</div><div class="val">${fmt(pd)}</div><div class="sub">almoço ${fmt(p.almoco)} · l.manhã ${fmt(p.lancheManha)} · l.tarde ${fmt(p.lancheTarde)}</div></div>
+      <div class="metric"><div class="lbl">Presenças (refeições)</div><div class="val blue">${totalCriancasDia}</div><div class="sub">nº crianças somado por dia</div></div>
+      <div class="metric" style="border-color:var(--coral)"><div class="lbl">Total alimentação</div><div class="val red">${fmt(total)}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">🍽️ Alimentação por dia</div>${pd===0?'<span class="chip amber">Define os valores em Valores → Alimentação diária</span>':''}</div>
+      <div class="muted" style="margin-bottom:10px">Calcula-se sozinho: <b>nº de crianças presentes nesse dia × ${fmt(pd)}</b> (almoço + 2 lanches).</div>
+      ${!comGente.length?'<div class="empty">Sem crianças inscritas em nenhum dia ainda.</div>':
+      `<div class="table-wrap"><table><thead><tr><th>Dia</th><th class="right">Nº crianças</th><th class="right">€/criança</th><th class="right">Custo do dia</th></tr></thead><tbody>
+      ${comGente.map(r=>`<tr><td>${esc(fmtData(r.iso))} <span class="muted">${DIAS_SEM_FULL[parseD(r.iso).getDay()]}</span></td><td class="right">${r.n}</td><td class="right">${fmt(pd)}</td><td class="right"><b>${fmt(r.custo)}</b></td></tr>`).join('')}
+      <tr><td><b>TOTAL</b></td><td class="right"><b>${totalCriancasDia}</b></td><td></td><td class="right"><b>${fmt(total)}</b></td></tr>
+      </tbody></table></div>`}
+    </div>`;
+}
+// junta tudo: Despesas (manual) + Funcionários + Alimentação (calc/dia) + Atividades (calc)
+function itensDespesa(){
+  if(modoAno()) return itensDespesaAno();
+  const d=getD(); const out=[];
+  (d.despesas||[]).forEach(x=>out.push({data:x.data||'', valor:+x.valor||0, cat:x.cat||'Outros', desc:x.desc||'', tipo:'Despesa'}));
+  (d.equipa||[]).forEach(m=>{ if(+m.remuneracao||0) out.push({data:'', valor:+m.remuneracao||0, cat:'Funcionários', desc:((m.cargo||'')+' '+(m.nome||'')).trim(), tipo:'Funcionário'}); });
+  const pd=precoDiaAlimentacao();
+  if(pd){ const att=d.criancas.map(diasDaCrianca); diasUteisPeriodo().forEach(dt=>{ const iso=isoDate(dt); const n=att.filter(s=>s.has(iso)).length; if(n) out.push({data:iso, valor:n*pd, cat:'Alimentação', desc:n+' criança(s) × '+fmt(pd), tipo:'Alimentação'}); }); }
+  (d.atividades||[]).forEach(a=>{ const v=custoAtividade(a); if(v) out.push({data:a.data||'', valor:v, cat:'Atividades / Visitas', desc:(a.nome||'')+' ('+(a.grupo||'Todos')+' · '+nCriancasAtividade(a)+' crianças)', tipo:'Atividade'}); });
+  return out;
+}
+function itensDespesaAno(){
+  const out=[];
+  edicoes.forEach(e=>{ const d=LS.get('atl_ed_'+e.id); if(!d) return; const nome=e.nome+(e.ano?(' '+e.ano):'');
+    (d.despesas||[]).forEach(x=>out.push({data:x.data||'', valor:+x.valor||0, cat:x.cat||'Outros', desc:x.desc||'', tipo:'Despesa', _ed:nome}));
+    (d.equipa||[]).forEach(m=>{ if(+m.remuneracao||0) out.push({data:'', valor:+m.remuneracao||0, cat:'Funcionários', desc:((m.cargo||'')+' '+(m.nome||'')).trim(), tipo:'Funcionário', _ed:nome}); });
+    const fa=custoAlimentacaoPeriodo(e.id); if(fa) out.push({data:'', valor:fa, cat:'Alimentação', desc:'(calculado) '+nome, tipo:'Alimentação', _ed:nome});
+    const at=custoAtividadesPeriodo(e.id); if(at) out.push({data:'', valor:at, cat:'Atividades / Visitas', desc:'(calculado) '+nome, tipo:'Atividade', _ed:nome});
+  });
+  return out;
+}
+function mesLabel(k){ if(k==='Sem data') return 'Sem data'; const p=k.split('-'); return MESES[(+p[1])-1]+' '+p[0]; }
+function renderDespesasResumo(){
+  const itens=itensDespesa();
+  if(!itens.length) return '<div class="card"><div class="empty">Ainda não há despesas lançadas. Regista em Despesas, Atividades ou Funcionários.</div></div>';
+  const total=itens.reduce((s,x)=>s+x.valor,0);
+  const soma=(arr)=>arr.reduce((s,x)=>s+x.valor,0);
+  // por categoria
+  const porCat={}; itens.forEach(x=>porCat[x.cat]=(porCat[x.cat]||0)+x.valor);
+  const catRows=Object.keys(porCat).sort((a,b)=>porCat[b]-porCat[a]);
+  // por mês
+  const porMes={}; itens.forEach(x=>{ const k=x.data?x.data.slice(0,7):'Sem data'; porMes[k]=(porMes[k]||0)+x.valor; });
+  const mesRows=Object.keys(porMes).sort();
+  // por semana (do período)
+  const semanas=semanasPeriodo();
+  const allWeek=new Set(); semanas.forEach(s=>s.dias.forEach(dd=>allWeek.add(dd)));
+  const semRows=semanas.map(s=>{ const set=new Set(s.dias); return {label:s.label, periodo:s.periodo, v:itens.reduce((a,x)=>a+((x.data&&set.has(x.data))?x.valor:0),0)}; });
+  const semSemData=itens.filter(x=>!x.data||( x.data && !allWeek.has(x.data))).reduce((a,x)=>a+x.valor,0);
+  // por dia
+  const porDia={}; itens.forEach(x=>{ const k=x.data||'Sem data'; porDia[k]=(porDia[k]||0)+x.valor; });
+  const diaRows=Object.keys(porDia).sort((a,b)=> a==='Sem data'?1:b==='Sem data'?-1:a.localeCompare(b));
+  const barra=(v)=>`<div style="height:6px;border-radius:4px;background:var(--coral);opacity:.85;width:${total>0?Math.max(3,Math.round(100*v/total)):0}%"></div>`;
+  return `
+    <div class="cards">
+      <div class="metric" style="border-color:var(--coral)"><div class="lbl">Total de despesas</div><div class="val red">${fmt(total)}</div><div class="sub">${itens.length} lançamento(s)</div></div>
+      <div class="metric"><div class="lbl">Média por dia com gastos</div><div class="val">${fmt(diaRows.filter(k=>k!=='Sem data').length? soma(itens.filter(x=>x.data))/diaRows.filter(k=>k!=='Sem data').length : 0)}</div></div>
+      <div class="metric"><div class="lbl">Categorias com gastos</div><div class="val blue">${catRows.length}</div></div>
+    </div>
+    <div class="card"><div class="card-title">Por categoria</div>
+      <div class="table-wrap"><table><thead><tr><th>Categoria</th><th style="width:120px"></th><th class="right">Total</th></tr></thead><tbody>
+        ${catRows.map(c=>`<tr><td><span class="chip blue">${esc(c)}</span></td><td>${barra(porCat[c])}</td><td class="right"><b>${fmt(porCat[c])}</b></td></tr>`).join('')}
+        <tr><td><b>TOTAL</b></td><td></td><td class="right"><b>${fmt(total)}</b></td></tr>
+      </tbody></table></div>
+    </div>
+    <div class="card"><div class="card-title">Por mês</div>
+      <div class="table-wrap"><table><thead><tr><th>Mês</th><th class="right">Total</th></tr></thead><tbody>
+        ${mesRows.map(k=>`<tr><td>${esc(mesLabel(k))}</td><td class="right"><b>${fmt(porMes[k])}</b></td></tr>`).join('')}
+      </tbody></table></div>
+    </div>
+    ${semanas.length?`<div class="card"><div class="card-title">Por semana ${modoAno()?'<span class="muted">(do período selecionado — escolhe um período p/ semanas)</span>':''}</div>
+      <div class="table-wrap"><table><thead><tr><th>Semana</th><th>Período</th><th class="right">Total</th></tr></thead><tbody>
+        ${semRows.map(s=>`<tr><td><b>${s.label}</b></td><td class="muted">${s.periodo}</td><td class="right"><b>${fmt(s.v)}</b></td></tr>`).join('')}
+        ${semSemData>0?`<tr><td class="muted">Sem data / fora das semanas</td><td></td><td class="right">${fmt(semSemData)}</td></tr>`:''}
+      </tbody></table></div>
+    </div>`:''}
+    <div class="card"><div class="card-title">Por dia</div>
+      <div class="table-wrap"><table><thead><tr><th>Dia</th><th class="right">Total</th></tr></thead><tbody>
+        ${diaRows.map(k=>`<tr><td>${k==='Sem data'?'<span class="muted">Sem data (ex.: funcionários)</span>':esc(fmtData(k))}</td><td class="right"><b>${fmt(porDia[k])}</b></td></tr>`).join('')}
+      </tbody></table></div>
+    </div>`;
+}
+function abrirModalDespesa(id){ if(guardaModoAno()) return;
+  const d=getD(); const cats=d.categorias||CATEGORIAS_DEFAULT;
+  const x=id?Object.assign({},d.despesas.find(y=>y.id===id)):{cat:cats[0],data:new Date().toISOString().slice(0,10),valor:''};
+  modal(id?'Editar despesa':'Nova despesa',`
+    <div class="grid2"><div class="fg"><label>Categoria</label><select id="dp-cat">${cats.map(c=>`<option ${c===x.cat?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+      <div class="fg"><label>Data</label><input id="dp-data" type="date" value="${esc(x.data||'')}"></div></div>
+    <div class="fg"><label>Descrição</label><input id="dp-desc" value="${esc(x.desc||'')}"></div>
+    <div class="grid2"><div class="fg"><label>Valor (€) *</label><input id="dp-valor" type="number" step="0.01" value="${esc(x.valor)}"></div>
+      <div class="fg"><label>Forma de pagamento</label><select id="dp-pag">${FORMAS_PAG.map(o=>`<option ${o===x.pagamento?'selected':''}>${o}</option>`).join('')}</select></div></div>
+    <div class="fg"><label>Nota</label><input id="dp-nota" value="${esc(x.nota||'')}"></div>`,
+    [ {txt:'Guardar',cls:'btn-add',fn:()=>guardarDespesa(id)} ]);
+}
+function guardarDespesa(id){
+  const valor=parseFloat($('dp-valor').value); if(isNaN(valor)){ toast('Indica o valor.',false); return; }
+  const d=getD(); const obj={ id:id||uid(), cat:$('dp-cat').value, data:$('dp-data').value, desc:$('dp-desc').value.trim(), valor, pagamento:$('dp-pag').value, nota:$('dp-nota').value.trim() };
+  if(id){ const i=d.despesas.findIndex(y=>y.id===id); if(i>=0)d.despesas[i]=obj; } else d.despesas.push(obj);
+  setD(d); fecharModal(); renderDespesas(); toast('Despesa guardada.');
+}
+function eliminarDespesa(id){ if(!confirm('Eliminar esta despesa?'))return; const d=getD(); d.despesas=d.despesas.filter(y=>y.id!==id); setD(d); renderDespesas(); toast('Despesa eliminada.'); }
+function gerirCategorias(){
+  const d=getD(); const cats=d.categorias||CATEGORIAS_DEFAULT.slice();
+  modal('Categorias de despesa',`
+    <div id="cat-lista">${cats.map((c,i)=>`<div class="sem-check"><span style="flex:1">${esc(c)}</span><button class="btn-sm btn-del" onclick="apagarCategoria(${i})">✕</button></div>`).join('')||'<div class="muted">Sem categorias.</div>'}</div>
+    <div class="fg" style="margin-top:10px;display:flex;gap:6px"><input id="cat-nova" placeholder="Nova categoria…"><button class="btn-sm btn-add" onclick="addCategoria()">+</button></div>`,
+    [ {txt:'Fechar',cls:'btn-neutral',fn:fecharModal} ]);
+}
+function addCategoria(){ const v=$('cat-nova').value.trim(); if(!v)return; const d=getD(); d.categorias=d.categorias||CATEGORIAS_DEFAULT.slice(); if(!d.categorias.includes(v))d.categorias.push(v); setD(d); gerirCategorias(); }
+function apagarCategoria(i){ const d=getD(); d.categorias=d.categorias||CATEGORIAS_DEFAULT.slice(); d.categorias.splice(i,1); setD(d); gerirCategorias(); }
+
+/* ============================================================
+   RECEITAS
+   ============================================================ */
+function renderReceitas(){
+  const el=$('sec-receitas'); if(precisaEdicao(el)) return;
+  const t=totais(); const d=t.d;
+  el.innerHTML=`
+    <div class="cards">
+      <div class="metric"><div class="lbl">Pagamentos das crianças</div><div class="val green">${fmt(t.totPago)}</div><div class="sub">de ${fmt(t.totInscrito)} previstos</div></div>
+      <div class="metric"><div class="lbl">Outras receitas</div><div class="val green">${fmt(t.outrasRec)}</div></div>
+      <div class="metric"><div class="lbl">Total de receitas</div><div class="val green">${fmt(t.recTotal)}</div></div>
+    </div>
+    <div class="card"><div class="card-head"><div class="card-title">Outras receitas</div>
+      <div style="display:flex;gap:6px"><button class="btn-sm btn-neutral" onclick="gerirCategoriasRec()">🏷️ Categorias</button><button class="btn-sm btn-add" onclick="abrirModalReceita()">+ Nova receita</button></div></div>
+      <div class="filters"><select onchange="fRec.cat=this.value;renderReceitas()"><option value="">Todas as categorias</option>${(d.categoriasRec||CATEGORIAS_REC_DEFAULT).map(c=>`<option ${c===fRec.cat?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+      ${(()=>{ let lista=d.receitas.slice(); if(fRec.cat) lista=lista.filter(x=>x.cat===fRec.cat); return !lista.length?'<div class="empty">Sem outras receitas (donativos, apoios, etc.).</div>':
+      `<div class="table-wrap"><table><thead><tr><th>Data</th><th>Categoria</th><th>Descrição</th><th>Pagamento</th><th class="right">Valor</th><th></th></tr></thead><tbody>
+      ${lista.map(r=>`<tr><td>${esc(r.data||'')}</td><td>${r.cat?`<span class="chip green">${esc(r.cat)}</span>`:''}</td><td>${esc(r.desc||'')}${r.origem?`<div class="muted">${esc(r.origem)}</div>`:''}</td><td class="muted">${esc(r.pagamento||'')}</td><td class="right">${fmt(r.valor)}</td>
+        <td class="right" style="white-space:nowrap"><button class="btn-sm btn-edit" onclick="abrirModalReceita('${r.id}')">✏️</button> <button class="btn-sm btn-del" onclick="eliminarReceita('${r.id}')">🗑️</button></td></tr>`).join('')}
+      </tbody></table></div>`; })()}
+    </div>`;
+}
+function abrirModalReceita(id){ if(guardaModoAno()) return;
+  const d=getD(); const cats=d.categoriasRec||CATEGORIAS_REC_DEFAULT;
+  const r=id?Object.assign({},d.receitas.find(y=>y.id===id)):{data:new Date().toISOString().slice(0,10),valor:'',cat:cats[0]};
+  modal(id?'Editar receita':'Nova receita',`
+    <div class="grid2"><div class="fg"><label>Categoria</label><select id="r-cat">${cats.map(c=>`<option ${c===r.cat?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+      <div class="fg"><label>Data</label><input id="r-data" type="date" value="${esc(r.data||'')}"></div></div>
+    <div class="grid2"><div class="fg"><label>Valor (€) *</label><input id="r-valor" type="number" step="0.01" value="${esc(r.valor)}"></div>
+      <div class="fg"><label>Forma de pagamento</label><select id="r-pag">${FORMAS_PAG.map(o=>`<option ${o===r.pagamento?'selected':''}>${o}</option>`).join('')}</select></div></div>
+    <div class="fg"><label>Descrição</label><input id="r-desc" value="${esc(r.desc||'')}"></div>
+    <div class="fg"><label>Origem / notas</label><input id="r-origem" value="${esc(r.origem||'')}" placeholder="Ex: quem doou, nº do apoio…"></div>`,
+    [ {txt:'Guardar',cls:'btn-add',fn:()=>guardarReceita(id)} ]);
+}
+function guardarReceita(id){
+  const valor=parseFloat($('r-valor').value); if(isNaN(valor)){ toast('Indica o valor.',false); return; }
+  const d=getD(); const obj={ id:id||uid(), cat:$('r-cat').value, data:$('r-data').value, valor, desc:$('r-desc').value.trim(), origem:$('r-origem').value.trim(), pagamento:$('r-pag').value };
+  if(id){ const i=d.receitas.findIndex(y=>y.id===id); if(i>=0)d.receitas[i]=obj; } else d.receitas.push(obj);
+  setD(d); fecharModal(); renderReceitas(); toast('Receita guardada.');
+}
+function eliminarReceita(id){ if(!confirm('Eliminar esta receita?'))return; const d=getD(); d.receitas=d.receitas.filter(y=>y.id!==id); setD(d); renderReceitas(); toast('Receita eliminada.'); }
+function gerirCategoriasRec(){
+  const d=getD(); const cats=d.categoriasRec||CATEGORIAS_REC_DEFAULT.slice();
+  modal('Categorias de receita',`
+    <div id="catr-lista">${cats.map((c,i)=>`<div class="sem-check"><span style="flex:1">${esc(c)}</span><button class="btn-sm btn-del" onclick="apagarCategoriaRec(${i})">✕</button></div>`).join('')||'<div class="muted">Sem categorias.</div>'}</div>
+    <div class="fg" style="margin-top:10px;display:flex;gap:6px"><input id="catr-nova" placeholder="Nova categoria…"><button class="btn-sm btn-add" onclick="addCategoriaRec()">+</button></div>`,
+    [ {txt:'Fechar',cls:'btn-neutral',fn:fecharModal} ]);
+}
+function addCategoriaRec(){ const v=$('catr-nova').value.trim(); if(!v)return; const d=getD(); d.categoriasRec=d.categoriasRec||CATEGORIAS_REC_DEFAULT.slice(); if(!d.categoriasRec.includes(v))d.categoriasRec.push(v); setD(d); gerirCategoriasRec(); }
+function apagarCategoriaRec(i){ const d=getD(); d.categoriasRec=d.categoriasRec||CATEGORIAS_REC_DEFAULT.slice(); d.categoriasRec.splice(i,1); setD(d); gerirCategoriasRec(); }
+
+/* ============================================================
+   FUNCIONÁRIOS
+   ============================================================ */
+function renderEquipa(){
+  const el=$('sec-equipa'); if(precisaEdicao(el)) return;
+  const d=getD(); const tot=d.equipa.reduce((s,m)=>s+(+m.remuneracao||0),0);
+  el.innerHTML=`<div class="card">
+    <div class="card-head"><div class="card-title">Funcionários · ${d.equipa.length} · custo ${fmt(tot)}</div><button class="btn-sm btn-add" onclick="abrirModalEquipa()">+ Novo funcionário</button></div>
+    <div class="muted" style="margin-bottom:10px">💡 As remunerações aqui já contam como despesa no Painel — não as lances também em Despesas para não duplicar.</div>
+    ${!d.equipa.length?'<div class="empty">Sem funcionários.</div>':
+    `<div class="table-wrap"><table><thead><tr><th>Cargo</th><th>Nome</th><th>Contacto</th><th>Horário</th><th class="right">Remuneração</th><th></th></tr></thead><tbody>
+    ${d.equipa.map(m=>`<tr><td><b>${esc(m.cargo||'')}</b></td><td>${esc(m.nome||'')}</td><td class="muted">${esc(m.tel||'')}${m.email?' · '+esc(m.email):''}</td><td class="muted">${esc(m.horario||'')}</td><td class="right">${fmt(m.remuneracao)}</td>
+      <td class="right" style="white-space:nowrap"><button class="btn-sm btn-edit" onclick="abrirModalEquipa('${m.id}')">✏️</button> <button class="btn-sm btn-del" onclick="eliminarEquipa('${m.id}')">🗑️</button></td></tr>`).join('')}
+    </tbody></table></div>`}
+  </div>`;
+}
+function abrirModalEquipa(id){ if(guardaModoAno()) return;
+  const d=getD(); const m=id?Object.assign({},d.equipa.find(y=>y.id===id)):{cargo:'',remuneracao:''};
+  modal(id?'Editar funcionário':'Novo funcionário',`
+    <div class="grid2"><div class="fg"><label>Cargo</label><input id="q-cargo" value="${esc(m.cargo||'')}" placeholder="Ex: Monitor, Coordenador"></div><div class="fg"><label>Nome</label><input id="q-nome" value="${esc(m.nome||'')}"></div></div>
+    <div class="grid2"><div class="fg"><label>Telefone</label><input id="q-tel" value="${esc(m.tel||'')}"></div><div class="fg"><label>Email</label><input id="q-email" type="email" value="${esc(m.email||'')}"></div></div>
+    <div class="grid3"><div class="fg"><label>Remuneração (€)</label><input id="q-rem" type="number" step="0.01" value="${esc(m.remuneracao)}"></div>
+      <div class="fg"><label>Forma pagamento</label><select id="q-pag">${FORMAS_PAG.map(o=>`<option ${o===m.pagamento?'selected':''}>${o}</option>`).join('')}</select></div>
+      <div class="fg"><label>Horário</label><input id="q-hor" value="${esc(m.horario||'')}"></div></div>
+    <div class="fg"><label>Notas</label><input id="q-notas" value="${esc(m.notas||'')}"></div>`,
+    [ {txt:'Guardar',cls:'btn-add',fn:()=>guardarEquipa(id)} ]);
+}
+function guardarEquipa(id){
+  const nome=$('q-nome').value.trim(); const cargo=$('q-cargo').value.trim();
+  if(!nome&&!cargo){ toast('Indica o cargo ou o nome.',false); return; }
+  const d=getD(); const obj={ id:id||uid(), cargo, nome, tel:$('q-tel').value.trim(), email:$('q-email').value.trim(), remuneracao:parseFloat($('q-rem').value)||0, pagamento:$('q-pag').value, horario:$('q-hor').value.trim(), notas:$('q-notas').value.trim() };
+  if(id){ const i=d.equipa.findIndex(y=>y.id===id); if(i>=0)d.equipa[i]=obj; } else d.equipa.push(obj);
+  setD(d); fecharModal(); renderEquipa(); toast('Funcionário guardado.');
+}
+function eliminarEquipa(id){ if(!confirm('Eliminar este funcionário?'))return; const d=getD(); d.equipa=d.equipa.filter(y=>y.id!==id); setD(d); renderEquipa(); toast('Funcionário eliminado.'); }
+
+/* ============================================================
+   ATIVIDADES
+   ============================================================ */
+let atvView='lista';
+function renderAtividades(){
+  const el=$('sec-atividades'); if(precisaEdicao(el)) return;
+  const seg=`<div class="seg" style="margin-bottom:14px">
+    <button class="${atvView==='lista'?'on':''}" onclick="atvView='lista';renderAtividades()">📋 Lista</button>
+    <button class="${atvView==='mapa'?'on':''}" onclick="atvView='mapa';renderAtividades()">🗓️ Mapa por dia</button></div>`;
+  el.innerHTML = seg + (atvView==='mapa'? renderAtividadesMapa() : renderAtividadesLista());
+}
+function renderAtividadesLista(){
+  const d=getD(); const tot=custoAtividadesTotal();
+  return `<div class="card">
+    <div class="card-head"><div class="card-title">Atividades / visitas · custo ${fmt(tot)}</div>${modoAno()?'':'<button class="btn-sm btn-add" onclick="abrirModalAtividade()">+ Nova atividade</button>'}</div>
+    <div class="muted" style="margin-bottom:10px">💡 O custo é calculado automaticamente: <b>preço por criança × nº de crianças do grupo</b> que estão presentes na <b>data</b> da atividade. Conta como despesa no Painel.</div>
+    ${!d.atividades.length?'<div class="empty">Sem atividades ou visitas.</div>':
+    `<div class="table-wrap"><table><thead><tr><th>Data</th><th>Atividade</th><th>Grupo</th><th class="right">€/criança</th><th class="right">Nº crianças</th><th class="right">Custo</th><th></th></tr></thead><tbody>
+    ${d.atividades.map(a=>{ const n=nCriancasAtividade(a); return `<tr><td>${esc(fmtData(a.data)||'—')}</td><td><b>${esc(a.nome||'')}</b>${a.local?`<div class="muted">${esc(a.local)}</div>`:''}</td><td><span class="chip ${a.grupo==='G1'?'blue':a.grupo==='G2'?'amber':'green'}">${esc(a.grupo||'Todos')}</span></td><td class="right">${fmt(a.precoCrianca)}</td><td class="right">${n}</td><td class="right"><b>${fmt(custoAtividade(a))}</b></td>
+      <td class="right" style="white-space:nowrap">${modoAno()?'':`<button class="btn-sm btn-edit" onclick="abrirModalAtividade('${a.id}')">✏️</button> <button class="btn-sm btn-del" onclick="eliminarAtividade('${a.id}')">🗑️</button>`}</td></tr>`; }).join('')}
+    </tbody></table></div>`}
+  </div>`;
+}
+function renderAtividadesMapa(){
+  const d=getD(); const cols=['G1','G2','Todos'];
+  const datas=[...new Set(d.atividades.filter(a=>a.data).map(a=>a.data))].sort();
+  const semData=d.atividades.filter(a=>!a.data);
+  const cellFor=(dt,g)=> d.atividades.filter(a=>a.data===dt && (a.grupo||'Todos')===g);
+  const cellHTML=(as)=> as.length? as.map(a=>`<div style="margin-bottom:3px"><b>${esc(a.nome||'—')}</b><div class="muted">${nCriancasAtividade(a)} cr. × ${fmt(a.precoCrianca)} = <b>${fmt(custoAtividade(a))}</b></div></div>`).join('') : '<span class="muted">—</span>';
+  return `<div class="card">
+    <div class="card-head"><div class="card-title">🗓️ Mapa de atividades por dia · total ${fmt(custoAtividadesTotal())}</div>${modoAno()?'':'<button class="btn-sm btn-add" onclick="abrirModalAtividade()">+ Nova atividade</button>'}</div>
+    <div class="muted" style="margin-bottom:10px">Marca por dia o que cada grupo faz (ex.: <b>Grupo 1 → Piscina</b>, <b>Grupo 2 → IlhaPark</b>). O nº de crianças e o custo calculam-se sozinhos.</div>
+    ${!datas.length && !semData.length? '<div class="empty">Sem atividades. Cria uma com data e grupo.</div>':
+    `<div class="table-wrap"><table><thead><tr><th>Dia</th><th>Grupo 1</th><th>Grupo 2</th><th>Todos os grupos</th></tr></thead><tbody>
+    ${datas.map(dt=>`<tr><td><b>${esc(fmtData(dt))}</b><div class="muted">${DIAS_SEM_FULL[parseD(dt).getDay()]}</div></td>${cols.map(g=>`<td>${cellHTML(cellFor(dt,g))}</td>`).join('')}</tr>`).join('')}
+    ${semData.length?`<tr><td class="muted">Sem data</td><td colspan="3">${semData.map(a=>`${esc(a.nome)} (${esc(a.grupo||'Todos')})`).join(', ')} <span class="muted">— define a data para calcular</span></td></tr>`:''}
+    </tbody></table></div>`}
+  </div>`;
+}
+function abrirModalAtividade(id){ if(guardaModoAno()) return;
+  const d=getD(); const cat=d.precos.atividades||[]; const a=id?Object.assign({},d.atividades.find(y=>y.id===id)):{data:'',precoCrianca:'',grupo:'Todos'};
+  modal(id?'Editar atividade':'Nova atividade',`
+    <div class="grid2"><div class="fg"><label>Nome *</label><input id="a-nome" value="${esc(a.nome||'')}" list="ativ-sug"><datalist id="ativ-sug">${cat.map(x=>`<option value="${esc(x.nome)}">`).join('')}</datalist></div>
+      <div class="fg"><label>Data *</label><input id="a-data" type="date" value="${esc(a.data||'')}"></div></div>
+    <div class="grid3">
+      <div class="fg"><label>Preço por criança (€)</label><input id="a-preco" type="number" step="0.01" value="${esc(a.precoCrianca)}"></div>
+      <div class="fg"><label>Grupo</label><select id="a-grupo">${['Todos','G1','G2'].map(g=>`<option ${g===(a.grupo||'Todos')?'selected':''}>${g}</option>`).join('')}</select></div>
+      <div class="fg"><label>Local</label><input id="a-local" value="${esc(a.local||'')}"></div>
+    </div>
+    <div class="info">O custo é calculado sozinho: <b>preço por criança × nº de crianças do grupo</b> que estão presentes na data escolhida. Só contam as crianças do grupo que frequentam o ATL nesse dia.</div>
+    <div class="fg"><label>Notas</label><input id="a-notas" value="${esc(a.notas||'')}"></div>`,
+    [ {txt:'Guardar',cls:'btn-add',fn:()=>guardarAtividade(id)} ]);
+}
+function guardarAtividade(id){
+  const nome=$('a-nome').value.trim(); if(!nome){ toast('Indica o nome.',false); return; }
+  const d=getD(); const obj={ id:id||uid(), nome, data:$('a-data').value, local:$('a-local').value.trim(), precoCrianca:parseFloat($('a-preco').value)||0, grupo:$('a-grupo').value||'Todos', notas:$('a-notas').value.trim() };
+  if(id){ const i=d.atividades.findIndex(y=>y.id===id); if(i>=0)d.atividades[i]=obj; } else d.atividades.push(obj);
+  setD(d); fecharModal(); renderAtividades(); toast('Atividade guardada.');
+}
+function eliminarAtividade(id){ if(!confirm('Eliminar esta atividade?'))return; const d=getD(); d.atividades=d.atividades.filter(y=>y.id!==id); setD(d); renderAtividades(); toast('Atividade eliminada.'); }
+
+/* ============================================================
+   CONTA BANCÁRIA / TESOURARIA (global)
+   ============================================================ */
+function getConta(){ const c=LS.get('atl_conta')||{movimentos:[]}; if(!Array.isArray(c.movimentos)) c.movimentos=[]; return c; }
+function setConta(c){ save('atl_conta', c); }
+function saldoConta(){ return getConta().movimentos.reduce((s,m)=>s+(+m.valor||0),0); }
+const CONTA_TIPOS=[ {t:'Depósito do cofre', sinal:1}, {t:'Transferência recebida', sinal:1}, {t:'Transferência enviada', sinal:-1}, {t:'Levantamento', sinal:-1}, {t:'Pagamento / débito', sinal:-1}, {t:'Outra entrada', sinal:1}, {t:'Outra saída', sinal:-1} ];
+function renderConta(){
+  const el=$('sec-conta'); const c=getConta();
+  const movs=c.movimentos.slice().sort((a,b)=>(a.data||'').localeCompare(b.data||'')||(a._i||0)-(b._i||0));
+  let run=0; const linhas=movs.map(m=>{ run+=(+m.valor||0); return {m,saldo:run}; });
+  const saldo=saldoConta();
+  const entradas=movs.filter(m=>(+m.valor||0)>0).reduce((s,m)=>s+m.valor,0);
+  const saidas=movs.filter(m=>(+m.valor||0)<0).reduce((s,m)=>s+m.valor,0);
+  el.innerHTML=`
+    <div class="cards">
+      <div class="metric" style="border-color:var(--teal)"><div class="lbl">Saldo da conta bancária</div><div class="val ${saldo>=0?'green':'red'}">${fmt(saldo)}</div><div class="sub">${movs.length} movimento(s)</div></div>
+      <div class="metric"><div class="lbl">Entradas</div><div class="val green">${fmt(entradas)}</div></div>
+      <div class="metric"><div class="lbl">Saídas</div><div class="val red">${fmt(Math.abs(saidas))}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">🏦 Conta bancária</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn-sm btn-neutral" onclick="acertarSaldo()">✏️ Acertar saldo</button><button class="btn-sm btn-add" onclick="abrirModalMovConta()">+ Movimento</button></div></div>
+      <div class="muted" style="margin-bottom:10px">Regista aqui os <b>depósitos do cofre</b> e as <b>transferências</b>. Usa <b>“Acertar saldo”</b> para pôr o valor que tens neste momento na conta (ex.: pelo extrato do banco).</div>
+      ${!movs.length?'<div class="empty">Sem movimentos. Começa por “Acertar saldo” para pôr o valor atual da conta.</div>':
+      `<div class="table-wrap"><table><thead><tr><th>Data</th><th>Tipo</th><th>Nota</th><th class="right">Valor</th><th class="right">Saldo</th><th></th></tr></thead><tbody>
+      ${linhas.slice().reverse().map(({m,saldo})=>`<tr><td>${esc(fmtData(m.data)||'')}</td><td>${esc(m.tipo||'')}</td><td class="muted">${esc(m.desc||'')}</td><td class="right" style="color:${(+m.valor||0)>=0?'var(--teal)':'var(--coral)'};font-weight:700">${(+m.valor||0)>=0?'+':''}${fmt(m.valor)}</td><td class="right">${fmt(saldo)}</td>
+        <td class="right"><button class="btn-sm btn-del" onclick="eliminarMovConta('${m.id}')">🗑️</button></td></tr>`).join('')}
+      </tbody></table></div>`}
+    </div>`;
+}
+function acertarSaldo(){
+  const atual=saldoConta();
+  modal('✏️ Acertar saldo da conta', `
+    <div class="info">Escreve o valor que tens <b>neste momento</b> na conta bancária (ex.: pelo extrato). O programa cria um ajuste automático para acertar. Saldo atual registado: <b>${fmt(atual)}</b>.</div>
+    <div class="grid2"><div class="fg"><label>Saldo atual real (€)</label><input id="ac-valor" type="number" step="0.01" value="${esc(atual)}"></div>
+      <div class="fg"><label>Data</label><input id="ac-data" type="date" value="${hoje()}"></div></div>`,
+    [ {txt:'Guardar',cls:'btn-add',fn:()=>{ const novo=parseFloat($('ac-valor').value); if(isNaN(novo)){ toast('Indica o valor.',false); return; } const dif=Math.round((novo-saldoConta())*100)/100; const c=getConta(); c.movimentos.push({id:uid(),_i:Date.now(),data:$('ac-data').value||hoje(),tipo:'Acerto de saldo',desc:'Saldo definido manualmente',valor:dif}); setConta(c); fecharModal(); renderConta(); toast('Saldo acertado.'); }} ]);
+}
+function abrirModalMovConta(){
+  modal('Novo movimento da conta', `
+    <div class="grid2"><div class="fg"><label>Tipo</label><select id="mv-tipo" onchange="mvSinalAuto()">${CONTA_TIPOS.map(x=>`<option>${x.t}</option>`).join('')}</select></div>
+      <div class="fg"><label>Data</label><input id="mv-data" type="date" value="${hoje()}"></div></div>
+    <div class="grid2"><div class="fg"><label>Sentido</label><select id="mv-sinal"><option value="1">Entrada (+)</option><option value="-1">Saída (−)</option></select></div>
+      <div class="fg"><label>Valor (€)</label><input id="mv-valor" type="number" step="0.01" min="0"></div></div>
+    <div class="fg"><label>Nota</label><input id="mv-nota" placeholder="Ex.: depósito do cofre da semana 1"></div>`,
+    [ {txt:'Guardar',cls:'btn-add',fn:guardarMovConta} ]);
+  mvSinalAuto();
+}
+function mvSinalAuto(){ const t=$('mv-tipo').value; const cfg=CONTA_TIPOS.find(x=>x.t===t); const s=$('mv-sinal'); if(cfg&&s) s.value=String(cfg.sinal); }
+function guardarMovConta(){
+  const v=parseFloat($('mv-valor').value); if(isNaN(v)||v<0){ toast('Indica um valor.',false); return; }
+  const sinal=parseInt($('mv-sinal').value)||1; const c=getConta();
+  c.movimentos.push({id:uid(),_i:Date.now(),data:$('mv-data').value||hoje(),tipo:$('mv-tipo').value,desc:$('mv-nota').value.trim(),valor:Math.round(v*sinal*100)/100});
+  setConta(c); fecharModal(); renderConta(); toast('Movimento registado.');
+}
+function eliminarMovConta(id){ if(!confirm('Eliminar este movimento?'))return; const c=getConta(); c.movimentos=c.movimentos.filter(m=>m.id!==id); setConta(c); renderConta(); toast('Movimento eliminado.'); }
+
+/* ---------- Lembrete de fecho de mês ---------- */
+function verificarFimMes(){
+  const t=new Date(); const y=t.getFullYear(), m=t.getMonth(), day=t.getDate();
+  const lastDay=new Date(y,m+1,0).getDate();
+  let alvo=null;
+  if(day>=lastDay-2) alvo={y,m};
+  else if(day<=7){ const pm=new Date(y,m-1,1); alvo={y:pm.getFullYear(),m:pm.getMonth()}; }
+  if(!alvo) return;
+  const key=alvo.y+'-'+pad2(alvo.m+1);
+  if((LS.get('atl_lembreteMes')||'')===key) return;
+  setTimeout(()=>lembreteFimMes(key, alvo), 600);
+}
+function lembreteFimMes(key, alvo){
+  modal('📅 Fecho do mês — '+MESES[alvo.m]+' '+alvo.y, `
+    <div class="info">Chegou o fim do mês. Convém <b>imprimir todos os movimentos de ${MESES[alvo.m]} ${alvo.y}</b> (receitas, despesas e conta) para arquivo.</div>
+    <button class="btn btn-primary" style="width:auto;padding:11px 20px" onclick="imprimirMovimentosMes('${key}')">🖨️ Imprimir movimentos do mês</button>`,
+    [ {txt:'✔️ Já tratei (não mostrar até ao próximo mês)',cls:'btn-neutral',fn:()=>{ save('atl_lembreteMes',key); fecharModal(); toast('Ok, até ao próximo mês.'); }} ]);
+}
+function imprimirMovimentosMes(key){
+  const ed=getEdicao()||{}; const d=getD(); const conta=getConta();
+  const noMes=x=>((x.data||'').slice(0,7)===key);
+  const desp=(d.despesas||[]).filter(noMes); const rec=(d.receitas||[]).filter(noMes); const movs=(conta.movimentos||[]).filter(noMes);
+  const tD=desp.reduce((s,x)=>s+(+x.valor||0),0), tR=rec.reduce((s,x)=>s+(+x.valor||0),0);
+  const tabela=(tit,rows,cols)=> `<div class="sec">${tit}</div>`+(rows.length?`<table><thead><tr>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${c[1](r)}</td>`).join('')}</tr>`).join('')}</tbody></table>`:'<p>Sem registos.</p>');
+  const body=`<h1>Movimentos do mês — ${MESES[+key.slice(5,7)-1]} ${key.slice(0,4)}</h1>
+    <div style="font-size:12px;color:#555;margin-bottom:6px">${esc(ed.nome||'')}${ed.ano?(' · '+ed.ano):''}</div>
+    ${tabela('Receitas ('+fmt(tR)+')', rec, [['Data',r=>esc(fmtData(r.data))],['Categoria',r=>esc(r.cat||'')],['Descrição',r=>esc(r.desc||'')],['Valor',r=>fmt(r.valor)]])}
+    ${tabela('Despesas ('+fmt(tD)+')', desp, [['Data',r=>esc(fmtData(r.data))],['Categoria',r=>esc(r.cat||'')],['Descrição',r=>esc(r.desc||'')],['Valor',r=>fmt(r.valor)]])}
+    ${tabela('Conta bancária', movs, [['Data',r=>esc(fmtData(r.data))],['Tipo',r=>esc(r.tipo||'')],['Nota',r=>esc(r.desc||'')],['Valor',r=>((+r.valor||0)>=0?'+':'')+fmt(r.valor)]])}
+    <div class="sec">Resumo</div><table><tr><th>Total receitas</th><td>${fmt(tR)}</td></tr><tr><th>Total despesas</th><td>${fmt(tD)}</td></tr><tr><th>Saldo atual da conta</th><td>${fmt(saldoConta())}</td></tr></table>`;
+  abrirImpressao('Movimentos '+key, body);
+}
+
+/* ============================================================
+   DOCUMENTOS / DECLARAÇÕES (modelos editáveis)
+   ============================================================ */
+function renderDocumentos(){
+  const el=$('sec-documentos'); const docs=getDocs(); const c=getCfg();
+  el.innerHTML=`
+    ${!c.logo?'<div class="info">💡 Adiciona o <b>logótipo da associação</b> em ⚙️ Definições para aparecer no cabeçalho das fichas e declarações.</div>':''}
+    <div class="card">
+      <div class="card-title">🖨️ Listas para imprimir (seguradora, cozinha, grupos…)</div>
+      <div class="muted" style="margin:6px 0 10px">Estas listas geram-se sozinhas a partir das inscrições. Abrem no separador Mapa, prontas a imprimir (com logótipo e rodapé).</div>
+      <div class="seg">
+        <button onclick="irListaMapa('nomes')">🧾 Nomes por semana (seguradora)</button>
+        <button onclick="irListaMapa('alergias')">🍽️ Alergias (cozinha)</button>
+        <button onclick="irListaMapa('obs')">💊 Observações / medicação</button>
+        <button onclick="irListaMapa('grupos')">👥 Grupos (G1 / G2)</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">📄 Documentos e declarações</div><button class="btn-sm btn-add" onclick="editarDocumento()">+ Novo documento</button></div>
+      <div class="muted" style="margin-bottom:12px">Modelos editáveis para imprimir com o logótipo no cabeçalho. Imprime <b>em branco</b> aqui, ou <b>preenchido</b> para cada inscrito no botão 🖨️ da lista de inscrições.</div>
+      ${!docs.length?'<div class="empty">Sem documentos. Cria o primeiro (ex.: declaração de veracidade, autorização de saída…).</div>':
+        docs.map(dc=>`<div class="sem-check" style="align-items:flex-start">
+          <div style="flex:1"><b>${esc(dc.titulo)}</b><div class="muted" style="margin-top:3px;white-space:pre-wrap;max-height:40px;overflow:hidden">${esc((dc.corpo||'').slice(0,150))}${(dc.corpo||'').length>150?'…':''}</div></div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn-sm btn-neutral" onclick="imprimirDocumento('${dc.id}','')">🖨️ Em branco</button><button class="btn-sm btn-edit" onclick="editarDocumento('${dc.id}')">✏️</button><button class="btn-sm btn-del" onclick="eliminarDocumento('${dc.id}')">🗑️</button></div>
+        </div>`).join('')}
+    </div>`;
+}
+function editarDocumento(id){
+  const docs=getDocs(); const dc= id? docs.find(x=>x.id===id) : {titulo:'',corpo:''};
+  modal(id?'Editar documento':'Novo documento', `
+    <div class="fg"><label>Título do documento</label><input id="doc-tit" value="${esc(dc.titulo||'')}"></div>
+    <div class="fg"><label>Texto</label><textarea id="doc-corpo" rows="12" style="font-size:13px">${esc(dc.corpo||'')}</textarea></div>
+    <div class="info">Marcadores (preenchem-se sozinhos ao imprimir para um inscrito): <b>{{nome}}</b>, <b>{{numero}}</b>, {{nasc}}, {{doc}}, {{nif}}, <b>{{responsavel}}</b>, {{atl}}, {{ano}}. Ao imprimir "em branco" ficam com espaço para preencher à mão.</div>`,
+    [ {txt:'Guardar',cls:'btn-add',fn:()=>guardarDocumento(id)} ]);
+}
+function guardarDocumento(id){
+  const tit=$('doc-tit').value.trim(); if(!tit){ toast('Dá um título ao documento.',false); return; }
+  let docs=getDocs(); const obj={ id:id||uid(), titulo:tit, corpo:$('doc-corpo').value };
+  if(id){ const i=docs.findIndex(x=>x.id===id); if(i>=0)docs[i]=obj; } else docs.push(obj);
+  setDocs(docs); fecharModal(); renderDocumentos(); toast('Documento guardado.');
+}
+function eliminarDocumento(id){ if(!confirm('Eliminar este documento?'))return; setDocs(getDocs().filter(x=>x.id!==id)); renderDocumentos(); toast('Documento eliminado.'); }
+function irListaMapa(view){ mapaView=view; showTab('mapa'); }
+
+/* ============================================================
+   DEFINIÇÕES
+   ============================================================ */
+function renderDefinicoes(){
+  const el=$('sec-definicoes'); const c=getCfg();
+  const contaEmail = (supaSession && supaSession.user && supaSession.user.email) || '';
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-title">🖼️ Logótipo e nome da associação</div>
+      <div class="muted" style="margin:6px 0 10px">Aparece no cabeçalho das fichas e declarações impressas.</div>
+      ${c.logo?`<img src="${c.logo}" style="max-height:90px;max-width:220px;object-fit:contain;display:block;margin:6px 0 10px;border:1px solid var(--line);border-radius:8px;padding:6px;background:#fff">`:'<div class="muted" style="margin-bottom:8px">— ainda sem logótipo —</div>'}
+      <div class="fg"><label>Carregar / trocar logótipo (imagem)</label><input type="file" accept="image/*" onchange="carregarLogo(this)"></div>
+      <div class="fg"><label>Nome da associação</label><input id="cf-assoc" value="${esc(c.assocNome||"ARCA d'Ajuda")}"></div>
+      <div class="fg"><label>Morada</label><input id="cf-morada" value="${esc(c.assocMorada||'')}" placeholder="Rua…, código-postal, localidade"></div>
+      <div class="grid2">
+        <div class="fg"><label>NIF / NIPC</label><input id="cf-nif" value="${esc(c.assocNif||'')}"></div>
+        <div class="fg"><label>Contactos (tel / email / site)</label><input id="cf-contacto" value="${esc(c.assocContacto||'')}" placeholder="Tel · email · website"></div>
+      </div>
+      <div class="muted" style="margin-bottom:8px">Estes dados aparecem no <b>rodapé</b> das fichas e declarações impressas.</div>
+      <button class="btn-sm btn-add" onclick="guardarAssoc()">💾 Guardar</button>
+      ${c.logo?' <button class="btn-sm btn-del" onclick="removerLogo()">Remover logótipo</button>':''}
+    </div>
+    <div class="card">
+      <div class="card-title">📧 Emails (editáveis a qualquer momento)</div>
+      <div class="muted" style="margin:6px 0 12px">Podem ser o mesmo email nos três campos.</div>
+      <div class="fg"><label>Email para <b>enviar</b> (remetente)</label><input id="cf-envio" type="email" value="${esc(c.emailEnvio)}" placeholder="atl.arcakids@gmail.com"></div>
+      <div class="fg"><label>Email para <b>notificações</b></label><input id="cf-notif" type="email" value="${esc(c.emailNotif)}" placeholder="atl.arcakids@gmail.com"></div>
+      <div class="fg"><label>Email da <b>Google Drive</b></label><input id="cf-drive" type="email" value="${esc(c.emailDrive)}" placeholder="atl.arcakids@gmail.com"></div>
+      <button class="btn-sm btn-add" onclick="guardarCfg()">💾 Guardar emails</button>
+    </div>
+    <div class="card">
+      <div class="card-title">🔐 Conta / início de sessão</div>
+      <div class="muted" style="margin:6px 0 12px">${modoLocal?'Estás em modo local (sem conta).':'Conta atual: <b>'+esc(contaEmail||'—')+'</b>'}</div>
+      <div class="grid2"><div class="fg"><label>Novo email de acesso</label><input id="ac-email" type="email" value="${esc(contaEmail)}" placeholder="atl.arcakids@gmail.com"></div>
+        <div class="fg"><label>Nova palavra-passe (opcional)</label><input id="ac-pass" type="password" placeholder="deixa vazio p/ manter"></div></div>
+      <button class="btn-sm btn-add" onclick="atualizarConta()">💾 Atualizar acesso</button>
+      <div class="muted" style="margin-top:8px">A alteração do email pode pedir confirmação por email.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🗑️ Eliminar período</div>
+      <div class="muted" style="margin:6px 0 10px">Apaga um período e <b>todos</b> os seus dados. Pede <b>confirmação dupla</b> (aviso + escrever “APAGAR”) para não apagares sem querer.</div>
+      ${edicoes.length? edicoes.map(e=>`<div class="sem-check"><span style="flex:1"><b>${esc(e.nome)}</b>${e.ano?(' · '+e.ano):''}</span><button class="btn-sm btn-del" onclick="eliminarEdicao('${e.id}')">🗑️ Eliminar</button></div>`).join('') : '<div class="muted">Sem períodos.</div>'}
+    </div>
+    <div class="card"><div class="card-title">☁️ Cloud</div>
+      <div class="muted" style="margin:6px 0 10px">Estado: ${modoLocal?'Local (só neste dispositivo)':(CLOUD_ON()?'Ligado à cloud':'Sem ligação')}</div>
+      <button class="btn-sm btn-neutral" onclick="hidratarCloud().then(()=>{toast('Sincronizado.');renderDefinicoes();})">🔄 Sincronizar agora</button>
+    </div>`;
+}
+function guardarCfg(){ const c=getCfg(); c.emailEnvio=$('cf-envio').value.trim(); c.emailNotif=$('cf-notif').value.trim(); c.emailDrive=$('cf-drive').value.trim(); setCfg(c); toast('Emails guardados.'); }
+function carregarLogo(input){ const f=input.files&&input.files[0]; if(!f) return; if(f.size>2*1024*1024){ toast('Imagem muito grande (máx ~2 MB).',false); input.value=''; return; } const rd=new FileReader(); rd.onload=e=>{ const c=getCfg(); c.logo=e.target.result; setCfg(c); toast('Logótipo guardado.'); renderDefinicoes(); }; rd.readAsDataURL(f); }
+function guardarAssoc(){ const c=getCfg(); const a=$('cf-assoc'); if(a) c.assocNome=a.value.trim()||"ARCA d'Ajuda"; const m=$('cf-morada'); if(m)c.assocMorada=m.value.trim(); const n=$('cf-nif'); if(n)c.assocNif=n.value.trim(); const ct=$('cf-contacto'); if(ct)c.assocContacto=ct.value.trim(); setCfg(c); toast('Guardado.'); renderDefinicoes(); }
+function removerLogo(){ const c=getCfg(); c.logo=''; setCfg(c); toast('Logótipo removido.'); renderDefinicoes(); }
+async function atualizarConta(){
+  if(modoLocal || !CLOUD_ON()){ toast('Entra numa conta primeiro.',false); return; }
+  const email=$('ac-email').value.trim(), pass=$('ac-pass').value; const body={}; if(email) body.email=email; if(pass) body.password=pass;
+  if(!body.email && !body.password){ toast('Nada para alterar.',false); return; }
+  try{ await fetch(`${SUPA_URL}/auth/v1/user`,{ method:'PUT', headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+supaSession.access_token}, body:JSON.stringify(body) }).then(async r=>{ const j=await r.json(); if(!r.ok) throw new Error(j.msg||j.error_description||'Falha.'); return j; });
+    toast('Acesso atualizado.'); renderDefinicoes();
+  }catch(e){ toast(e.message||'Falha ao atualizar.',false); }
+}
+
+/* ============================================================
+   MODAL genérico
+   ============================================================ */
+function modal(title, bodyHTML, botoes){
+  $('ov-title').textContent=title; $('ov-body').innerHTML=bodyHTML;
+  const foot=$('ov-foot'); foot.innerHTML='';
+  (botoes||[]).filter(Boolean).forEach(b=>{ const btn=document.createElement('button'); btn.className='btn-sm '+(b.cls||'btn-neutral'); btn.textContent=b.txt; btn.onclick=b.fn; foot.appendChild(btn); });
+  const cancel=document.createElement('button'); cancel.className='btn-sm btn-neutral'; cancel.textContent='Cancelar'; cancel.onclick=fecharModal; foot.appendChild(cancel);
+  $('ov').classList.add('open');
+}
+function fecharModal(){ $('ov').classList.remove('open'); _modalCriancaNovo=false; }
+// clicar fora NÃO fecha (evita perder o que se está a escrever) — só fecha no × ou em Cancelar
+$('ov').addEventListener('click', e=>{ if(e.target.id==='ov'){ const t=$('toast'); t.textContent='Usa "Cancelar" ou o × para fechar (assim não perdes o que escreveste).'; t.className='show'; clearTimeout(_toastT); _toastT=setTimeout(()=>t.className='',2600); } });
+</script>
+</body>
+</html>
