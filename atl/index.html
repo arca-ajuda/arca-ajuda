@@ -230,7 +230,7 @@
       <button data-tab="documentos" onclick="showTab('documentos')">📄 Documentos</button>
     </nav>
     <div class="side-foot">
-      <span id="cloud-pill">•</span>
+      <span id="cloud-pill" title="Estado da cloud — clica para sincronizar" style="cursor:pointer" onclick="marcaCloud(null);hidratarCloud().then(ok=>toast(ok===false?'Sem ligação à cloud — verifica a internet.':'Sincronizado.', ok!==false))">•</span>
       <button class="side-mini" onclick="showTab('definicoes')">⚙️ Definições</button>
       <button class="side-mini" onclick="sair()">Sair</button>
     </div>
@@ -308,13 +308,29 @@ async function supaSignup(email, password){
   if(!res.ok) throw new Error(data.error_description||data.msg||data.error||'Não foi possível criar a conta.');
   if(data.access_token){ supaSession=data; LS.set('atl_supa_session', supaSession); } return data;
 }
-async function supaFetch(path, method='GET', body=null, extra=null){
+// renova o acesso com o refresh_token (a sessão expira ~1h) — evita "Sem ligação" com sessão iniciada
+let _refreshing=null;
+async function supaRefresh(){
+  const rt = supaSession && supaSession.refresh_token; if(!rt) return false;
+  if(_refreshing) return _refreshing;
+  _refreshing = (async()=>{
+    try{ const res=await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`,{ method:'POST', headers:{'Content-Type':'application/json','apikey':SUPA_KEY}, body:JSON.stringify({refresh_token:rt}) });
+      const data=await res.json(); if(res.ok && data.access_token){ supaSession=data; LS.set('atl_supa_session', supaSession); return true; } }
+    catch(e){ console.warn('refresh',e); }
+    return false;
+  })();
+  const ok=await _refreshing; _refreshing=null; return ok;
+}
+async function supaFetch(path, method='GET', body=null, extra=null, _retry){
   const headers={'apikey':SUPA_KEY,'Content-Type':'application/json'};
   headers['Authorization']='Bearer '+((supaSession&&supaSession.access_token)||SUPA_KEY);
   if(method!=='GET') headers['Prefer']='return=representation';
   if(extra) Object.assign(headers, extra);
   const opts={method,headers}; if(body) opts.body=JSON.stringify(body);
   const res=await fetch(`${SUPA_URL}/rest/v1/${path}`, opts);
+  if((res.status===401||res.status===403) && !_retry && supaSession && supaSession.refresh_token){
+    if(await supaRefresh()) return supaFetch(path, method, body, extra, true);
+  }
   const text=await res.text(); if(!res.ok) throw new Error(text||('Erro '+res.status));
   return text?JSON.parse(text):null;
 }
@@ -329,11 +345,11 @@ function cloudApagar(chave){ if(!CLOUD_ON()) return; _fila=_fila.then(()=>supaFe
 function save(k,v){ LS.set(k,v); if(ehChaveAtl(k)) cloudGuardar(k,v); }
 function del(k){ LS.del(k); if(ehChaveAtl(k)) cloudApagar(k); }
 async function hidratarCloud(){
-  if(!CLOUD_ON()){ marcaCloud(null); return; }
-  let rows; try{ rows = await supaFetch('atl_dados?select=chave,valor'); }catch(e){ console.warn('cloud ler',e); marcaCloud(false); return; }
+  if(!CLOUD_ON()){ marcaCloud(null); return false; }
+  let rows; try{ rows = await supaFetch('atl_dados?select=chave,valor'); }catch(e){ console.warn('cloud ler',e); marcaCloud(false); return false; }
   if(rows && rows.length){ rows.forEach(r=>{ try{ localStorage.setItem(r.chave, JSON.stringify(r.valor)); }catch(e){} }); }
   else{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(ehChaveAtl(k)){ try{ cloudGuardar(k, JSON.parse(localStorage.getItem(k))); }catch(e){} } } }
-  marcaCloud(true);
+  marcaCloud(true); return true;
 }
 function marcaCloud(state){ const p=$('cloud-pill'); if(!p) return;
   if(modoLocal){ p.textContent='📴 Local'; return; }
@@ -578,7 +594,7 @@ function loginMsg(m, ok){ const el=$('login-msg'); el.textContent=m||''; el.styl
 
 async function entrarApp(){
   $('login-screen').style.display='none'; $('app').style.display='flex';
-  marcaCloud(null); await hidratarCloud();
+  marcaCloud(null); if(CLOUD_ON() && supaSession.refresh_token){ await supaRefresh(); } await hidratarCloud();
   if(LS.get('atl_documentos')===null) setDocs(docsDefault());
   edicoes = LS.get('atl_edicoes') || []; edicaoAtiva = LS.get('atl_edicao_ativa') || null;
   if(!edicaoAtiva && edicoes.length) edicaoAtiva = edicoes[0].id;
@@ -745,11 +761,7 @@ function renderDashboard(){
       <div class="card-head"><div class="card-title">${ed?esc(ed.nome):'ATL'}</div><div class="muted">${modoAno()?`Soma de ${edicoes.length} período(s) do ano`:(ed&&ed.dataInicio?`${ed.dataInicio} → ${ed.dataFim} · ${nSem} semanas · ${nDias} dias úteis`:'Sem datas definidas — edita o período')}</div></div>
       <div style="max-width:340px;margin:0 auto"><canvas id="ch-rv" height="200"></canvas></div>
     </div>
-    <div class="card"><div class="card-title" style="margin-bottom:8px">Atalhos</div>
-      <div class="seg">
-        <button onclick="editarPeriodoAtual()">✏️ Editar período</button>
-      </div>
-    </div>`;
+    `;
   try{ if(chartRV) chartRV.destroy();
     chartRV = new Chart($('ch-rv'), { type:'doughnut', data:{ labels:['Recebido','Pendente','Despesas'], datasets:[{ data:[t.totPago, t.pendente, t.totDesp], backgroundColor:['#1D9E75','#BA7517','#D85A30'], borderWidth:0 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{size:11}}}} } });
   }catch(e){}
@@ -2216,8 +2228,8 @@ function renderDefinicoes(){
       ${edicoes.length? edicoes.map(e=>`<div class="sem-check"><span style="flex:1"><b>${esc(e.nome)}</b>${e.ano?(' · '+e.ano):''}</span><button class="btn-sm btn-del" onclick="eliminarEdicao('${e.id}')">🗑️ Eliminar</button></div>`).join('') : '<div class="muted">Sem períodos.</div>'}
     </div>
     <div class="card"><div class="card-title">☁️ Cloud</div>
-      <div class="muted" style="margin:6px 0 10px">Estado: ${modoLocal?'Local (só neste dispositivo)':(CLOUD_ON()?'Ligado à cloud':'Sem ligação')}</div>
-      <button class="btn-sm btn-neutral" onclick="hidratarCloud().then(()=>{toast('Sincronizado.');renderDefinicoes();})">🔄 Sincronizar agora</button>
+      <div class="muted" style="margin:6px 0 10px">${modoLocal?'Estado: <b>Local</b> (só neste dispositivo). Entra com a conta para sincronizar entre dispositivos.':(CLOUD_ON()?'Estado: <b>Ligado à cloud</b> com a conta <b>'+esc((supaSession&&supaSession.user&&supaSession.user.email)||'')+'</b>. A “cloud” é a tua conta (o teu login), não a Google Drive — os dados sincronizam automaticamente entre dispositivos que entrem com esta conta.':'Estado: Sem sessão iniciada.')}</div>
+      <button class="btn-sm btn-neutral" onclick="hidratarCloud().then(ok=>{toast(ok===false?'Não consegui sincronizar — verifica a internet e volta a tentar.':'Sincronizado.', ok!==false);renderDefinicoes();})">🔄 Sincronizar agora</button>
     </div>`;
 }
 function guardarCfg(){ const c=getCfg(); c.emailEnvio=$('cf-envio').value.trim(); c.emailNotif=$('cf-notif').value.trim(); c.emailDrive=$('cf-drive').value.trim(); setCfg(c); toast('Emails guardados.'); }
