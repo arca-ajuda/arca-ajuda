@@ -549,7 +549,7 @@ tbody tr:hover td{background:#F5F9FF}
         <option value="HONORÁRIO">Honorário</option>
         <option value="BENEMÉRITO">Benemérito</option>
       </select>
-      <input type="text" class="filter-input" id="sf-busca" placeholder="Pesquisar nome, NIF, email..." oninput="renderSociosList()" style="min-width:200px">
+      <input type="search" name="pesquisa-lista-socios" autocomplete="off" autocorrect="off" spellcheck="false" class="filter-input" id="sf-busca" placeholder="Pesquisar nome, NIF, email..." oninput="renderSociosList()" style="min-width:200px">
       <span id="sf-contagem" style="margin-left:auto;font-size:12.5px;font-weight:700;color:#1B4570;background:#E6F1FB;padding:6px 12px;border-radius:20px;white-space:nowrap">—</span>
       <button class="btn-secondary" onclick="toggleResumoSocios()" id="btn-resumo-socios" title="Ver quantos sócios há por tipo e estado">📊 Contagem</button>
     </div>
@@ -567,7 +567,7 @@ tbody tr:hover td{background:#F5F9FF}
     <div class="card" style="margin-bottom:14px">
       <div class="card-title">Seleciona o sócio para gerar o cartão</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <input type="text" id="cartao-busca" class="filter-input" placeholder="Nome ou nº do sócio..." oninput="filterCartaoSocio()" style="flex:1;min-width:200px">
+        <input type="search" name="pesquisa-cartao-socio" autocomplete="off" autocorrect="off" spellcheck="false" id="cartao-busca" class="filter-input" placeholder="Nome ou nº do sócio..." oninput="filterCartaoSocio()" style="flex:1;min-width:200px">
         <select id="cartao-socio-sel" onchange="renderCartaoSocio()" style="flex:1;min-width:200px;padding:8px 10px;border:var(--border);border-radius:var(--radius);background:var(--bg);font-size:13px">
           <option value="">-- Seleciona --</option>
         </select>
@@ -610,7 +610,7 @@ tbody tr:hover td{background:#F5F9FF}
       <div class="card-title">Verificar sócio por QR Code ou número</div>
       <div style="font-size:13px;color:var(--text-2);margin-bottom:14px">Insere o número do sócio ou o código do QR para verificar o estado das quotas em tempo real.</div>
       <div style="display:flex;gap:8px;margin-bottom:16px">
-        <input type="text" id="verificar-input" placeholder="Nº do sócio ou código QR..." class="filter-input" style="flex:1" onkeydown="if(event.key==='Enter')verificarSocio()">
+        <input type="search" name="verificar-codigo-socio" autocomplete="off" autocorrect="off" spellcheck="false" id="verificar-input" placeholder="Nº do sócio ou código QR..." class="filter-input" style="flex:1" onkeydown="if(event.key==='Enter')verificarSocio()">
         <button class="btn-primary" onclick="verificarSocio()">Verificar</button>
       </div>
       <div id="verificar-resultado"></div>
@@ -691,6 +691,12 @@ tbody tr:hover td{background:#F5F9FF}
           <select id="s-estado"><option>ATIVO</option><option>INATIVO</option><option>ATENÇÃO</option><option>FALECEU</option></select>
         </div>
         <div class="form-group"><label>Modalidade / Obs.</label><input type="text" id="s-obs" placeholder="Ex: Atleta Atletismo"></div>
+      </div>
+      <div class="form-group" style="margin-top:6px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--amber-l);border:0.5px solid #E8CFA3;border-radius:var(--radius);padding:9px 12px;font-weight:500">
+          <input type="checkbox" id="s-isento" style="width:16px;height:16px;cursor:pointer"> 🎗️ Isento de quotas (isenção individual, decidida pela Direção)
+        </label>
+        <div style="font-size:11px;color:var(--text-3);margin-top:4px;line-height:1.5">Nota: sócios de tipos isentos (regra em Configurações → Quotas) ficam isentos automaticamente, sem precisar desta marca.</div>
       </div>
       <div class="form-group" style="margin-top:6px">
         <label>Preferências de contacto</label>
@@ -9761,7 +9767,12 @@ function renderSociosList(){
   if(cont){ const filtrado=(fE||fS||fT||fB); cont.textContent = filtrado ? `${ms.length} de ${socios.length} sócios` : `${socios.length} sócios`; }
   if(document.getElementById('socios-resumo')?.style.display!=='none') renderResumoSocios();
   const el=document.getElementById('tabela-socios');
-  if(!ms.length){el.innerHTML='<div class="empty-state"><p>Nenhum sócio encontrado.</p></div>';return;}
+  if(!ms.length){
+    const busca=(document.getElementById('sf-busca')?.value||'').trim();
+    const bSafe=busca.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    el.innerHTML='<div class="empty-state"><p>Nenhum sócio encontrado'+(busca?` para a pesquisa "<b>${bSafe}</b>`+'"':'')+'.</p>'+((fE||fS||fT||busca)?'<p style="margin-top:8px"><a href="#" onclick="limparFiltrosSocios();return false" style="color:#1B4570;font-weight:600">Limpar filtros e pesquisa</a></p>':'')+'</div>';
+    return;
+  }
   const sB=s=>{const c={'EM DIA':'#085041','VENCIDO':'#712B13','A TERMINAR':'#633806','ISENTO':'#1B4570'}[s]||'var(--text-2)';const bg={'EM DIA':'#E1F5EE','VENCIDO':'#FAECE7','A TERMINAR':'#FAEEDA','ISENTO':'#DCE7F0'}[s]||'var(--bg2)';return `<span style="background:${bg};color:${c};padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;display:inline-block;line-height:1.4">${s||'—'}</span>`;};
   const eB=e=>{const c={'ATIVO':'var(--teal-d)','INATIVO':'var(--text-3)','ATENÇÃO':'var(--amber)','FALECEU':'var(--coral-d)'}[e]||'var(--text-2)';return `<span style="color:${c};font-weight:500;font-size:12px">${e||'—'}</span>`;};
   el.innerHTML=`<table><thead><tr><th>Nº</th><th>Nome</th><th>Tipo</th><th>Estado</th><th>Situação</th><th>Telemóvel</th><th>Email</th><th>Obs.</th><th></th></tr></thead><tbody>${ms.map(s=>{
@@ -10041,6 +10052,7 @@ function openModalSocio(){
   document.getElementById('s-num').value=nextNumSocio();
   const _ae=document.getElementById('s-aceita-email');if(_ae)_ae.checked=false;
   const _as=document.getElementById('s-aceita-sms');if(_as)_as.checked=false;
+  const _is=document.getElementById('s-isento');if(_is)_is.checked=false;
   ['s-nome','s-nif','s-tel','s-morada','s-cp','s-email','s-quota','s-obs'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   document.getElementById('s-tipo').value='EFETIVO';
   document.getElementById('s-sexo').value='M';
@@ -10066,6 +10078,7 @@ function editSocio(id){
   document.getElementById('s-email').value=s.email||'';
   document.getElementById('s-quota').value=s.quota||'';
   document.getElementById('s-obs').value=s.obs||'';
+  const _isE=document.getElementById('s-isento');if(_isE)_isE.checked=(s.isento===true);
   document.getElementById('s-tipo').value=s.tipo||'EFETIVO';
   document.getElementById('s-sexo').value=s.sexo||'M';
   document.getElementById('s-estado').value=s.estado||'ATIVO';
@@ -10105,7 +10118,8 @@ async function saveSocio(){
   if(dp&&periodo&&!vq){const v=calcValidadeQuota(dp,periodo);if(v)vq=v.toISOString().slice(0,10);}
   const tipo=document.getElementById('s-tipo').value;
   const numAtual=parseInt(document.getElementById('s-num').value)||null;
-  const isento=tipoEIsento(tipo) || (numAtual!==null && numsEmDireccaoIsentos().has(numAtual));
+  const isentoManual=document.getElementById('s-isento')?.checked===true;
+  const isento=isentoManual || tipoEIsento(tipo) || (numAtual!==null && numsEmDireccaoIsentos().has(numAtual));
   let sit;
   if(isento){ sit='ISENTO'; }
   else if(vq){ sit=getSituacaoFromValidade(new Date(vq+'T12:00:00')); }
