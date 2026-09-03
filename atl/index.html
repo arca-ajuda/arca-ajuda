@@ -143,6 +143,7 @@
   .overlay{position:fixed;inset:0;background:rgba(15,30,26,.5);display:none;align-items:flex-start;justify-content:center;padding:24px 14px;z-index:200;overflow-y:auto}
   .overlay.open{display:flex}
   body.modal-aberto{overflow:hidden}
+  #cloud-banner{position:fixed;top:0;left:0;right:0;z-index:300;background:#C0392B;color:#fff;text-align:center;font-weight:800;font-size:13px;padding:9px 14px;line-height:1.35;box-shadow:0 2px 10px rgba(0,0,0,.28)}
   .modal{background:var(--card);border-radius:16px;width:100%;max-width:600px;box-shadow:0 24px 60px rgba(0,0,0,.3);margin:auto}
   .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:var(--border)}
   .modal-head .t{font-size:16px;font-weight:700}
@@ -215,12 +216,12 @@
     <label>Palavra-passe</label>
     <input type="password" id="lg-pass" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
     <button class="btn btn-primary" onclick="fazerLogin()">Entrar</button>
-    <button class="btn btn-ghost" onclick="criarConta()">Criar conta</button>
-    <button class="btn-link" onclick="usarLocal()">Usar sem conta (só neste dispositivo)</button>
     <div id="login-msg"></div>
+    <div class="muted" style="margin-top:14px;font-size:12px;text-align:center;line-height:1.5">Entra sempre com a <b>conta da associação</b> para os dados ficarem guardados e sincronizados em todos os computadores.</div>
   </div>
 </div>
 
+<div id="cloud-banner" style="display:none">⚠️ SEM LIGAÇÃO À CONTA — as alterações podem NÃO estar a ser guardadas nem sincronizadas. Verifica a internet e recarrega (Ctrl+F5).</div>
 <div id="app">
   <aside id="side">
     <div class="brand">☀️ ATL ARCAKIDS</div>
@@ -311,7 +312,7 @@ function toast(msg, ok=true){ const t=$('toast'); t.textContent=msg; t.className
 
 /* ---------- Supabase auth ---------- */
 let supaSession = LS.get('atl_supa_session');
-let modoLocal = LS.get('atl_modo_local') || false;
+let modoLocal = false; try{ LS.del('atl_modo_local'); }catch(e){}
 async function supaAuthLogin(email, password){
   const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`,{ method:'POST', headers:{'Content-Type':'application/json','apikey':SUPA_KEY}, body: JSON.stringify({email,password}) });
   const data = await res.json();
@@ -367,7 +368,8 @@ async function hidratarCloud(){
   else{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(ehChaveAtl(k)){ try{ cloudGuardar(k, JSON.parse(localStorage.getItem(k))); }catch(e){} } } }
   marcaCloud(true); return true;
 }
-function marcaCloud(state){ const p=$('cloud-pill'); if(!p) return;
+function marcaCloud(state){ const b=$('cloud-banner'); if(b) b.style.display=(state===false)?'block':'none';
+  const p=$('cloud-pill'); if(!p) return;
   if(modoLocal){ p.textContent='📴 Local'; return; }
   p.textContent = state===true?'☁️ Ligado':state===false?'⚠️ Sem ligação':'☁️ …';
 }
@@ -686,7 +688,7 @@ function mesesPeriodo(){ return mesesDe(getEdicao()); }
    ============================================================ */
 window.addEventListener('DOMContentLoaded', ()=>{
   if(location.hash.indexOf('inscricao')>=0){ arrancarPublico(); return; }   // link dos pais → página pública autónoma
-  if((supaSession && supaSession.access_token) || modoLocal){ entrarApp(); }
+  if(supaSession && supaSession.access_token){ entrarApp(); }
 });
 async function fazerLogin(){
   const email=$('lg-email').value.trim(), pass=$('lg-pass').value;
@@ -1479,8 +1481,8 @@ async function enviarInscricaoPublica(){
     resp, parentesco:$('c-parent').value, tel, email:$('c-email').value.trim(), emergencia:$('c-emerg').value.trim(),
     dataInscricao:hoje(), avulsoDias:_cCur.avulsoDias||[], semanasSel:_cCur.semanasSel||[], mesesSel:[], autorizados:lerAutorizados(),
     atleta:!!_cCur.atleta, temIrmao:!!_cCur.temIrmao, valor:calcValor(_cCur), anexos:{comprovativo,ccFrente,ccVerso} };
-  try{ await supaFetch('atl_preinscricoes','POST',{ edicao_id:(_cfgPublico&&_cfgPublico.edicaoId)||'', dados:obj, estado:'pendente' }); }
-  catch(e){ console.warn('enviar pré',e); toast('Falha ao enviar. Verifica a ligação à internet e tenta novamente.',false); return; }
+  try{ await supaFetch('atl_preinscricoes','POST',{ edicao_id:(_cfgPublico&&_cfgPublico.edicaoId)||'', dados:obj, estado:'pendente' }, {'Prefer':'return=minimal'}); }
+  catch(e){ console.warn('enviar pré',e); toast('Falha ao enviar'+((e&&e.message)?(': '+String(e.message).replace(/\s+/g,' ').slice(0,140)):'.')+' — se continuar, avisa a coordenação.',false); return; }
   $('pub').innerHTML=`<div class="pub-wrap">${pubHero('')}<div class="pub-card" style="text-align:center"><div style="font-size:52px;line-height:1">✅</div><h2>Inscrição enviada!</h2><p>Recebemos a inscrição de <b>${esc(nome)}</b>. A coordenação vai validar os dados e os descontos e entrará em contacto.</p><p class="muted">Obrigado! Já podes fechar esta página.</p></div></div>`;
 }
 /* ---------- coordenação: publicar a página pública e ler pré-inscrições da cloud ---------- */
