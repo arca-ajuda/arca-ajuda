@@ -407,6 +407,16 @@ function driveGetToken(interactive){
     try{ tc.requestAccessToken({prompt: interactive?'consent':''}); }catch(e){ reject(e); }
   });
 }
+// religa a Drive automaticamente (sem pedir nada) se já foi autorizada antes e há sessão Google ativa
+async function driveAutoReligar(tent){
+  tent=tent||0; const cfg=getCfg();
+  if(!cfg.driveAuto || !(cfg.driveClientId||'').trim()) return;   // Drive não configurada
+  if(driveLigada()){ atualizaDriveAviso(); return; }              // já ligada
+  if(!(window.google&&google.accounts&&google.accounts.oauth2)){  // biblioteca da Google ainda a carregar
+    if(tent<20) setTimeout(()=>driveAutoReligar(tent+1), 500); return; }
+  try{ await driveGetToken(false); _drivePendente=false; atualizaDriveAviso(); const el=$('drive-estado'); if(el) el.textContent='✅ Google Drive ligada nesta sessão.'; }
+  catch(e){ /* 1ª vez ou sem sessão Google → mantém o aviso para ligar à mão */ }
+}
 async function driveFetch(path, method='GET', body){
   const res=await fetch('https://www.googleapis.com'+path,{method,headers:{Authorization:'Bearer '+_driveTok,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
   const j=await res.json().catch(()=>({})); if(!res.ok) throw new Error((j.error&&j.error.message)||('Drive '+res.status)); return j;
@@ -465,7 +475,7 @@ async function driveBackupTudo(){
 let _driveAutoT=null;
 function driveAutoBackup(){
   if(!getCfg().driveAuto) return;
-  if(!driveLigada()){ _drivePendente=true; atualizaDriveAviso(); return; } // expirou/desligou → avisa para religar
+  if(!driveLigada()){ driveGetToken(false).then(()=>{ _drivePendente=false; atualizaDriveAviso(); driveAutoBackup(); }).catch(()=>{ _drivePendente=true; atualizaDriveAviso(); }); return; } // expirou → tenta religar em silêncio; se não der, avisa
   if(modoAno()||!edicaoAtiva) return;
   clearTimeout(_driveAutoT);
   _driveAutoT=setTimeout(async()=>{ try{ const rootId=await driveFolder('ATL ARCAKIDS','root'); const ed=getEdicao(); if(ed&&ed.id) await driveBackupEdicao(rootId, ed, false); LS.set('atl_drive_ultima', Date.now()); _drivePendente=false; atualizaDriveAviso(); }catch(e){ console.warn('auto drive',e); _drivePendente=true; atualizaDriveAviso(); } }, 6000);
@@ -747,7 +757,7 @@ async function entrarApp(){
   if(!edicaoAtiva && edicoes.length) edicaoAtiva = edicoes[0].id;
   // alinhar o ano do menu com a edição ativa (ou o ano mais recente)
   { const ea=edicoes.find(e=>e.id===edicaoAtiva); if(ea&&ea.ano) anoFiltro=String(ea.ano); else if(!anoFiltro) anoFiltro = anosDisponiveis()[0]||String(new Date().getFullYear()); }
-  popularEdicoes(); showTab('dashboard'); initAjudaFab(); atualizaDriveAviso();
+  popularEdicoes(); showTab('dashboard'); initAjudaFab(); atualizaDriveAviso(); driveAutoReligar();
   carregarPreInscricoesCloud();
   verificarFimMes();
 }
