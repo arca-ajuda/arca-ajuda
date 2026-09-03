@@ -326,14 +326,16 @@ async function supaSignup(email, password){
   if(data.access_token){ supaSession=data; LS.set('atl_supa_session', supaSession); } return data;
 }
 // renova o acesso com o refresh_token (a sessão expira ~1h) — evita "Sem ligação" com sessão iniciada
-let _refreshing=null;
+let _refreshing=null, _sessaoMorta=false, _ultimoErroCloud='';
 async function supaRefresh(){
-  const rt = supaSession && supaSession.refresh_token; if(!rt) return false;
+  const rt = supaSession && supaSession.refresh_token; if(!rt){ _sessaoMorta=true; return false; }
   if(_refreshing) return _refreshing;
   _refreshing = (async()=>{
     try{ const res=await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`,{ method:'POST', headers:{'Content-Type':'application/json','apikey':SUPA_KEY}, body:JSON.stringify({refresh_token:rt}) });
-      const data=await res.json(); if(res.ok && data.access_token){ supaSession=data; LS.set('atl_supa_session', supaSession); return true; } }
-    catch(e){ console.warn('refresh',e); }
+      const data=await res.json();
+      if(res.ok && data.access_token){ supaSession=data; LS.set('atl_supa_session', supaSession); _sessaoMorta=false; return true; }
+      if(res.status===400 || res.status===401 || res.status===403){ _sessaoMorta=true; _ultimoErroCloud='sessão expirada ('+res.status+')'; } }   // servidor recusou o refresh → sessão morta
+    catch(e){ console.warn('refresh',e); _ultimoErroCloud='sem rede'; }   // erro de rede → NÃO é sessão morta
     return false;
   })();
   const ok=await _refreshing; _refreshing=null; return ok;
@@ -356,19 +358,21 @@ function ehChaveAtl(k){ return typeof k==='string' && k.indexOf('atl_')===0 && k
 let _fila = Promise.resolve();
 function cloudGuardar(chave, valor){
   if(!CLOUD_ON()) return;
-  _fila = _fila.then(()=>supaFetch('atl_dados','POST',{chave, valor, atualizado_em:new Date().toISOString()},{'Prefer':'resolution=merge-duplicates'})).then(()=>marcaCloud(true)).catch(e=>{ console.warn('cloud guardar',chave,e); marcaCloud(false); });
+  _fila = _fila.then(()=>supaFetch('atl_dados','POST',{chave, valor, atualizado_em:new Date().toISOString()},{'Prefer':'resolution=merge-duplicates'})).then(()=>marcaCloud(true)).catch(e=>{ console.warn('cloud guardar',chave,e); _ultimoErroCloud=(e&&e.message)||_ultimoErroCloud; marcaCloud(false); });
 }
 function cloudApagar(chave){ if(!CLOUD_ON()) return; _fila=_fila.then(()=>supaFetch('atl_dados?chave=eq.'+encodeURIComponent(chave),'DELETE')).catch(e=>console.warn('cloud apagar',chave,e)); }
 function save(k,v){ LS.set(k,v); if(ehChaveAtl(k)) cloudGuardar(k,v); }
 function del(k){ LS.del(k); if(ehChaveAtl(k)) cloudApagar(k); }
 async function hidratarCloud(){
   if(!CLOUD_ON()){ marcaCloud(null); return false; }
-  let rows; try{ rows = await supaFetch('atl_dados?select=chave,valor'); }catch(e){ console.warn('cloud ler',e); marcaCloud(false); return false; }
+  let rows; try{ rows = await supaFetch('atl_dados?select=chave,valor'); }catch(e){ console.warn('cloud ler',e); _ultimoErroCloud=(e&&e.message)||_ultimoErroCloud; marcaCloud(false); return false; }
   if(rows && rows.length){ rows.forEach(r=>{ try{ localStorage.setItem(r.chave, JSON.stringify(r.valor)); }catch(e){} }); }
   else{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(ehChaveAtl(k)){ try{ cloudGuardar(k, JSON.parse(localStorage.getItem(k))); }catch(e){} } } }
   marcaCloud(true); return true;
 }
-function marcaCloud(state){ const b=$('cloud-banner'); if(b) b.style.display=(state===false)?'block':'none';
+function marcaCloud(state){ const b=$('cloud-banner');
+  if(b){ b.style.display=(state===false)?'block':'none';
+    if(state===false){ b.innerHTML='⚠️ SEM LIGAÇÃO À CONTA — as alterações podem NÃO estar a ser guardadas. '+(_ultimoErroCloud?('<span style="opacity:.85">('+String(_ultimoErroCloud).replace(/[<>]/g,'').slice(0,90)+')</span> '):'')+'Verifica a internet ou <b>entra outra vez</b>.'; } }
   const p=$('cloud-pill'); if(!p) return;
   if(modoLocal){ p.textContent='📴 Local'; return; }
   p.textContent = state===true?'☁️ Ligado':state===false?'⚠️ Sem ligação':'☁️ …';
@@ -709,9 +713,35 @@ async function criarConta(){
 function usarLocal(){ modoLocal=true; LS.set('atl_modo_local', true); entrarApp(); }
 function loginMsg(m, ok){ const el=$('login-msg'); el.textContent=m||''; el.style.color = ok===false?'#C0392B':(ok===true?'#173F72':'#5C6B70'); }
 
+let _religarTimer=null;
+function sessaoExpirou(){
+  if(_religarTimer){ clearInterval(_religarTimer); _religarTimer=null; }
+  try{ LS.del('atl_supa_session'); }catch(e){} supaSession=null; _sessaoMorta=false;
+  const b=$('cloud-banner'); if(b) b.style.display='none';
+  document.body.classList.remove('modal-aberto');
+  const app=$('app'); if(app) app.style.display='none';
+  const ls=$('login-screen'); if(ls) ls.style.display='flex';
+  loginMsg('A tua sessão expirou por segurança. Escreve a palavra-passe e entra outra vez — os teus dados estão guardados.', false);
+}
+async function ligarCloudComRetries(){
+  if(!CLOUD_ON()){ marcaCloud(null); return false; }
+  if(supaSession && supaSession.refresh_token){ await supaRefresh(); }   // renova já no arranque
+  for(let i=0;i<3;i++){ if(await hidratarCloud()) return true; if(_sessaoMorta) break; await new Promise(r=>setTimeout(r,800)); }
+  if(_sessaoMorta){ sessaoExpirou(); return false; }   // refresh_token recusado → pedir novo login em vez de barra eterna
+  // ainda falhou (provável falta de rede): continuar a tentar sozinho em segundo plano
+  if(!_religarTimer){
+    _religarTimer=setInterval(async()=>{
+      if(!CLOUD_ON()){ clearInterval(_religarTimer); _religarTimer=null; return; }
+      if(supaSession && supaSession.refresh_token){ await supaRefresh(); }
+      if(_sessaoMorta){ clearInterval(_religarTimer); _religarTimer=null; sessaoExpirou(); return; }
+      if(await hidratarCloud()){ clearInterval(_religarTimer); _religarTimer=null; toast('Ligação à conta reposta. ✅'); if(tabAtual==='criancas') carregarPreInscricoesCloud(); }
+    }, 6000);
+  }
+  return false;
+}
 async function entrarApp(){
   $('login-screen').style.display='none'; $('app').style.display='flex';
-  marcaCloud(null); if(CLOUD_ON() && supaSession.refresh_token){ await supaRefresh(); } await hidratarCloud();
+  _sessaoMorta=false; marcaCloud(null); await ligarCloudComRetries();
   if(LS.get('atl_documentos')===null) setDocs(docsDefault());
   edicoes = LS.get('atl_edicoes') || []; edicaoAtiva = LS.get('atl_edicao_ativa') || null;
   if(!edicaoAtiva && edicoes.length) edicaoAtiva = edicoes[0].id;
