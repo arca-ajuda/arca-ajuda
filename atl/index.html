@@ -487,7 +487,7 @@ function precosDefault(){
   return {
     inscricoes:[ {id:uid(), label:'1 dia (avulso)', semanas:0, avulso:true, preco:0, descontoArca:0}, ...packs ],
     precoMes:0, descontoArcaMes:0, descontoAtletaSemana:0,
-    descontoIrmao:{tipo:'€', valor:0},
+    descontoIrmao:{tipo:'€/semana', valor:0},
     campanhas:[],
     atividades:['Piscina','IlhaPark','Museu','Canoagem'].map(n=>({id:uid(),nome:n,preco:0})),
     alimentacaoDiaria:{almoco:0, lancheManha:0, lancheTarde:0},
@@ -500,7 +500,7 @@ function normalizaPrecos(p){
   p.inscricoes.forEach(x=>{ if(!x.id) x.id=uid(); if(x.descontoArca==null) x.descontoArca=0; });
   if(p.precoMes==null) p.precoMes=0; if(p.descontoArcaMes==null) p.descontoArcaMes=0;
   if(p.descontoAtletaSemana==null){ const one=(p.inscricoes||[]).find(x=>!x.avulso&&+x.semanas===1); p.descontoAtletaSemana = one?(+one.descontoArca||0):0; }
-  if(!p.descontoIrmao||typeof p.descontoIrmao!=='object') p.descontoIrmao={tipo:'€', valor:(p.descontoIrmaos||0)};
+  if(!p.descontoIrmao||typeof p.descontoIrmao!=='object') p.descontoIrmao={tipo:'€/semana', valor:(p.descontoIrmaos||0)};
   if(!Array.isArray(p.campanhas)) p.campanhas=[];
   if(!Array.isArray(p.atividades)) p.atividades=precosDefault().atividades;
   if(!p.alimentacaoDiaria||typeof p.alimentacaoDiaria!=='object') p.alimentacaoDiaria={almoco:0,lancheManha:0,lancheTarde:0};
@@ -955,16 +955,14 @@ function renderPrecos(){
         <td class="right"><button class="btn-sm btn-del" onclick="delPacote('${pk.id}')">✕</button></td>
       </tr>`).join('')}
       </tbody></table></div>
-      <div class="fg" style="max-width:380px;margin-top:12px"><label>🏅 Desconto atleta da ARCA d'Ajuda <span class="muted">(€ por cada semana completa)</span></label><input id="pk-atleta" type="number" step="0.01" value="${esc(p.descontoAtletaSemana)}"></div>
-      <div class="muted" style="font-size:12px">Só se aplica a <b>semanas inteiras</b>: 1 semana = este valor, 2 semanas = a dobrar, 3 semanas = o triplo… <b>Dias avulso ou semanas incompletas não têm desconto.</b></div>
     </div>
 
     <div class="card">
-      <div class="card-title">👧👦 Desconto por irmão no ATL</div>
-      <div class="muted" style="margin:6px 0 10px">Aplicado quando a criança tem um irmão a frequentar o ATL ao mesmo tempo.</div>
+      <div class="card-title">🏷️ Descontos — atleta / irmão <span class="muted" style="font-weight:600">(não acumuláveis)</span></div>
+      <div class="muted" style="margin:6px 0 10px">Aplica-se <b>apenas um</b> (o mais vantajoso) — nunca os dois ao mesmo tempo. O valor é o mesmo e conta só por <b>semanas inteiras</b> (1 semana = este valor, 2 semanas = a dobrar, 3 = o triplo…); dias avulso ou semanas incompletas <b>não têm desconto</b>. O desconto por irmão só é válido se o irmão frequentar o ATL <b>no mesmo período</b>.</div>
       <div class="grid2">
-        <div class="fg"><label>Tipo</label><select id="di-tipo">${['€','€/semana','%'].map(t=>`<option ${t===di.tipo?'selected':''}>${t}</option>`).join('')}</select></div>
-        <div class="fg"><label>Valor do desconto <span class="muted">(€/semana = por cada semana inscrita)</span></label><input id="di-valor" type="number" step="0.01" value="${esc(di.valor)}"></div>
+        <div class="fg"><label>🏅 Atleta da ARCA d'Ajuda <span class="muted">(€ por semana completa)</span></label><input id="pk-atleta" type="number" step="0.01" value="${esc(p.descontoAtletaSemana)}"></div>
+        <div class="fg"><label>👧👦 Irmão no ATL <span class="muted">(€ por semana completa)</span></label><input id="di-valor" type="number" step="0.01" value="${esc(di.valor)}"></div>
       </div>
     </div>
 
@@ -1025,7 +1023,7 @@ function lerValoresDoDOM(){
   document.querySelectorAll('[data-pk]').forEach(inp=>{ const pk=p.inscricoes.find(x=>x.id===inp.dataset.pk); if(!pk) return; const f=inp.dataset.f; pk[f]= f==='label'?inp.value : (parseFloat(inp.value)||0); });
   document.querySelectorAll('[data-cm]').forEach(inp=>{ const cm=p.campanhas.find(x=>x.id===inp.dataset.cm); if(!cm) return; const f=inp.dataset.f; if(f==='descontoPct')cm[f]=parseFloat(inp.value)||0; else if(f==='semanas')cm[f]=inp.value===''?'':(+inp.value); else cm[f]=inp.value; });
   document.querySelectorAll('[data-ex]').forEach(inp=>{ const grp=inp.dataset.ex; const a=p[grp].find(x=>x.id===inp.dataset.id); if(!a) return; a[inp.dataset.f]= inp.dataset.f==='preco'?(parseFloat(inp.value)||0):inp.value; });
-  const dt=$('di-tipo'), dv=$('di-valor'); if(dt&&dv) p.descontoIrmao={tipo:dt.value, valor:parseFloat(dv.value)||0};
+  const dv=$('di-valor'); if(dv) p.descontoIrmao={tipo:'€/semana', valor:parseFloat(dv.value)||0};
   const pa=$('pk-atleta'); if(pa) p.descontoAtletaSemana=parseFloat(pa.value)||0;
   const aa=$('al-almoco'), alm=$('al-lm'), alt=$('al-lt'); if(aa) p.alimentacaoDiaria={almoco:parseFloat(aa.value)||0, lancheManha:parseFloat(alm.value)||0, lancheTarde:parseFloat(alt.value)||0};
   return d;
@@ -1922,6 +1920,13 @@ async function guardarCrianca(id){
   if(ff&&ff.files[0]) novos.push(['ccFrente',ff.files[0]]);
   if(fv&&fv.files[0]) novos.push(['ccVerso',fv.files[0]]);
   if(novos.length){ toast('A processar documentos…'); for(const [k,f] of novos){ const r=await comprimirFicheiro(f); if(r) anexos[k]=r; } }
+  // documentos OBRIGATÓRIOS: comprovativo de pagamento + CC da criança (frente e verso) — sem eles não guarda
+  { const faltam=[]; if(!(anexos.comprovativo&&anexos.comprovativo.dataUrl)) faltam.push('comprovativo de pagamento'); if(!(anexos.ccFrente&&anexos.ccFrente.dataUrl)) faltam.push('CC da criança (frente)'); if(!(anexos.ccVerso&&anexos.ccVerso.dataUrl)) faltam.push('CC da criança (verso)');
+    if(faltam.length){ toast('Não é possível guardar sem os documentos. Falta: '+faltam.join(', ')+'. Anexa-os primeiro.', false); return; } }
+  // aviso de pagamento: a inscrição só é válida com a pré-inscrição (mín. 50€) ou o total pago
+  { const totalV=parseFloat($('c-valor').value)||0; const pagoV=parseFloat($('c-pago').value)||0;
+    const pagou = pagoV>=50 || (totalV>0 && pagoV>=totalV);
+    if(!pagou){ if(!confirm('⚠️ ATENÇÃO — pagamento\n\nA inscrição só é VÁLIDA depois de efetuado o pagamento: pré-inscrição de pelo menos 50€, ou o valor total.\n\nAté ao pagamento, a inscrição NÃO fica concluída.\n\nGuardar mesmo assim?')) return; } }
   const numero = id ? (_cCur.numero || proximoNumero()) : proximoNumero();
   const obj={ id:id||uid(), numero, nome,
     nasc:$('c-nasc').value, ccTipo:$('c-cctipo').value, cc:$('c-cc').value.trim(), nif:$('c-nif').value.trim(), ccVal:$('c-ccval').value,
