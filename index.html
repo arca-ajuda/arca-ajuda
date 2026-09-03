@@ -109,6 +109,15 @@
   .card.placeholder h3{color:var(--text-2);}
   .card.placeholder p{color:var(--text-3);}
 
+  /* secondary: standalone tools (apps/QR), same tier as placeholders, not highlighted */
+  .card.secondary{background:#FBFAF5;}
+  .card.secondary::before{background:#D8D2C1;opacity:.6;}
+  .card.secondary .icon{background:#EFEAD9;filter:grayscale(.15);}
+  .card.secondary h3{font-weight:600;color:var(--text-2);}
+  .card.secondary p{color:var(--text-3);}
+  a.card.secondary:hover, a.card.secondary:focus-visible{box-shadow:0 6px 16px rgba(20,20,10,.07);}
+  .badge.external{background:#EFEAD9;color:var(--text-2);margin-top:auto;}
+
   /* FOOTER */
   footer{
     flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:8px;
@@ -151,12 +160,6 @@
         <p>Registo de sócios, quotas e contactos.</p>
       </a>
 
-      <a class="card" style="--accent:var(--amber);--accent-l:var(--amber-l)" href="parceiros/">
-        <div class="card-top"><div class="icon">🎁</div><span class="arrow">→</span></div>
-        <h3>Benefícios dos Sócios</h3>
-        <p>Parcerias e vantagens para os sócios.</p>
-      </a>
-
       <a class="card" style="--accent:var(--coral);--accent-l:var(--coral-l)" href="oficios/">
         <div class="card-top"><div class="icon">📝</div><span class="arrow">→</span></div>
         <h3>Ofícios e Protocolos</h3>
@@ -169,10 +172,18 @@
         <p>Atividades e presenças por QR code.</p>
       </a>
 
-      <a class="card" style="--accent:var(--pink);--accent-l:var(--pink-l)" href="carrinha/">
-        <div class="card-top"><div class="icon">🚐</div><span class="arrow">→</span></div>
+      <a class="card secondary" href="parceiros/" target="_blank" rel="noopener">
+        <div class="card-top"><div class="icon">🎁</div></div>
+        <h3>Benefícios dos Sócios</h3>
+        <p>Parcerias e vantagens para os sócios.</p>
+        <span class="badge external">↗ Abre em nova aba</span>
+      </a>
+
+      <a class="card secondary" href="carrinha/" target="_blank" rel="noopener">
+        <div class="card-top"><div class="icon">🚐</div></div>
         <h3>Carrinha</h3>
-        <p>Gestão do transporte da associação.</p>
+        <p>Também acessível por QR code, na carrinha.</p>
+        <span class="badge external">↗ Abre em nova aba</span>
       </a>
 
       <div class="card placeholder">
