@@ -247,17 +247,17 @@ body{background:#F3F5F8}
 
 /* Menu lateral: botões coloridos em degradê como nas outras apps */
 .sidebar{background:#fff;border-right:0.5px solid #dfe3e8;padding-bottom:8px}
-.sidebar-nav{display:flex;flex-direction:column;gap:clamp(6px,1.2vh,12px);padding:6px 10px}
-.nav-label{padding:clamp(8px,1.4vh,14px) 6px 2px}
+.sidebar-nav{display:flex;flex-direction:column;gap:clamp(5px,1vh,8px);padding:6px 10px}
+.nav-label{padding:clamp(6px,1.2vh,10px) 6px 2px}
 .nav-label::after{display:none}
-.nav-item{--c:#1B4570;border-radius:9px;background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 72%,#fff) 100%);color:#fff!important;font-weight:700;font-size:11.5px;letter-spacing:.4px;text-transform:uppercase;box-shadow:0 3px 9px color-mix(in srgb,var(--c) 45%,transparent);padding:clamp(8px,1.5vh,12px) 12px;transition:transform .12s,filter .12s;position:relative}
+.nav-item{--c:#1B4570;border-radius:9px;background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 72%,#fff) 100%);color:#fff!important;font-weight:700;font-size:11.5px;letter-spacing:.4px;text-transform:uppercase;box-shadow:0 3px 9px color-mix(in srgb,var(--c) 45%,transparent);padding:clamp(7px,1.2vh,10px) 12px;transition:transform .12s,filter .12s;position:relative}
 .nav-item svg{opacity:1;color:#fff;background:rgba(255,255,255,.22);border-radius:6px;padding:3px;width:22px;height:22px}
 .nav-item:hover{transform:translateX(3px);filter:brightness(1.08);background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 72%,#fff) 100%);color:#fff;padding-left:12px}
 .nav-item.active{background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 72%,#fff) 100%);color:#fff;font-weight:700;transform:translateX(3px);outline:1.5px solid color-mix(in srgb,var(--c) 55%,#0E1A26)}
 .nav-item.active::before{display:none}
 .nav-item.active svg{background:rgba(255,255,255,.38);color:#fff}
 .nav-item.nav-geral{--c:#1B4570;background:linear-gradient(135deg,#1B4570,#2E6199 60%,#2F7A8F)!important;font-size:12.5px}
-@media(max-height:760px){.nav-item.nav-geral{grid-column:1/-1;font-size:10px}}
+@media(max-height:940px){.nav-item.nav-geral{grid-column:1/-1;font-size:10px}}
 .nav-item[onclick*="'dashboard'"]{--c:#6C4BB6}
 .nav-item[onclick*="'lancamentos'"]{--c:#2F5F9E}
 .nav-item[onclick*="'fluxo'"]{--c:#1F8FC8}
@@ -321,7 +321,7 @@ tbody tr:hover td{background:#F5F9FF}
 .topbar .card-saldo-value{font-size:14.5px}
 .topbar .mes-sel,.topbar .year-sel{padding:0 10px;font-size:12.5px;font-weight:600;color:#1B4570}
 @media(max-width:1100px){.topbar .card-saldo-label{font-size:8.5px}.topbar .card-saldo-value{font-size:13px}.topbar #btn-arca-chat,.topbar #role-badge{padding:0 10px!important}}
-@media(max-height:760px){
+@media(max-height:940px){
   .sidebar-nav{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:5px;padding:4px 10px}
   .nav-item{min-width:0;overflow:hidden}
   .nav-label{grid-column:1/-1;padding:6px 4px 1px;font-size:9px}
