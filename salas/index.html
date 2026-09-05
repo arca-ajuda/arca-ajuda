@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão das Salas — ARCA d'Ajuda</title>
+<link rel="icon" href="data:,">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --teal:#0E9C7C;--teal-d:#076B54;--teal-l:#DFF7EF;
+    --coral:#D85A30;--coral-l:#FAECE7;--coral-d:#712B13;
+    --amber:#BA7517;--amber-l:#FAEEDA;--amber-d:#633806;
+    --text:#1B2A3D;--text-2:#556377;--text-3:#8C98A8;
+    --bg:#F3F6F5;--card:#FFFFFF;--line:#DDE6E2;
+    --radius:10px;--radius-lg:14px;--border:1px solid var(--line);
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.45}
+  button{font-family:inherit;cursor:pointer}
+  input,select,textarea{font-family:inherit;font-size:14px;color:var(--text)}
+  .hidden{display:none!important}
+  .muted{color:var(--text-2)}
+  .small{font-size:12px}
+  .mono{font-variant-numeric:tabular-nums}
+  .right{text-align:right}
+  .center{text-align:center}
+
+  /* ---- LOGIN ---- */
+  #login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0E9C7C,#076B54);display:flex;align-items:center;justify-content:center;padding:20px;z-index:1000}
+  #login-card{background:#fff;border-radius:18px;padding:30px 26px;width:100%;max-width:400px;box-shadow:0 24px 60px rgba(0,0,0,.28)}
+  #login-card h1{font-size:20px;color:var(--teal-d);text-align:center;margin-bottom:2px}
+  #login-card .sub{text-align:center;color:var(--text-2);font-size:12.5px;margin-bottom:20px}
+  #login-card label{display:block;font-size:12px;font-weight:600;color:var(--text-2);margin:12px 0 4px}
+  #login-card input{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:9px}
+  #login-msg{margin-top:12px;font-size:12.5px;text-align:center;min-height:16px}
+  #login-msg.err{color:var(--coral-d)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:9px;padding:9px 13px;font-size:13.5px;font-weight:600;background:#fff;border:1.5px solid var(--line);color:var(--text)}
+  .btn:hover{background:var(--bg)}
+  .btn-primary{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .btn-primary:hover{background:var(--teal-d);border-color:var(--teal-d)}
+  .btn-danger{background:none;color:var(--coral-d);border-color:var(--coral)}
+  .btn-danger:hover{background:var(--coral-l)}
+  .btn-sm{padding:5px 9px;font-size:12px;border-radius:7px}
+  .btn-block{width:100%;margin-top:18px;padding:11px 14px;font-size:14px}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+
+  /* ---- APP ---- */
+  #app{display:none;min-height:100vh}
+  aside#side{width:232px;flex-shrink:0;background:linear-gradient(160deg,var(--teal),var(--teal-d));color:#fff;display:flex;flex-direction:column;gap:10px;padding:14px 12px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;z-index:50}
+  aside#side .brand{font-weight:800;font-size:16px;letter-spacing:.3px;display:flex;align-items:center;gap:8px;justify-content:center;padding:4px 0 6px}
+  .side-geral{display:flex;align-items:center;justify-content:center;gap:5px;background:rgba(255,255,255,.18);color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.34);border-radius:9px;padding:8px 10px;font-weight:800;font-size:12px}
+  .side-geral:hover{background:rgba(255,255,255,.30)}
+  .side-ano{background:rgba(255,255,255,.14);border-radius:9px;padding:8px 10px;font-size:12px;line-height:1.4}
+  .side-ano b{font-size:13px}
+  nav#tabs{display:flex;flex-direction:column;gap:6px}
+  nav#tabs button{text-align:left;border:none;border-left:5px solid rgba(255,255,255,.5);border-radius:9px;padding:9px 12px;font-size:13.5px;font-weight:800;background:rgba(255,255,255,.92);color:var(--teal-d);transition:all .12s ease}
+  nav#tabs button:hover{background:#fff}
+  nav#tabs button.active{background:#fff;border-left-color:var(--amber);box-shadow:0 3px 9px rgba(0,0,0,.2)}
+  .side-foot{margin-top:auto;display:flex;align-items:center;gap:6px;justify-content:space-between;font-size:12px}
+  #cloud-pill{background:rgba(255,255,255,.18);border-radius:99px;padding:4px 10px;font-weight:700;cursor:pointer}
+  .side-icon{background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:8px;width:32px;height:30px;font-size:14px}
+  .side-icon:hover{background:rgba(255,255,255,.3)}
+  #content{flex:1;min-width:0}
+  main{padding:20px 22px 60px;max-width:1500px}
+  .section{display:none}.section.active{display:block}
+  .page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .page-head h2{font-size:22px;color:var(--teal-d);letter-spacing:-.01em}
+  .page-head p{color:var(--text-2);font-size:13px;margin-top:2px;max-width:70ch}
+  .card{background:var(--card);border:var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:16px;box-shadow:0 1px 2px rgba(20,20,10,.03)}
+  .card h3{font-size:15px;color:var(--teal-d);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+  .kpi{background:var(--card);border:var(--border);border-radius:var(--radius);padding:12px 14px}
+  .kpi .n{font-size:22px;font-weight:800;color:var(--teal-d);line-height:1.1}
+  .kpi .l{font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:.05em;margin-top:3px}
+  #cloud-banner{position:fixed;top:0;left:0;right:0;z-index:300;background:#C0392B;color:#fff;text-align:center;font-weight:800;font-size:13px;padding:9px 14px;line-height:1.35;box-shadow:0 2px 10px rgba(0,0,0,.28)}
+  body.com-banner #app{padding-top:38px}
+  .kpi .n.sm{font-size:14px;line-height:1.35}
+  #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1F2A2E;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:500;opacity:0;transition:opacity .25s;pointer-events:none}
+  #toast.show{opacity:1}#toast.err{background:var(--coral-d)}
+
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-2);background:#F7FAF9;white-space:nowrap}
+  tr.total td{font-weight:800;background:var(--teal-l)}
+  tr.dim td{color:var(--text-3)}
+  .table-wrap{overflow-x:auto}
+  input.cell{width:100%;min-width:60px;border:1px solid var(--line);border-radius:6px;padding:5px 7px;background:#FFFBEA}
+  input.cell.wide{min-width:140px}
+  input.cell.num{max-width:90px;text-align:right}
+  select.cell{border:1px solid var(--line);border-radius:6px;padding:5px 7px;background:#FFFBEA}
+  input[type=color]{width:34px;height:26px;border:1px solid var(--line);border-radius:6px;padding:0;background:none}
+
+  /* ---- MAPA ---- */
+  .palette{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .chip{border:2px solid transparent;border-radius:99px;padding:5px 11px;font-size:12.5px;font-weight:700;cursor:pointer;color:#1b1b1b}
+  .chip.sel{border-color:#1B2A3D;box-shadow:0 0 0 2px #fff inset}
+  .chip.eraser{background:#fff;border-color:var(--line);color:var(--text-2)}
+  .chip.eraser.sel{border-color:var(--coral)}
+  .salas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:16px}
+  @media(max-width:1100px){.salas-grid{grid-template-columns:1fr}}
+  table.mapa{table-layout:fixed;user-select:none}
+  table.mapa th,table.mapa td{padding:0;border:1px solid var(--line);text-align:center;height:22px;font-size:11px;line-height:1.1;overflow:hidden}
+  table.mapa th{background:var(--teal-l);color:var(--teal-d);height:28px;font-size:11px}
+  table.mapa td.hora{background:#F7FAF9;color:var(--text-2);font-weight:600;font-size:10.5px;width:44px}
+  table.mapa td.slot{cursor:cell;font-weight:700;color:#1b1b1b}
+  table.mapa td.slot:hover{outline:2px solid var(--teal);outline-offset:-2px}
+  table.mapa tr.hora-cheia td{border-top-color:#B9C7C1}
+  table.mapa td.slot.first{border-top:2px solid rgba(0,0,0,.35)}
+  .legend{display:flex;gap:8px;flex-wrap:wrap;font-size:12px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+  /* ---- CALENDÁRIO ---- */
+  .meses{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+  .mes{background:var(--card);border:var(--border);border-radius:var(--radius);padding:10px 12px}
+  .mes h4{font-size:13px;color:var(--teal-d);margin-bottom:6px;display:flex;justify-content:space-between}
+  .mes .dias{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:11px;text-align:center}
+  .mes .dias .h{color:var(--text-3);font-weight:700;font-size:10px}
+  .mes .dias .d{border-radius:5px;padding:4px 0;cursor:pointer;border:1px solid transparent}
+  .mes .dias .d:hover{border-color:var(--teal)}
+  .mes .dias .d.fim{color:var(--text-3);background:#F3F6F5}
+  .mes .dias .d.fechado{background:var(--coral-l);color:var(--coral-d);text-decoration:line-through}
+  .mes .dias .d.forcado{outline:2px solid var(--amber);outline-offset:-2px}
+  .mes .dias .d.vazio{visibility:hidden}
+
+  /* ---- PRINT ---- */
+  #print-area{display:none}
+  @media print{
+    body>*{display:none!important}
+    #print-area{display:block!important;font-size:12px;color:#000}
+    #print-area h1{font-size:16px;margin-bottom:2px}
+    #print-area .ph{border-bottom:2px solid #000;margin-bottom:10px;padding-bottom:6px}
+    #print-area table{font-size:11px}
+    #print-area th,#print-area td{border:1px solid #999;padding:4px 6px}
+    #print-area th{background:#eee;color:#000}
+    #print-area .pf{margin-top:14px;font-size:10px;color:#444;border-top:1px solid #999;padding-top:5px}
+  }
+  @media(max-width:760px){
+    #app{flex-direction:column}
+    aside#side{position:static;height:auto;width:100%}
+    main{padding:14px}
+  }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div id="login-card">
+    <h1>🏠 GESTÃO DAS SALAS</h1>
+    <div class="sub">Mapa de ocupação e pagamentos — ARCA d'Ajuda</div>
+    <label>Email</label>
+    <input type="email" id="lg-email" autocomplete="username" placeholder="conta da associação">
+    <label>Palavra-passe</label>
+    <input type="password" id="lg-pass" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
+    <button class="btn btn-primary btn-block" onclick="fazerLogin()">Entrar</button>
+    <div id="login-msg"></div>
+    <div class="muted" style="margin-top:14px;font-size:12px;text-align:center;line-height:1.5">Entra com a <b>mesma conta da associação</b> que usas no ATL. Os dados ficam guardados e sincronizados em todos os computadores.</div>
+    <div class="center" style="margin-top:12px"><a href="../" class="small muted">⬅️ Voltar ao menu geral</a></div>
+  </div>
+</div>
+
+<div id="cloud-banner" style="display:none"></div>
+
+<div id="app">
+  <aside id="side">
+    <div class="brand">🏠 SALAS ARCA</div>
+    <a class="side-geral" href="../" title="Voltar ao menu geral da ARCA d'Ajuda">⬅️ Menu geral</a>
+    <div class="side-ano">Ano letivo<br><b id="side-ano-txt">—</b></div>
+    <nav id="tabs">
+      <button data-tab="mapa" onclick="showTab('mapa')">📆 Mapa de ocupação</button>
+      <button data-tab="precos" onclick="showTab('precos')">🏷️ Preçário e atividades</button>
+      <button data-tab="calendario" onclick="showTab('calendario')">📅 Calendário</button>
+      <button data-tab="pagamentos" onclick="showTab('pagamentos')">💶 Pagamentos</button>
+      <button data-tab="definicoes" onclick="showTab('definicoes')">⚙️ Definições</button>
+    </nav>
+    <div class="side-foot">
+      <span id="cloud-pill" title="Estado da ligação — clica para sincronizar" onclick="sincronizarAgora()">☁️ …</span>
+      <button class="side-icon" onclick="sair()" title="Sair">⏻</button>
+    </div>
+  </aside>
+  <div id="content"><main>
+    <div id="sec-mapa" class="section active"></div>
+    <div id="sec-precos" class="section"></div>
+    <div id="sec-calendario" class="section"></div>
+    <div id="sec-pagamentos" class="section"></div>
+    <div id="sec-definicoes" class="section"></div>
+  </main></div>
+</div>
+
+<div id="print-area"></div>
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   GESTÃO DAS SALAS — ARCA d'Ajuda
+   Login: conta da associação (Supabase Auth — a mesma do ATL)
+   Dados: localStorage + espelho na cloud (Supabase, tabela config_app, chave salas_dados)
+   ============================================================ */
+const SUPA_URL = 'https://yfsyifypsrqnwkqkfrnm.supabase.co';
+const SUPA_KEY = 'sb_publishable_AkzlMeHlYHDyl0HzeC7_qg__j_Y6C9W';
+const CHAVE_DADOS = 'salas_dados';
+
+const LS = {
+  get(k){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const $ = id => document.getElementById(id);
+const esc = s => (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmt = n => (Number(n)||0).toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+const fmtH = n => (Number(n)||0).toLocaleString('pt-PT',{minimumFractionDigits:0,maximumFractionDigits:1});
+const uid = () => 'x'+Math.random().toString(36).slice(2,9)+(Date.now()%100000).toString(36);
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS=['2ª Feira','3ª Feira','4ª Feira','5ª Feira','6ª Feira','Sábado','Domingo'];
+const DIAS_S=['2ª','3ª','4ª','5ª','6ª','Sáb','Dom'];
+let _toastT=null;
+function toast(msg, ok=true){ const t=$('toast'); t.textContent=msg; t.className='show'+(ok?'':' err'); clearTimeout(_toastT); _toastT=setTimeout(()=>t.className='',2800); }
+
+/* ---------- Supabase auth (igual ao ATL) ---------- */
+let supaSession = LS.get('salas_supa_session');
+async function supaAuthLogin(email, password){
+  const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`,{ method:'POST', headers:{'Content-Type':'application/json','apikey':SUPA_KEY}, body: JSON.stringify({email,password}) });
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.error_description||data.msg||data.error||'Email ou palavra-passe incorretos.');
+  supaSession = data; LS.set('salas_supa_session', supaSession); return data;
+}
+let _refreshing=null, _ultimoErroCloud='';
+async function supaRefresh(){
+  const rt = supaSession && supaSession.refresh_token; if(!rt) return false;
+  if(_refreshing) return _refreshing;
+  _refreshing = (async()=>{
+    try{ const res=await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`,{ method:'POST', headers:{'Content-Type':'application/json','apikey':SUPA_KEY}, body:JSON.stringify({refresh_token:rt}) });
+      const data=await res.json();
+      if(res.ok && data.access_token){ supaSession=data; LS.set('salas_supa_session', supaSession); return true; }
+      if(res.status===400||res.status===401||res.status===403){ _ultimoErroCloud='sessão expirada'; sessaoExpirou(); } }
+    catch(e){ _ultimoErroCloud='sem rede'; }
+    return false;
+  })();
+  const ok=await _refreshing; _refreshing=null; return ok;
+}
+async function supaFetch(path, method='GET', body=null, extra=null, _retry){
+  const headers={'apikey':SUPA_KEY,'Content-Type':'application/json'};
+  headers['Authorization']='Bearer '+((supaSession&&supaSession.access_token)||SUPA_KEY);
+  if(method!=='GET') headers['Prefer']='return=representation';
+  if(extra) Object.assign(headers, extra);
+  const opts={method,headers}; if(body) opts.body=JSON.stringify(body);
+  const res=await fetch(`${SUPA_URL}/rest/v1/${path}`, opts);
+  if((res.status===401||res.status===403) && !_retry && supaSession && supaSession.refresh_token){
+    if(await supaRefresh()) return supaFetch(path, method, body, extra, true);
+  }
+  const text=await res.text(); if(!res.ok) throw new Error(text||('Erro '+res.status));
+  return text?JSON.parse(text):null;
+}
+const CLOUD_ON = () => !!(supaSession && supaSession.access_token);
+
+function loginMsg(m, ok=true){ const e=$('login-msg'); e.textContent=m; e.className=ok?'':'err'; }
+async function fazerLogin(){
+  const email=$('lg-email').value.trim(), pass=$('lg-pass').value;
+  if(!email||!pass){ loginMsg('Preenche o email e a palavra-passe.', false); return; }
+  loginMsg('A entrar…');
+  try{ await supaAuthLogin(email, pass); await entrarApp(); }
+  catch(e){ loginMsg(e.message||'Falha ao entrar.', false); }
+}
+function sair(){ supaSession=null; LS.del('salas_supa_session'); $('app').style.display='none'; $('login-screen').style.display='flex'; $('lg-pass').value=''; loginMsg(''); }
+function sessaoExpirou(){ supaSession=null; LS.del('salas_supa_session'); $('app').style.display='none'; $('login-screen').style.display='flex'; loginMsg('A sessão expirou por segurança. Entra outra vez — os dados estão guardados.', false); }
+
+/* ---------- cloud (config_app: chave/valor) ---------- */
+function marcaCloud(state){
+  const b=$('cloud-banner');
+  b.style.display=(state===false)?'block':'none'; document.body.classList.toggle('com-banner', state===false);
+  if(state===false) b.innerHTML='⚠️ SEM LIGAÇÃO À CONTA — as alterações podem NÃO estar a ser guardadas. '+(_ultimoErroCloud?('<span style="opacity:.85">('+esc(String(_ultimoErroCloud).slice(0,110))+')</span> '):'')+'Verifica a internet ou entra outra vez.';
+  const p=$('cloud-pill'); p.textContent = state===true?'☁️ Ligado':state===false?'⚠️ Sem ligação':'☁️ …';
+}
+let _fila=Promise.resolve(), _existeNaCloud=null;
+async function cloudLer(){
+  const rows = await supaFetch(`config_app?chave=eq.${CHAVE_DADOS}&select=valor`);
+  if(!rows||!rows.length){ _existeNaCloud=false; return null; }
+  _existeNaCloud=true;
+  let v=rows[0].valor; if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
+  return v;
+}
+function cloudGuardar(dados){
+  if(!CLOUD_ON()) return;
+  const valor=JSON.stringify(dados);
+  _fila=_fila.then(async()=>{
+    if(_existeNaCloud===null){ const ex=await supaFetch(`config_app?chave=eq.${CHAVE_DADOS}&select=chave`); _existeNaCloud=!!(ex&&ex.length); }
+    if(_existeNaCloud) await supaFetch(`config_app?chave=eq.${CHAVE_DADOS}`,'PATCH',{valor});
+    else { await supaFetch('config_app','POST',{chave:CHAVE_DADOS, valor}); _existeNaCloud=true; }
+    marcaCloud(true);
+  }).catch(e=>{ console.warn('cloud guardar',e); _ultimoErroCloud=(e&&e.message)||''; marcaCloud(false); });
+}
+async function sincronizarAgora(){
+  marcaCloud(null);
+  try{ const v=await cloudLer(); if(v){ D=normalizar(v); LS.set(CHAVE_DADOS,D); renderAll(); toast('Dados atualizados a partir da cloud.'); } else { cloudGuardar(D); toast('Dados enviados para a cloud.'); } marcaCloud(true); }
+  catch(e){ _ultimoErroCloud=e.message; marcaCloud(false); toast('Sem ligação à cloud.',false); }
+}
+
+/* ============================================================
+   DADOS
+   ============================================================ */
+let D = null;
+function dadosIniciais(){
+  const salas=[
+    {id:'s1',nome:'SALA 1',p1:10.5,p2:9,limiar:2},
+    {id:'s2',nome:'SALA 2',p1:12.5,p2:11,limiar:2}
+  ];
+  const cores=['#F4CCCC','#FCE5CD','#FFF2CC','#D9EAD3','#D0E0E3','#C9DAF8','#D9D2E9','#EAD1DC','#B6D7A8','#A2C4C9','#F9CB9C','#B4A7D6'];
+  const nomes=[['KARATÉ',1],['CAPOEIRA',0],['BALLET',0],['CONTEMPORÂNEO',1],['ESGRIMA',1],['DANÇA',0],['TEATRO',0],['JUDO',1],['QI GONG',0],['EXPLICAÇÕES',0],['KRAV-MAGA',1],['URBAN',0]];
+  const atividades=nomes.map((n,i)=>({id:'a'+(i+1),nome:n[0],federada:!!n[1],cor:cores[i]}));
+  const byName=Object.fromEntries(atividades.map(a=>[a.nome,a.id]));
+  const mapa={};
+  const put=(sala,dia,h0,h1,nome)=>{ mapa[sala]=mapa[sala]||{}; mapa[sala][dia]=mapa[sala][dia]||{}; for(let h=h0;h<h1;h+=0.5){ mapa[sala][dia][String(h)]=byName[nome]; } };
+  // horário 2025/26 (Sala 1 e Sala 2)
+  put('s1',5,9.5,11.5,'BALLET'); put('s1',5,11.5,12.5,'CONTEMPORÂNEO');
+  put('s1',1,17.5,20.5,'BALLET'); put('s1',2,17.5,19.5,'BALLET'); put('s1',4,17.5,20.5,'BALLET');
+  put('s1',0,19,21,'CAPOEIRA'); put('s1',3,19,21,'CAPOEIRA'); put('s1',2,19.5,21,'KRAV-MAGA');
+  put('s2',6,10,11,'QI GONG'); put('s2',1,17.5,18.5,'JUDO'); put('s2',3,17.5,18.5,'JUDO');
+  put('s2',0,19.5,21.5,'DANÇA'); put('s2',1,19.5,21.5,'DANÇA'); put('s2',2,19.5,21.5,'DANÇA');
+  put('s2',4,19.5,21,'KRAV-MAGA'); put('s2',5,15.5,16.5,'TEATRO');
+  const fechados=[
+    ['Implantação da República','2025-10-05','2025-10-05'],['Todos os Santos','2025-11-01','2025-11-01'],
+    ['Restauração da Independência','2025-12-01','2025-12-01'],['Imaculada Conceição','2025-12-08','2025-12-08'],
+    ['Pausa de Natal / Ano Novo','2025-12-24','2026-01-01'],['Carnaval','2026-02-17','2026-02-17'],
+    ['Sexta-feira Santa','2026-04-03','2026-04-03'],['Páscoa','2026-04-05','2026-04-05'],['25 de Abril','2026-04-25','2026-04-25'],
+    ['Dia do Trabalhador','2026-05-01','2026-05-01'],['Corpo de Deus','2026-06-04','2026-06-04'],['Dia de Portugal','2026-06-10','2026-06-10'],
+    ['Dia da Região Autónoma da Madeira','2026-07-01','2026-07-01'],['Assunção de Nossa Senhora','2026-08-15','2026-08-15'],['Feriado municipal do Funchal','2026-08-21','2026-08-21']
+  ].map(f=>({id:uid(),desc:f[0],inicio:f[1],fim:f[2]}));
+  return {versao:1, inicio:'2025-09-01', horaIni:8, horaFim:22, salas, atividades, mapa, fechados, ajustes:{}, precoManual:{}, atualizado:new Date().toISOString()};
+}
+function normalizar(v){
+  const base=dadosIniciais();
+  if(!v||typeof v!=='object') return base;
+  const d=Object.assign({},base,v);
+  d.salas=Array.isArray(d.salas)?d.salas:base.salas; d.atividades=Array.isArray(d.atividades)?d.atividades:base.atividades;
+  d.mapa=d.mapa||{}; d.fechados=Array.isArray(d.fechados)?d.fechados:[]; d.ajustes=d.ajustes||{}; d.precoManual=d.precoManual||{};
+  d.horaIni=Number(d.horaIni)||8; d.horaFim=Number(d.horaFim)||22;
+  return d;
+}
+let _saveT=null;
+function guardar(){
+  D.atualizado=new Date().toISOString();
+  LS.set(CHAVE_DADOS, D);
+  clearTimeout(_saveT); _saveT=setTimeout(()=>cloudGuardar(D), 700);
+}
+
+/* ============================================================
+   CÁLCULOS
+   ============================================================ */
+const atv = id => D.atividades.find(a=>a.id===id);
+const sala = id => D.salas.find(s=>s.id===id);
+function slots(){ const out=[]; for(let h=D.horaIni; h<D.horaFim; h+=0.5) out.push(h); return out; }
+function horaTxt(h){ const hh=Math.floor(h), mm=Math.round((h-hh)*60); return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0'); }
+function celula(salaId,dia,h){ return ((D.mapa[salaId]||{})[dia]||{})[String(h)]||null; }
+function setCelula(salaId,dia,h,atvId){
+  D.mapa[salaId]=D.mapa[salaId]||{}; D.mapa[salaId][dia]=D.mapa[salaId][dia]||{};
+  if(atvId) D.mapa[salaId][dia][String(h)]=atvId; else delete D.mapa[salaId][dia][String(h)];
+}
+// horas por dia [7] de uma atividade numa sala
+function horasDia(salaId, atvId){
+  const out=[0,0,0,0,0,0,0]; const m=D.mapa[salaId]||{};
+  for(let d=0; d<7; d++){ const dd=m[d]||{}; for(const k in dd){ if(dd[k]===atvId) out[d]+=0.5; } }
+  return out;
+}
+function precoAplicado(s, atvId, horasSemana){
+  const manual=D.precoManual[s.id+'|'+atvId];
+  if(manual!==undefined && manual!=='' && manual!==null && !isNaN(Number(manual))) return {preco:Number(manual), escalao:'manual'};
+  if(horasSemana<=0) return {preco:0, escalao:''};
+  const red = horasSemana >= Number(s.limiar||2);
+  return {preco: red? Number(s.p2)||0 : Number(s.p1)||0, escalao: red?'2 OU MAIS':'1 HORA'};
+}
+// linhas de detalhe: por sala × atividade com horas>0 (ou preço manual definido)
+function detalhe(){
+  const rows=[];
+  D.salas.forEach(s=>D.atividades.forEach(a=>{
+    const hd=horasDia(s.id,a.id); const hs=hd.reduce((x,y)=>x+y,0);
+    if(hs<=0) return;
+    const pa=precoAplicado(s,a.id,hs);
+    rows.push({sala:s, atv:a, horasDia:hd, horasSemana:hs, preco:pa.preco, escalao:pa.escalao, valorSemana:hs*pa.preco, valorDia:hd.map(h=>h*pa.preco)});
+  }));
+  return rows;
+}
+// calendário
+function parseD(s){ const p=(s||'').split('-'); return new Date(Number(p[0]),Number(p[1])-1,Number(p[2])); }
+function isoD(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function diaSemana(d){ return (d.getDay()+6)%7; } // 0=2ª … 6=Dom
+function meses(){ // 12 meses a partir do início
+  const ini=parseD(D.inicio); const out=[];
+  for(let i=0;i<12;i++){ const d=new Date(ini.getFullYear(), ini.getMonth()+i, 1); out.push({ano:d.getFullYear(), mes:d.getMonth(), nome:MESES[d.getMonth()]+' '+d.getFullYear(), curto:MESES[d.getMonth()].slice(0,3)+' '+String(d.getFullYear()).slice(2)}); }
+  return out;
+}
+function fechadoPorPeriodo(iso){ return D.fechados.some(f=>f.inicio && f.fim && f.inicio<=iso && iso<=f.fim); }
+function temAulas(iso){ const a=D.ajustes[iso]; if(a==='A') return true; if(a==='S') return false; return !fechadoPorPeriodo(iso); }
+function sessoesMes(ano,mes){ // [7] nº de dias com aulas por dia da semana
+  const out=[0,0,0,0,0,0,0]; const n=new Date(ano,mes+1,0).getDate();
+  for(let d=1; d<=n; d++){ const dt=new Date(ano,mes,d); if(temAulas(isoD(dt))) out[diaSemana(dt)]++; }
+  return out;
+}
+function valorMes(row, ses){ return row.valorDia.reduce((acc,v,i)=>acc+v*ses[i],0); }
+
+/* ============================================================
+   UI
+   ============================================================ */
+function showTab(t){
+  document.querySelectorAll('nav#tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===t));
+  document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active', s.id==='sec-'+t));
+  render(t);
+}
+function tabAtual(){ const b=document.querySelector('nav#tabs button.active'); return b?b.dataset.tab:'mapa'; }
+function render(t){ ({mapa:renderMapa, precos:renderPrecos, calendario:renderCalendario, pagamentos:renderPagamentos, definicoes:renderDefinicoes}[t]||renderMapa)(); }
+function renderAll(){ const ini=parseD(D.inicio); $('side-ano-txt').textContent=ini.getFullYear()+'/'+String(ini.getFullYear()+1).slice(2); render(tabAtual()); }
+
+/* ---------- MAPA ---------- */
+let brush = null; // id da atividade | 'eraser'
+let painting=false, paintValue=null;
+function renderMapa(){
+  if(!brush || (brush!=='eraser' && !atv(brush))) brush = D.atividades[0]?D.atividades[0].id:'eraser';
+  const det=detalhe();
+  const totalH=det.reduce((a,r)=>a+r.horasSemana,0), totalV=det.reduce((a,r)=>a+r.valorSemana,0);
+  let h=`<div class="page-head"><div><h2>Mapa de ocupação das salas</h2><p>Escolhe a atividade em cima e clica (ou arrasta) nas meias-horas para ocupar. Cada célula = 30 minutos; uma aula de 1 hora = 2 células. Para libertar, usa a borracha ou clica de novo com a mesma atividade.</p></div>
+    <div class="row"><button class="btn" onclick="imprimirMapa()">🖶 Imprimir mapa</button></div></div>`;
+  h+=`<div class="kpis"><div class="kpi"><div class="n">${fmtH(totalH)} h</div><div class="l">horas ocupadas / semana</div></div><div class="kpi"><div class="n">${fmt(totalV)}</div><div class="l">valor semanal total</div></div><div class="kpi"><div class="n">${det.length}</div><div class="l">ocupações (atividade × sala)</div></div></div>`;
+  h+=`<div class="card"><h3>Atividade a colocar</h3><div class="palette">`;
+  D.atividades.forEach(a=>{ h+=`<span class="chip ${brush===a.id?'sel':''}" style="background:${esc(a.cor)}" onclick="brush='${a.id}';renderMapa()">${esc(a.nome)}</span>`; });
+  h+=`<span class="chip eraser ${brush==='eraser'?'sel':''}" onclick="brush='eraser';renderMapa()">🧽 Borracha</span></div></div>`;
+  h+=`<div class="salas-grid">`;
+  D.salas.forEach(s=>{
+    const hs=det.filter(r=>r.sala.id===s.id).reduce((a,r)=>a+r.horasSemana,0);
+    h+=`<div class="card" style="margin:0"><h3><span>${esc(s.nome)}</span><span class="small muted">${fmtH(hs)} h/semana · ${fmt(s.p1)} / ${fmt(s.p2)} por hora</span></h3><div class="table-wrap"><table class="mapa" data-sala="${s.id}"><thead><tr><th style="width:44px">Início</th>`;
+    DIAS_S.forEach(d=>h+=`<th>${d}</th>`); h+=`</tr></thead><tbody>`;
+    slots().forEach((hr,idx)=>{
+      h+=`<tr class="${Number.isInteger(hr)?'hora-cheia':''}"><td class="hora">${horaTxt(hr)}</td>`;
+      for(let d=0; d<7; d++){
+        const id=celula(s.id,d,hr); const a=id?atv(id):null;
+        const prev=celula(s.id,d,hr-0.5);
+        const first=a && prev!==id;
+        h+=`<td class="slot ${first?'first':''}" data-d="${d}" data-h="${hr}" style="${a?'background:'+esc(a.cor):''}" title="${a?esc(a.nome)+' · '+horaTxt(hr)+'–'+horaTxt(hr+0.5):horaTxt(hr)+'–'+horaTxt(hr+0.5)}">${a&&first?esc(a.nome):''}</td>`;
+      }
+      h+=`</tr>`;
+    });
+    h+=`</tbody></table></div></div>`;
+  });
+  h+=`</div>`;
+  // resumo por atividade
+  h+=`<div class="card" style="margin-top:16px"><h3>Horas semanais por atividade</h3><div class="table-wrap"><table><thead><tr><th>Atividade</th><th>Federada</th>`;
+  D.salas.forEach(s=>h+=`<th class="right">${esc(s.nome)}</th>`); h+=`<th class="right">Total h/sem</th><th class="right">Valor/semana</th></tr></thead><tbody>`;
+  D.atividades.forEach(a=>{
+    const rows=det.filter(r=>r.atv.id===a.id); if(!rows.length) return;
+    h+=`<tr><td><span class="legend"><span><i style="background:${esc(a.cor)}"></i>${esc(a.nome)}</span></span></td><td>${a.federada?'Federada':'Não federada'}</td>`;
+    D.salas.forEach(s=>{ const r=rows.find(x=>x.sala.id===s.id); h+=`<td class="right mono">${r?fmtH(r.horasSemana):'—'}</td>`; });
+    h+=`<td class="right mono"><b>${fmtH(rows.reduce((x,r)=>x+r.horasSemana,0))}</b></td><td class="right mono"><b>${fmt(rows.reduce((x,r)=>x+r.valorSemana,0))}</b></td></tr>`;
+  });
+  h+=`<tr class="total"><td colspan="2">TOTAL</td>`; D.salas.forEach(s=>h+=`<td class="right mono">${fmtH(det.filter(r=>r.sala.id===s.id).reduce((a,r)=>a+r.horasSemana,0))}</td>`);
+  h+=`<td class="right mono">${fmtH(totalH)}</td><td class="right mono">${fmt(totalV)}</td></tr></tbody></table></div><p class="small muted" style="margin-top:8px">Nota: as aulas têm 45 minutos com 15 minutos para mudança — cada aula ocupa 1 hora no mapa.</p></div>`;
+  $('sec-mapa').innerHTML=h;
+  // eventos de pintura
+  document.querySelectorAll('table.mapa').forEach(tb=>{
+    const sid=tb.dataset.sala;
+    tb.addEventListener('mousedown',e=>{ const td=e.target.closest('td.slot'); if(!td) return; e.preventDefault(); painting=true; const cur=celula(sid,+td.dataset.d,+td.dataset.h); paintValue = (brush==='eraser'||cur===brush)? null : brush; aplicar(sid,td); });
+    tb.addEventListener('mouseover',e=>{ if(!painting) return; const td=e.target.closest('td.slot'); if(td) aplicar(sid,td); });
+    tb.addEventListener('touchstart',e=>{ const td=e.target.closest('td.slot'); if(!td) return; const cur=celula(sid,+td.dataset.d,+td.dataset.h); paintValue=(brush==='eraser'||cur===brush)?null:brush; aplicar(sid,td); },{passive:true});
+  });
+}
+document.addEventListener('mouseup',()=>{ if(painting){ painting=false; guardar(); renderMapa(); } });
+document.addEventListener('touchend',()=>{ if(paintValue!==undefined){ guardar(); renderMapa(); } },{passive:true});
+function aplicar(sid,td){ const d=+td.dataset.d, hr=+td.dataset.h; if(celula(sid,d,hr)===paintValue) return; setCelula(sid,d,hr,paintValue); const a=paintValue?atv(paintValue):null; td.style.background=a?a.cor:''; td.textContent=a?a.nome:''; }
+
+function imprimirMapa(){
+  let h=cabecalhoPrint('Mapa de ocupação das salas');
+  D.salas.forEach(s=>{
+    h+=`<h3 style="margin:10px 0 4px">${esc(s.nome)}</h3><table><thead><tr><th>Horas</th>`; DIAS.forEach(d=>h+=`<th>${d}</th>`); h+=`</tr></thead><tbody>`;
+    slots().forEach(hr=>{ h+=`<tr><td>${horaTxt(hr)}–${horaTxt(hr+0.5)}</td>`; for(let d=0;d<7;d++){ const a=atv(celula(s.id,d,hr)||''); h+=`<td style="${a?'background:'+esc(a.cor):''}">${a?esc(a.nome):''}</td>`; } h+=`</tr>`; });
+    h+=`</tbody></table>`;
+  });
+  h+=rodapePrint(); $('print-area').innerHTML=h; window.print();
+}
+function cabecalhoPrint(titulo){ return `<div class="ph"><h1>Associação Recreativa e Cultural da Ajuda — ARCA d'Ajuda</h1><div>NIPC 510144012 · Rua Velha da Ajuda Nº89, Edifício Vale da Ajuda Fração LA, 9000-749 Funchal · 932 341 062</div><div style="margin-top:6px;font-weight:800;font-size:14px">${esc(titulo)} — ano letivo ${$('side-ano-txt').textContent}</div></div>`; }
+function rodapePrint(){ return `<div class="pf">Emitido em ${new Date().toLocaleDateString('pt-PT')} · Gestão das Salas ARCA</div>`; }
+
+/* ---------- PREÇÁRIO E ATIVIDADES ---------- */
+function renderPrecos(){
+  let h=`<div class="page-head"><div><h2>Preçário e atividades</h2><p>Regra: se a atividade ocupar na sala menos horas semanais do que o limiar paga o preço «1 hora»; a partir do limiar (2 ou mais horas por semana) paga o preço «2 ou mais» em todas as horas. As alterações guardam-se automaticamente.</p></div></div>`;
+  h+=`<div class="card"><h3><span>Salas e preços (€ por hora de aula)</span><button class="btn btn-sm" onclick="addSala()">+ Sala</button></h3><div class="table-wrap"><table><thead><tr><th>Sala</th><th>Preço/hora · 1 HORA</th><th>Preço/hora · 2 OU MAIS</th><th>Limiar (h/semana)</th><th></th></tr></thead><tbody>`;
+  D.salas.forEach(s=>{
+    const emUso = Object.values(D.mapa[s.id]||{}).some(d=>Object.keys(d).length);
+    h+=`<tr><td><input class="cell wide" value="${esc(s.nome)}" onchange="edSala('${s.id}','nome',this.value)"></td>
+      <td><input class="cell num" type="number" step="0.5" min="0" value="${s.p1}" onchange="edSala('${s.id}','p1',this.value)"></td>
+      <td><input class="cell num" type="number" step="0.5" min="0" value="${s.p2}" onchange="edSala('${s.id}','p2',this.value)"></td>
+      <td><input class="cell num" type="number" step="0.5" min="0" value="${s.limiar}" onchange="edSala('${s.id}','limiar',this.value)"></td>
+      <td>${emUso?'<span class="small muted">em uso</span>':`<button class="btn btn-sm btn-danger" onclick="delSala('${s.id}')">Apagar</button>`}</td></tr>`;
+  });
+  h+=`</tbody></table></div></div>`;
+  h+=`<div class="card"><h3><span>Atividades</span><button class="btn btn-sm" onclick="addAtv()">+ Atividade</button></h3><div class="table-wrap"><table><thead><tr><th>Cor</th><th>Nome</th><th>Federada?</th><th>Horas/semana (todas as salas)</th><th></th></tr></thead><tbody>`;
+  D.atividades.forEach(a=>{
+    const hs=D.salas.reduce((acc,s)=>acc+horasDia(s.id,a.id).reduce((x,y)=>x+y,0),0);
+    h+=`<tr><td><input type="color" value="${esc(a.cor)}" onchange="edAtv('${a.id}','cor',this.value)"></td>
+      <td><input class="cell wide" value="${esc(a.nome)}" onchange="edAtv('${a.id}','nome',this.value)"></td>
+      <td><select class="cell" onchange="edAtv('${a.id}','federada',this.value==='1')"><option value="1" ${a.federada?'selected':''}>Federada</option><option value="0" ${!a.federada?'selected':''}>Não federada</option></select></td>
+      <td class="mono">${fmtH(hs)} h</td>
+      <td>${hs>0?'<span class="small muted">no mapa</span>':`<button class="btn btn-sm btn-danger" onclick="delAtv('${a.id}')">Apagar</button>`}</td></tr>`;
+  });
+  h+=`</tbody></table></div><p class="small muted" style="margin-top:8px">Para apagar uma atividade ou sala, primeiro liberta as suas células no mapa.</p></div>`;
+  h+=`<div class="card"><h3>Preços manuais (exceções)</h3><p class="small muted" style="margin-bottom:8px">Se um caso específico tiver um preço acordado diferente do preçário, escreve-o aqui. Deixa em branco para usar o preçário.</p><div class="table-wrap"><table><thead><tr><th>Sala</th><th>Atividade</th><th class="right">Horas/semana</th><th>Escalão</th><th class="right">Preço tabela</th><th>Preço manual (€/h)</th><th class="right">Preço aplicado</th></tr></thead><tbody>`;
+  detalhe().forEach(r=>{
+    const key=r.sala.id+'|'+r.atv.id; const man=D.precoManual[key]; const tab=precoTabela(r.sala,r.horasSemana);
+    h+=`<tr><td>${esc(r.sala.nome)}</td><td>${esc(r.atv.nome)}</td><td class="right mono">${fmtH(r.horasSemana)}</td><td>${tab.escalao}</td><td class="right mono">${fmt(tab.preco)}</td>
+      <td><input class="cell num" type="number" step="0.5" min="0" placeholder="—" value="${man!==undefined&&man!==''?man:''}" onchange="edManual('${key}',this.value)"></td><td class="right mono"><b>${fmt(r.preco)}</b>${r.escalao==='manual'?' <span class="small muted">(manual)</span>':''}</td></tr>`;
+  });
+  h+=`</tbody></table></div></div>`;
+  $('sec-precos').innerHTML=h;
+}
+function precoTabela(s,hs){ const red=hs>=Number(s.limiar||2); return {preco:red?Number(s.p2)||0:Number(s.p1)||0, escalao:red?'2 OU MAIS':'1 HORA'}; }
+function edSala(id,k,v){ const s=sala(id); if(!s) return; s[k]= k==='nome'? (v.trim()||s.nome) : Number(v); guardar(); renderPrecos(); }
+function addSala(){ D.salas.push({id:uid(),nome:'NOVA SALA',p1:10,p2:9,limiar:2}); guardar(); renderPrecos(); }
+function delSala(id){ if(Object.values(D.mapa[id]||{}).some(d=>Object.keys(d).length)) return toast('Liberta o mapa desta sala primeiro.',false); D.salas=D.salas.filter(s=>s.id!==id); delete D.mapa[id]; guardar(); renderPrecos(); }
+function edAtv(id,k,v){ const a=atv(id); if(!a) return; a[k]= k==='nome'? (v.trim()||a.nome) : v; guardar(); renderPrecos(); }
+function addAtv(){ const cores=['#FDE9D9','#DDEBF7','#E2EFDA','#FFF2CC','#EAD1DC','#D0E0E3']; D.atividades.push({id:uid(),nome:'NOVA ATIVIDADE',federada:false,cor:cores[D.atividades.length%cores.length]}); guardar(); renderPrecos(); }
+function delAtv(id){ const emUso=D.salas.some(s=>horasDia(s.id,id).some(x=>x>0)); if(emUso) return toast('Esta atividade está no mapa. Liberta as células primeiro.',false); D.atividades=D.atividades.filter(a=>a.id!==id); guardar(); renderPrecos(); }
+function edManual(key,v){ if(v===''||v===null) delete D.precoManual[key]; else D.precoManual[key]=Number(v); guardar(); renderPrecos(); }
+
+/* ---------- CALENDÁRIO ---------- */
+function renderCalendario(){
+  const ms=meses();
+  let h=`<div class="page-head"><div><h2>Calendário do ano letivo</h2><p>Os dias riscados não têm aulas (feriados, férias, encerramentos). Clica num dia para o alternar manualmente (fica marcado a laranja). O valor mensal de cada atividade usa o número de 2ªs, 3ªs, … com aulas em cada mês.</p></div>
+    <div class="row"><label class="small muted">Início do ano letivo</label><input type="date" class="cell" style="width:auto" value="${esc(D.inicio)}" onchange="D.inicio=this.value||D.inicio;guardar();renderAll()"></div></div>`;
+  h+=`<div class="card"><h3><span>Períodos sem aulas</span><button class="btn btn-sm" onclick="addFechado()">+ Período</button></h3><div class="table-wrap"><table><thead><tr><th>Descrição</th><th>Início</th><th>Fim</th><th></th></tr></thead><tbody>`;
+  D.fechados.slice().sort((a,b)=>(a.inicio||'').localeCompare(b.inicio||'')).forEach(f=>{
+    h+=`<tr><td><input class="cell wide" value="${esc(f.desc)}" onchange="edFechado('${f.id}','desc',this.value)"></td><td><input type="date" class="cell" value="${esc(f.inicio)}" onchange="edFechado('${f.id}','inicio',this.value)"></td><td><input type="date" class="cell" value="${esc(f.fim)}" onchange="edFechado('${f.id}','fim',this.value)"></td><td><button class="btn btn-sm btn-danger" onclick="delFechado('${f.id}')">Apagar</button></td></tr>`;
+  });
+  h+=`</tbody></table></div><p class="small muted" style="margin-top:8px">Para um só dia, Início = Fim. Acrescenta as férias de verão ou outros encerramentos.</p></div>`;
+  h+=`<div class="meses">`;
+  ms.forEach(m=>{
+    const ses=sessoesMes(m.ano,m.mes); const n=new Date(m.ano,m.mes+1,0).getDate(); const off=diaSemana(new Date(m.ano,m.mes,1));
+    h+=`<div class="mes"><h4><span>${m.nome}</span><span class="muted">${ses.reduce((a,b)=>a+b,0)} dias c/ aulas</span></h4><div class="dias">`;
+    DIAS_S.forEach(d=>h+=`<div class="h">${d}</div>`); for(let i=0;i<off;i++) h+=`<div class="d vazio"></div>`;
+    for(let d=1; d<=n; d++){ const dt=new Date(m.ano,m.mes,d), iso=isoD(dt); const cls=['d']; if(diaSemana(dt)>=5) cls.push('fim'); if(!temAulas(iso)) cls.push('fechado'); if(D.ajustes[iso]) cls.push('forcado'); h+=`<div class="${cls.join(' ')}" title="${iso}${D.ajustes[iso]?' (manual)':''}" onclick="toggleDia('${iso}')">${d}</div>`; }
+    h+=`</div><div class="small muted" style="margin-top:6px">${DIAS_S.map((d,i)=>d+' '+ses[i]).join(' · ')}</div></div>`;
+  });
+  h+=`</div>`;
+  h+=`<div class="card" style="margin-top:16px"><h3>Nº de dias com aulas por dia da semana em cada mês</h3><div class="table-wrap"><table><thead><tr><th>Mês</th>`; DIAS_S.forEach(d=>h+=`<th class="right">${d}</th>`); h+=`<th class="right">Total</th></tr></thead><tbody>`;
+  ms.forEach(m=>{ const s=sessoesMes(m.ano,m.mes); h+=`<tr><td>${m.nome}</td>${s.map(x=>`<td class="right mono">${x}</td>`).join('')}<td class="right mono"><b>${s.reduce((a,b)=>a+b,0)}</b></td></tr>`; });
+  h+=`</tbody></table></div></div>`;
+  $('sec-calendario').innerHTML=h;
+}
+function toggleDia(iso){ const cur=D.ajustes[iso]; const auto=!fechadoPorPeriodo(iso); if(cur){ delete D.ajustes[iso]; } else { D.ajustes[iso]= auto?'S':'A'; } guardar(); renderCalendario(); }
+function addFechado(){ D.fechados.push({id:uid(),desc:'Novo período',inicio:'',fim:''}); guardar(); renderCalendario(); }
+function edFechado(id,k,v){ const f=D.fechados.find(x=>x.id===id); if(!f) return; f[k]=v; if(k==='inicio' && (!f.fim||f.fim<v)) f.fim=v; guardar(); renderCalendario(); }
+function delFechado(id){ D.fechados=D.fechados.filter(x=>x.id!==id); guardar(); renderCalendario(); }
+
+/* ---------- PAGAMENTOS ---------- */
+let mesSel = 'todos';
+function renderPagamentos(){
+  const ms=meses(); const det=detalhe();
+  const sesPorMes=ms.map(m=>sessoesMes(m.ano,m.mes));
+  let h=`<div class="page-head"><div><h2>Pagamentos pela ocupação</h2><p>Valor do mês = Σ por dia da semana (horas nesse dia × preço/hora × nº de dias com aulas nesse mês). Escolhe um mês para ver o detalhe por aula ou «Ano completo» para a tabela anual.</p></div>
+    <div class="row"><select class="cell" onchange="mesSel=this.value;renderPagamentos()"><option value="todos" ${mesSel==='todos'?'selected':''}>Ano completo</option>${ms.map((m,i)=>`<option value="${i}" ${String(mesSel)===String(i)?'selected':''}>${m.nome}</option>`).join('')}</select>
+    <button class="btn" onclick="imprimirPagamentos()">🖶 Imprimir</button><button class="btn" onclick="exportarCSV()">⭳ CSV</button></div></div>`;
+  if(mesSel==='todos'){
+    const totAno=det.reduce((a,r)=>a+ms.reduce((x,m,i)=>x+valorMes(r,sesPorMes[i]),0),0);
+    h+=`<div class="kpis"><div class="kpi"><div class="n">${fmt(totAno)}</div><div class="l">total do ano letivo</div></div><div class="kpi"><div class="n">${fmt(totAno/12)}</div><div class="l">média mensal</div></div><div class="kpi"><div class="n">${fmt(det.reduce((a,r)=>a+r.valorSemana,0))}</div><div class="l">valor semanal</div></div></div>`;
+    h+=`<div class="card"><h3>Por atividade / professor</h3><div class="table-wrap"><table id="tab-anual"><thead><tr><th>Atividade</th><th class="right">h/sem</th><th class="right">€/sem</th>${ms.map(m=>`<th class="right">${m.curto}</th>`).join('')}<th class="right">Total ano</th></tr></thead><tbody>`;
+    const colTot=new Array(12).fill(0);
+    D.atividades.forEach(a=>{ const rows=det.filter(r=>r.atv.id===a.id); if(!rows.length) return;
+      const vals=ms.map((m,i)=>rows.reduce((x,r)=>x+valorMes(r,sesPorMes[i]),0)); vals.forEach((v,i)=>colTot[i]+=v);
+      h+=`<tr><td><span class="legend"><span><i style="background:${esc(a.cor)}"></i><b>${esc(a.nome)}</b></span></span></td><td class="right mono">${fmtH(rows.reduce((x,r)=>x+r.horasSemana,0))}</td><td class="right mono">${fmt(rows.reduce((x,r)=>x+r.valorSemana,0))}</td>${vals.map(v=>`<td class="right mono">${fmt(v)}</td>`).join('')}<td class="right mono"><b>${fmt(vals.reduce((x,y)=>x+y,0))}</b></td></tr>`;
+    });
+    h+=`<tr class="total"><td>TOTAL</td><td class="right mono">${fmtH(det.reduce((a,r)=>a+r.horasSemana,0))}</td><td class="right mono">${fmt(det.reduce((a,r)=>a+r.valorSemana,0))}</td>${colTot.map(v=>`<td class="right mono">${fmt(v)}</td>`).join('')}<td class="right mono">${fmt(colTot.reduce((x,y)=>x+y,0))}</td></tr></tbody></table></div></div>`;
+    h+=`<div class="card"><h3>Por sala</h3><div class="table-wrap"><table><thead><tr><th>Sala</th><th class="right">Atividades</th><th class="right">h/sem</th>${ms.map(m=>`<th class="right">${m.curto}</th>`).join('')}<th class="right">Total ano</th></tr></thead><tbody>`;
+    D.salas.forEach(s=>{ const rows=det.filter(r=>r.sala.id===s.id); const vals=ms.map((m,i)=>rows.reduce((x,r)=>x+valorMes(r,sesPorMes[i]),0));
+      h+=`<tr><td><b>${esc(s.nome)}</b></td><td class="right mono">${rows.length}</td><td class="right mono">${fmtH(rows.reduce((x,r)=>x+r.horasSemana,0))}</td>${vals.map(v=>`<td class="right mono">${fmt(v)}</td>`).join('')}<td class="right mono"><b>${fmt(vals.reduce((x,y)=>x+y,0))}</b></td></tr>`; });
+    h+=`</tbody></table></div></div>`;
+  } else {
+    const i=Number(mesSel), m=ms[i], ses=sesPorMes[i];
+    const tot=det.reduce((a,r)=>a+valorMes(r,ses),0);
+    h+=`<div class="kpis"><div class="kpi"><div class="n">${fmt(tot)}</div><div class="l">total ${m.nome}</div></div><div class="kpi"><div class="n">${ses.reduce((a,b)=>a+b,0)}</div><div class="l">dias com aulas no mês</div></div><div class="kpi"><div class="n sm">${DIAS_S.map((d,k)=>d+' '+ses[k]).join(' · ')}</div><div class="l">nº de cada dia da semana</div></div></div>`;
+    h+=`<div class="card"><h3>Detalhe de ${m.nome} — por atividade e sala</h3><div class="table-wrap"><table><thead><tr><th>Atividade</th><th>Sala</th><th>Dias / horas por aula</th><th class="right">Aulas no mês</th><th class="right">Horas no mês</th><th>Escalão</th><th class="right">€/hora</th><th class="right">Valor do mês</th></tr></thead><tbody>`;
+    D.atividades.forEach(a=>{ det.filter(r=>r.atv.id===a.id).forEach(r=>{
+      const dias=r.horasDia.map((hh,k)=>hh>0?`${DIAS_S[k]} ${fmtH(hh)}h`:null).filter(Boolean).join(', ');
+      const aulas=r.horasDia.reduce((x,hh,k)=>x+(hh>0?ses[k]:0),0), horas=r.horasDia.reduce((x,hh,k)=>x+hh*ses[k],0);
+      h+=`<tr><td><span class="legend"><span><i style="background:${esc(a.cor)}"></i><b>${esc(a.nome)}</b></span></span></td><td>${esc(r.sala.nome)}</td><td class="small">${dias}</td><td class="right mono">${aulas}</td><td class="right mono">${fmtH(horas)}</td><td>${r.escalao}</td><td class="right mono">${fmt(r.preco)}</td><td class="right mono"><b>${fmt(valorMes(r,ses))}</b></td></tr>`;
+    }); });
+    h+=`<tr class="total"><td colspan="7">TOTAL ${m.nome.toUpperCase()}</td><td class="right mono">${fmt(tot)}</td></tr></tbody></table></div></div>`;
+    h+=`<div class="card"><h3>Resumo a pagar por atividade / professor — ${m.nome}</h3><div class="table-wrap"><table><thead><tr><th>Atividade</th><th class="right">Aulas</th><th class="right">Horas</th><th class="right">Valor a pagar</th></tr></thead><tbody>`;
+    D.atividades.forEach(a=>{ const rows=det.filter(r=>r.atv.id===a.id); if(!rows.length) return;
+      const aulas=rows.reduce((x,r)=>x+r.horasDia.reduce((y,hh,k)=>y+(hh>0?ses[k]:0),0),0), horas=rows.reduce((x,r)=>x+r.horasDia.reduce((y,hh,k)=>y+hh*ses[k],0),0), v=rows.reduce((x,r)=>x+valorMes(r,ses),0);
+      h+=`<tr><td><b>${esc(a.nome)}</b></td><td class="right mono">${aulas}</td><td class="right mono">${fmtH(horas)}</td><td class="right mono"><b>${fmt(v)}</b></td></tr>`; });
+    h+=`<tr class="total"><td>TOTAL</td><td></td><td></td><td class="right mono">${fmt(tot)}</td></tr></tbody></table></div></div>`;
+  }
+  $('sec-pagamentos').innerHTML=h;
+}
+function imprimirPagamentos(){
+  const ms=meses(), det=detalhe(); let h;
+  if(mesSel==='todos'){
+    h=cabecalhoPrint('Pagamentos pela ocupação das salas — ano completo');
+    h+=`<table><thead><tr><th>Atividade</th><th>h/sem</th>${ms.map(m=>`<th>${m.curto}</th>`).join('')}<th>Total</th></tr></thead><tbody>`;
+    const colTot=new Array(12).fill(0);
+    D.atividades.forEach(a=>{ const rows=det.filter(r=>r.atv.id===a.id); if(!rows.length) return; const vals=ms.map(m=>rows.reduce((x,r)=>x+valorMes(r,sessoesMes(m.ano,m.mes)),0)); vals.forEach((v,i)=>colTot[i]+=v);
+      h+=`<tr><td><b>${esc(a.nome)}</b></td><td>${fmtH(rows.reduce((x,r)=>x+r.horasSemana,0))}</td>${vals.map(v=>`<td style="text-align:right">${fmt(v)}</td>`).join('')}<td style="text-align:right"><b>${fmt(vals.reduce((x,y)=>x+y,0))}</b></td></tr>`; });
+    h+=`<tr><td><b>TOTAL</b></td><td></td>${colTot.map(v=>`<td style="text-align:right"><b>${fmt(v)}</b></td>`).join('')}<td style="text-align:right"><b>${fmt(colTot.reduce((x,y)=>x+y,0))}</b></td></tr></tbody></table>`;
+  } else {
+    const m=ms[Number(mesSel)], ses=sessoesMes(m.ano,m.mes);
+    h=cabecalhoPrint('Pagamentos pela ocupação das salas — '+m.nome);
+    h+=`<p style="margin-bottom:8px">Dias com aulas no mês: ${DIAS_S.map((d,k)=>d+' '+ses[k]).join(' · ')}</p>`;
+    h+=`<table><thead><tr><th>Atividade</th><th>Sala</th><th>Dias / horas por aula</th><th>Aulas</th><th>Horas</th><th>Escalão</th><th>€/hora</th><th>Valor</th></tr></thead><tbody>`;
+    let tot=0;
+    D.atividades.forEach(a=>det.filter(r=>r.atv.id===a.id).forEach(r=>{ const v=valorMes(r,ses); tot+=v;
+      h+=`<tr><td><b>${esc(a.nome)}</b></td><td>${esc(r.sala.nome)}</td><td>${r.horasDia.map((hh,k)=>hh>0?`${DIAS_S[k]} ${fmtH(hh)}h`:null).filter(Boolean).join(', ')}</td><td style="text-align:right">${r.horasDia.reduce((x,hh,k)=>x+(hh>0?ses[k]:0),0)}</td><td style="text-align:right">${fmtH(r.horasDia.reduce((x,hh,k)=>x+hh*ses[k],0))}</td><td>${r.escalao}</td><td style="text-align:right">${fmt(r.preco)}</td><td style="text-align:right"><b>${fmt(v)}</b></td></tr>`; }));
+    h+=`<tr><td colspan="7"><b>TOTAL</b></td><td style="text-align:right"><b>${fmt(tot)}</b></td></tr></tbody></table>`;
+  }
+  h+=rodapePrint(); $('print-area').innerHTML=h; window.print();
+}
+function exportarCSV(){
+  const ms=meses(), det=detalhe(); const sep=';'; const num=n=>(Number(n)||0).toFixed(2).replace('.',',');
+  const lines=[['Atividade','Sala','Horas/semana','Escalao','Preco/hora','Valor/semana',...ms.map(m=>m.nome),'Total ano'].join(sep)];
+  det.forEach(r=>{ const vals=ms.map(m=>valorMes(r,sessoesMes(m.ano,m.mes))); lines.push([r.atv.nome,r.sala.nome,num(r.horasSemana),r.escalao,num(r.preco),num(r.valorSemana),...vals.map(num),num(vals.reduce((a,b)=>a+b,0))].join(sep)); });
+  const blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='pagamentos_salas_'+$('side-ano-txt').textContent.replace('/','-')+'.csv'; document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ---------- DEFINIÇÕES ---------- */
+function renderDefinicoes(){
+  let h=`<div class="page-head"><div><h2>Definições</h2><p>Horário do mapa, cópias de segurança e reposição.</p></div></div>`;
+  h+=`<div class="card"><h3>Horário do mapa</h3><div class="row"><label>Das <input type="number" class="cell num" min="0" max="23" value="${D.horaIni}" onchange="D.horaIni=Math.max(0,Math.min(23,Number(this.value)||8));if(D.horaFim<=D.horaIni)D.horaFim=D.horaIni+1;guardar();renderDefinicoes()">h</label><label>às <input type="number" class="cell num" min="1" max="24" value="${D.horaFim}" onchange="D.horaFim=Math.max(D.horaIni+1,Math.min(24,Number(this.value)||22));guardar();renderDefinicoes()">h</label></div><p class="small muted" style="margin-top:8px">Ocupações fora deste intervalo deixam de ser visíveis no mapa (não são apagadas).</p></div>`;
+  h+=`<div class="card"><h3>Cópia de segurança</h3><div class="row"><button class="btn" onclick="exportarJSON()">⭳ Descarregar cópia (JSON)</button><label class="btn">⭱ Repor de uma cópia <input type="file" accept="application/json" style="display:none" onchange="importarJSON(this.files[0])"></label></div><p class="small muted" style="margin-top:8px">Última alteração: ${D.atualizado?new Date(D.atualizado).toLocaleString('pt-PT'):'—'} · Sessão: ${esc((supaSession&&supaSession.user&&supaSession.user.email)||'—')}</p></div>`;
+  h+=`<div class="card"><h3>Repor dados iniciais</h3><p class="small muted" style="margin-bottom:8px">Volta ao horário 2025/26 original, preçário e feriados pré-carregados. Apaga todas as alterações.</p><button class="btn btn-danger" id="btn-reset" onclick="resetDados(this)">Repor dados iniciais</button></div>`;
+  $('sec-definicoes').innerHTML=h;
+}
+function exportarJSON(){ const blob=new Blob([JSON.stringify(D,null,1)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='salas_arca_'+new Date().toISOString().slice(0,10)+'.json'; document.body.appendChild(a); a.click(); a.remove(); }
+function importarJSON(file){ if(!file) return; const r=new FileReader(); r.onload=()=>{ try{ D=normalizar(JSON.parse(r.result)); guardar(); renderAll(); toast('Cópia reposta.'); }catch(e){ toast('Ficheiro inválido.',false); } }; r.readAsText(file); }
+function resetDados(btn){ if(btn.dataset.armed!=='1'){ btn.dataset.armed='1'; btn.textContent='Confirmar? (apaga tudo)'; setTimeout(()=>{ if(btn.isConnected){ btn.dataset.armed=''; btn.textContent='Repor dados iniciais'; } },3500); return; } D=dadosIniciais(); guardar(); renderAll(); toast('Dados iniciais repostos.'); }
+
+/* ============================================================
+   ARRANQUE
+   ============================================================ */
+async function entrarApp(){
+  $('login-screen').style.display='none'; $('app').style.display='flex';
+  D = normalizar(LS.get(CHAVE_DADOS));
+  renderAll(); showTab('mapa');
+  marcaCloud(null);
+  try{
+    const v=await cloudLer();
+    if(v){ D=normalizar(v); LS.set(CHAVE_DADOS,D); renderAll(); }
+    else { cloudGuardar(D); }
+    marcaCloud(true);
+  }catch(e){ console.warn('cloud ler',e); _ultimoErroCloud=(e&&e.message)||''; marcaCloud(false); }
+}
+(function init(){
+  if(supaSession && supaSession.access_token){ entrarApp(); }
+})();
+</script>
+</body>
+</html>
