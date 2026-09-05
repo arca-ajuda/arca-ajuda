@@ -333,11 +333,24 @@
 
     async function loadNotifications(session){
       try{
-        const lastSeen = parseInt(localStorage.getItem(SEEN_SOCIOS_KEY)||'0', 10) || 0;
-        const res = await supa(`/rest/v1/socios?select=id&id=gt.${lastSeen}&limit=1`, {
-          headers:{ 'Authorization':'Bearer '+session.access_token, 'Prefer':'count=exact', 'Range':'0-0' }
-        });
-        showBadge('badge-socios', countFromContentRange(res));
+        const lastSeenRaw = localStorage.getItem(SEEN_SOCIOS_KEY);
+        if(lastSeenRaw === null){
+          // primeira vez neste browser: define a base no id mais recente,
+          // sem tratar os sócios já existentes como "novos"
+          const resMax = await supa('/rest/v1/socios?select=id&order=id.desc&limit=1', {
+            headers:{ 'Authorization':'Bearer '+session.access_token }
+          });
+          const rowsMax = await resMax.json();
+          const maxId = (rowsMax && rowsMax[0]) ? rowsMax[0].id : 0;
+          localStorage.setItem(SEEN_SOCIOS_KEY, String(maxId));
+          showBadge('badge-socios', 0);
+        }else{
+          const lastSeen = parseInt(lastSeenRaw, 10) || 0;
+          const res = await supa(`/rest/v1/socios?select=id&id=gt.${lastSeen}&limit=1`, {
+            headers:{ 'Authorization':'Bearer '+session.access_token, 'Prefer':'count=exact', 'Range':'0-0' }
+          });
+          showBadge('badge-socios', countFromContentRange(res));
+        }
       }catch(e){}
 
       try{
