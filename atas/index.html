@@ -852,6 +852,7 @@ function renderAta(id){
   if(e==="bloqueada") html+='<div class="status-banner lock"><span class="grow">🔒 Ata <b>bloqueada</b> desde '+addDays(a.fechadaEm,DIAS_CORRECAO).toLocaleDateString("pt-PT")+'. Para a alterar é necessária a autorização de <b>dois membros da Direção</b>.</span></div>';
 
   var dis = editavel ? '' : ' disabled';
+  var dirOpts='<option value="">Escolher da Direção…</option>'+state.settings.membros.map(function(m){ return '<option value="'+esc(m.nome)+'">'+esc(m.nome)+' — '+esc(m.cargo)+'</option>'; }).join('');
   html+='<fieldset'+dis+'>';
   // --- identificação
   html+='<div class="section"><h3>Reunião</h3><div class="field-grid">'
@@ -861,8 +862,8 @@ function renderAta(id){
     +'<div class="field"><label>Hora de início</label><input type="time" data-f="horaInicio" value="'+esc(a.horaInicio)+'"></div>'
     +'<div class="field"><label>Hora de encerramento</label><input type="time" data-f="horaFim" value="'+esc(a.horaFim)+'"></div>'
     +'<div class="field full"><label>Local</label><input type="text" data-f="local" value="'+esc(a.local)+'" placeholder="na sede da Associação…"></div>'
-    +'<div class="field span2"><label>Presidiu</label><input type="text" data-f="presidiu" value="'+esc(a.presidiu)+'"></div>'
-    +'<div class="field span2"><label>Secretariou (redige a ata)</label><input type="text" data-f="secretariou" value="'+esc(a.secretariou)+'"></div>'
+    +'<div class="field span2"><label>Presidiu</label><div style="display:flex;gap:6px"><input type="text" data-f="presidiu" value="'+esc(a.presidiu)+'" style="flex:1"><select data-dir-sel="presidiu" title="Escolher da Direção" style="max-width:46%">'+dirOpts+'</select></div></div>'
+    +'<div class="field span2"><label>Secretariou (redige a ata)</label><div style="display:flex;gap:6px"><input type="text" data-f="secretariou" value="'+esc(a.secretariou)+'" style="flex:1"><select data-dir-sel="secretariou" title="Escolher da Direção" style="max-width:46%">'+dirOpts+'</select></div></div>'
     +'</div></div>';
 
   // --- presenças
@@ -932,6 +933,11 @@ function bindAtaEvents(a, editavel){
     el.addEventListener(el.type==="checkbox"?"change":"input", function(){ markDirty(); });
   });
   app.querySelectorAll("[data-pres]").forEach(function(el){ el.addEventListener("change", markDirty); });
+  app.querySelectorAll("[data-dir-sel]").forEach(function(sel){ sel.addEventListener("change", function(){
+    if(!sel.value) return;
+    var inp=app.querySelector('[data-f="'+sel.getAttribute("data-dir-sel")+'"]'); if(inp){ inp.value=sel.value; markDirty(); }
+    sel.value="";
+  }); });
   app.querySelectorAll("[data-ordem]").forEach(function(el){ el.addEventListener("input", markDirty); });
   app.querySelectorAll("[data-ordem-del]").forEach(function(el){
     el.addEventListener("click", function(){
