@@ -162,6 +162,18 @@
   .folha-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
   @media(max-width:1100px){.folha .mapas{grid-template-columns:1fr!important}.folha .rodape-grid{grid-template-columns:1fr 1fr!important}}
 
+  /* ---- MODAL ATIVIDADE ---- */
+  .chip .lapis{margin-left:5px;opacity:.55;font-size:11px}
+  .chip:hover .lapis{opacity:1}
+  #modal-bg{position:fixed;inset:0;background:rgba(10,20,15,.45);z-index:400;display:none;align-items:center;justify-content:center;padding:16px}
+  #modal-bg.open{display:flex}
+  .modal{background:#fff;border-radius:14px;padding:20px 22px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+  .modal h3{color:var(--teal-d);font-size:16px;margin-bottom:12px}
+  .modal label{display:block;font-size:12px;font-weight:600;color:var(--text-2);margin:10px 0 4px}
+  .modal input[type=text],.modal select{width:100%;padding:9px 10px;border:1.5px solid var(--line);border-radius:8px}
+  .modal .acoes{display:flex;gap:8px;justify-content:space-between;margin-top:16px;flex-wrap:wrap}
+  .modal .aviso{font-size:12px;color:var(--coral-d);margin-top:8px}
+
   /* ---- PRINT ---- */
   #print-area{display:none}
   @media print{
@@ -173,6 +185,7 @@
     body.print-folha .section{display:none!important}
     body.print-folha #sec-folha{display:block!important}
     body.print-folha{background:#fff}
+    #modal-bg{display:none!important}
     body.print-folha #sec-folha .card{display:none!important}
     body.print-folha .folha{border:none;border-radius:0;padding:0;zoom:.8}
     body.print-folha .folha table.fm th,body.print-folha .folha table.fm td{height:13px}
@@ -243,6 +256,7 @@
   </main></div>
 </div>
 
+<div id="modal-bg" onclick="if(event.target===this)fecharModal()"><div class="modal" id="modal"></div></div>
 <div id="print-area"></div>
 <div id="toast"></div>
 
@@ -498,6 +512,44 @@ function tabAtual(){ const b=document.querySelector('nav#tabs button.active'); r
 function render(t){ ({folha:renderFolha, mapa:renderMapa, precos:renderPrecos, calendario:renderCalendario, pagamentos:renderPagamentos, definicoes:renderDefinicoes}[t]||renderMapa)(); }
 function renderAll(){ const ini=parseD(D.inicio); $('side-ano-txt').textContent=ini.getFullYear()+'/'+String(ini.getFullYear()+1).slice(2); render(tabAtual()); }
 
+/* ---------- PALETA + EDIÇÃO DE ATIVIDADES ---------- */
+let _renderDepois=null;
+function paletaHtml(after){
+  _renderDepois=after;
+  let h=`<div class="palette"><b class="small muted" style="margin-right:4px">Atividade a colocar:</b>`;
+  D.atividades.forEach(a=>{ h+=`<span class="chip ${brush===a.id?'sel':''}" style="background:${esc(a.cor)}" onclick="brush='${a.id}';_renderDepois()" title="${a.federada?'Federada':'Não federada'} · clica no lápis para editar">${esc(a.nome)}<span class="lapis" onclick="event.stopPropagation();abrirAtividade('${a.id}')" title="Editar / eliminar">✏️</span></span>`; });
+  h+=`<span class="chip eraser ${brush==='eraser'?'sel':''}" onclick="brush='eraser';_renderDepois()">🧽 Borracha</span>`;
+  h+=`<button class="btn btn-sm btn-primary" style="margin-left:6px" onclick="abrirAtividade(null)">+ Nova atividade</button></div>`;
+  return h;
+}
+function usoAtividade(id){ let n=0; D.salas.forEach(s=>{ n+=horasDia(s.id,id).reduce((a,b)=>a+b,0); }); const inv=ocupacoesInvisiveis().filter(x=>x.atv&&x.atv.id===id).length; return {horas:n, escondidas:inv}; }
+function abrirAtividade(id){
+  const a=id?atv(id):null; const cores=['#F4CCCC','#FCE5CD','#FFF2CC','#D9EAD3','#D0E0E3','#C9DAF8','#D9D2E9','#EAD1DC','#B6D7A8','#A2C4C9','#F9CB9C','#B4A7D6','#EA9999','#FFE599','#A4C2F4','#D5A6BD'];
+  const cor=a?a.cor:cores[D.atividades.length%cores.length]; const uso=a?usoAtividade(id):{horas:0,escondidas:0};
+  $('modal').innerHTML=`<h3>${a?'Editar atividade':'Nova atividade'}</h3>
+    <label>Nome</label><input type="text" id="ma-nome" value="${esc(a?a.nome:'')}" placeholder="ex.: ESGRIMA" onkeydown="if(event.key==='Enter')guardarAtividade('${id||''}')">
+    <label>Federada?</label><select id="ma-fed"><option value="0" ${a&&!a.federada||!a?'selected':''}>Não federada</option><option value="1" ${a&&a.federada?'selected':''}>Federada</option></select>
+    <label>Cor no mapa</label><div class="row"><input type="color" id="ma-cor" value="${esc(cor)}"> ${cores.map(c=>`<span class="chip" style="background:${c};padding:4px 9px" onclick="$('ma-cor').value='${c}'">&nbsp;</span>`).join('')}</div>
+    ${a?`<div class="small muted" style="margin-top:10px">No mapa: ${fmtH(uso.horas)} h/semana${uso.escondidas?` (+${uso.escondidas} células escondidas)`:''}.</div>`:''}
+    <div class="acoes"><div>${a?`<button class="btn btn-danger" id="ma-del" onclick="eliminarAtividade('${id}',this)">🗑 Eliminar</button>`:''}</div><div style="display:flex;gap:8px"><button class="btn" onclick="fecharModal()">Cancelar</button><button class="btn btn-primary" onclick="guardarAtividade('${id||''}')">Guardar</button></div></div>
+    ${a&&uso.horas>0?`<div class="aviso">Ao eliminar, as ${fmtH(uso.horas)} h marcadas no mapa são também apagadas.</div>`:''}`;
+  $('modal-bg').classList.add('open'); setTimeout(()=>$('ma-nome').focus(),50);
+}
+function fecharModal(){ $('modal-bg').classList.remove('open'); }
+function guardarAtividade(id){
+  const nome=$('ma-nome').value.trim(); if(!nome){ toast('Escreve o nome da atividade.',false); return; }
+  const dup=D.atividades.find(x=>x.nome.toLowerCase()===nome.toLowerCase() && x.id!==id); if(dup){ toast('Já existe uma atividade com esse nome.',false); return; }
+  const fed=$('ma-fed').value==='1', cor=$('ma-cor').value;
+  if(id){ const a=atv(id); a.nome=nome; a.federada=fed; a.cor=cor; } else { const nid=uid(); D.atividades.push({id:nid,nome,federada:fed,cor}); brush=nid; }
+  guardar(); fecharModal(); renderAll(); toast(id?'Atividade atualizada.':'Atividade criada — já podes marcá-la no mapa.');
+}
+function eliminarAtividade(id, btn){
+  if(btn.dataset.armed!=='1'){ btn.dataset.armed='1'; btn.textContent='Confirmar eliminação?'; setTimeout(()=>{ if(btn.isConnected){ btn.dataset.armed=''; btn.textContent='🗑 Eliminar'; } },3500); return; }
+  D.salas.forEach(s=>{ const m=D.mapa[s.id]||{}; for(const d in m){ for(const k in m[d]){ if(m[d][k]===id) delete m[d][k]; } } });
+  D.atividades=D.atividades.filter(a=>a.id!==id); D.acertos=D.acertos.filter(x=>x.atvId!==id); Object.keys(D.precoManual).forEach(k=>{ if(k.endsWith('|'+id)) delete D.precoManual[k]; });
+  if(brush===id) brush=null; guardar(); fecharModal(); renderAll(); toast('Atividade eliminada.');
+}
+
 /* ---------- FOLHA COMPLETA (como no mapa impresso) ---------- */
 let folhaMostraValores = false;
 function edTexto(el, campo){ D.assoc[campo]=el.innerText.replace(/\n+$/,''); guardar(); }
@@ -517,9 +569,7 @@ function renderFolha(){
   const usadas=D.atividades.slice(); // todas as atividades da lista, como no mapa original
   let h=`<div class="page-head"><div><h2>Folha completa — mapa das atividades</h2><p>Igual ao mapa impresso. Edita diretamente aqui: escolhe uma atividade e clica/arrasta nas meias-horas (cada linha mostra início–fim; uma aula das 17:30 às 18:30 = linhas 17:30–18:00 e 18:00–18:30); clica nos textos (nomes das salas, valores de inscrição, avisos, observações) para os alterar. Depois «Imprimir» sai numa folha A4 horizontal.</p></div></div>`;
   h+=`<div class="folha-tools"><button class="btn btn-primary" onclick="imprimirFolha()">🖶 Imprimir / guardar PDF</button><label class="small muted"><input type="checkbox" ${folhaMostraValores?'checked':''} onchange="folhaMostraValores=this.checked;renderFolha()"> Juntar tabela de valores a pagar por mês</label></div>`;
-  h+=`<div class="card" style="margin-bottom:12px"><div class="palette"><b class="small muted" style="margin-right:4px">Atividade a colocar:</b>`;
-  D.atividades.forEach(a=>{ h+=`<span class="chip ${brush===a.id?'sel':''}" style="background:${esc(a.cor)}" onclick="brush='${a.id}';renderFolha()">${esc(a.nome)}</span>`; });
-  h+=`<span class="chip eraser ${brush==='eraser'?'sel':''}" onclick="brush='eraser';renderFolha()">🧽 Borracha</span></div></div>`;
+  h+=`<div class="card" style="margin-bottom:12px">${paletaHtml(renderFolha)}<p class="small muted" style="margin-top:8px">Clica no ✏️ de uma atividade para mudar o nome, a cor ou se é federada, ou para a eliminar. «+ Nova atividade» cria uma nova e deixa-a logo selecionada para marcar no mapa.</p></div>`;
   h+=`<div class="folha" id="folha">`;
   h+=`<div class="fh"><h1><span class="ed" contenteditable="true" onblur="edTexto(this,'nome')">${esc(D.assoc.nome)}</span> - ${T('nipc')} <span class="ed" contenteditable="true" onblur="edTexto(this,'nipc')">${esc(D.assoc.nipc)}</span></h1><div class="sub">${T('morada')} <span class="ed" contenteditable="true" onblur="edTexto(this,'morada')">${esc(D.assoc.morada)}</span> - ${T('contacto')} <span class="ed" contenteditable="true" onblur="edTexto(this,'contacto')">${esc(D.assoc.contacto)}</span></div></div>`;
   h+=`<h2 class="ft">${T('titulo')} - ${anoTxt}</h2>`;
@@ -571,9 +621,7 @@ function renderMapa(){
   let h=`<div class="page-head"><div><h2>Mapa de ocupação das salas</h2><p>Escolhe a atividade em cima e clica (ou arrasta) nas meias-horas para ocupar. Cada linha vai da hora de Início à hora de Fim (ex.: uma aula das 17:30 às 18:30 = linhas 17:30 e 18:00). Cada célula = ${D.passo} minutos; uma aula de 1 hora = ${Math.round(60/D.passo)} célula(s). Para libertar, usa a borracha ou clica de novo com a mesma atividade.</p></div>
     <div class="row"><button class="btn" onclick="imprimirMapa()">🖶 Imprimir mapa</button></div></div>`;
   h+=`<div class="kpis"><div class="kpi"><div class="n">${fmtH(totalH)} h</div><div class="l">horas ocupadas / semana</div></div><div class="kpi"><div class="n">${fmt(totalV)}</div><div class="l">valor semanal total</div></div><div class="kpi"><div class="n">${det.length}</div><div class="l">ocupações (atividade × sala)</div></div></div>`;
-  h+=`<div class="card"><h3>Atividade a colocar</h3><div class="palette">`;
-  D.atividades.forEach(a=>{ h+=`<span class="chip ${brush===a.id?'sel':''}" style="background:${esc(a.cor)}" onclick="brush='${a.id}';renderMapa()">${esc(a.nome)}</span>`; });
-  h+=`<span class="chip eraser ${brush==='eraser'?'sel':''}" onclick="brush='eraser';renderMapa()">🧽 Borracha</span></div></div>`;
+  h+=`<div class="card">${paletaHtml(renderMapa)}</div>`;
   h+=`<div class="salas-grid">`;
   D.salas.forEach(s=>{
     const hs=det.filter(r=>r.sala.id===s.id).reduce((a,r)=>a+r.horasSemana,0);
