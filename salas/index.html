@@ -47,13 +47,14 @@
   /* ---- APP ---- */
   #app{display:none;min-height:100vh}
   aside#side{width:232px;flex-shrink:0;background:linear-gradient(160deg,var(--teal),var(--teal-d));color:#fff;display:flex;flex-direction:column;gap:10px;padding:14px 12px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;z-index:50}
+  .side-foot{flex-shrink:0}
   aside#side .brand{font-weight:800;font-size:16px;letter-spacing:.3px;display:flex;align-items:center;gap:8px;justify-content:center;padding:4px 0 6px}
   .side-geral{display:flex;align-items:center;justify-content:center;gap:5px;background:rgba(255,255,255,.18);color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.34);border-radius:9px;padding:8px 10px;font-weight:800;font-size:12px}
   .side-geral:hover{background:rgba(255,255,255,.30)}
   .side-ano{background:rgba(255,255,255,.14);border-radius:9px;padding:8px 10px;font-size:12px;line-height:1.4}
   .side-ano b{font-size:13px}
-  nav#tabs{display:flex;flex-direction:column;gap:6px}
-  nav#tabs button{text-align:left;border:none;border-left:5px solid rgba(255,255,255,.5);border-radius:9px;padding:9px 12px;font-size:13.5px;font-weight:800;background:rgba(255,255,255,.92);color:var(--teal-d);transition:all .12s ease}
+  nav#tabs{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+  nav#tabs button{text-align:left;border:none;border-left:5px solid rgba(255,255,255,.5);border-radius:9px;padding:7px 12px;font-size:13px;font-weight:800;background:rgba(255,255,255,.92);color:var(--teal-d);transition:all .12s ease}
   nav#tabs button:hover{background:#fff}
   nav#tabs button.active{background:#fff;border-left-color:var(--amber);box-shadow:0 3px 9px rgba(0,0,0,.2)}
   .side-foot{margin-top:auto;display:flex;align-items:center;gap:6px;justify-content:space-between;font-size:12px}
@@ -65,7 +66,7 @@
   .section{display:none}.section.active{display:block}
   .page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
   .page-head h2{font-size:22px;color:var(--teal-d);letter-spacing:-.01em}
-  .page-head p{color:var(--text-2);font-size:13px;margin-top:2px;max-width:70ch}
+  .page-head p{color:var(--text-2);font-size:13px;margin-top:2px}
   .card{background:var(--card);border:var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:16px;box-shadow:0 1px 2px rgba(20,20,10,.03)}
   .card h3{font-size:15px;color:var(--teal-d);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
   .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -92,6 +93,16 @@
   input[type=color]{width:34px;height:26px;border:1px solid var(--line);border-radius:6px;padding:0;background:none}
 
   /* ---- MAPA ---- */
+  #side-paleta{background:rgba(255,255,255,.12);border-radius:9px;padding:8px 8px 6px;display:flex;flex-direction:column;gap:4px;min-height:0;flex:1 1 auto;overflow:auto}
+  #side-paleta .lbl{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;opacity:.9;margin-bottom:2px;display:flex;justify-content:space-between;align-items:center}
+  #side-paleta .lbl button{background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:800}
+  #side-paleta .sp{display:flex;align-items:center;gap:6px;border-radius:7px;padding:2px 7px;font-size:11.5px;font-weight:700;color:#1b1b1b;cursor:pointer;border:2px solid transparent;line-height:1.2}
+  #side-paleta .sp.sel{border-color:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.35)}
+  #side-paleta .sp .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #side-paleta .sp .lapis{opacity:.6;font-size:11px}
+  #side-paleta .sp:hover .lapis{opacity:1}
+  #side-paleta .sp.eraser{background:#fff;color:var(--text-2)}
+  #side-paleta .sp.eraser.sel{border-color:var(--coral)}
   .paleta-sticky{position:sticky;top:6px;z-index:60;background:rgba(255,255,255,.97);border:var(--border);border-radius:var(--radius);padding:8px 12px;margin-bottom:12px;box-shadow:0 6px 18px rgba(0,0,0,.10);backdrop-filter:blur(4px)}
   body.com-banner .paleta-sticky{top:44px}
   .paleta-sticky .chip{padding:3px 9px;font-size:11.5px}
@@ -168,10 +179,6 @@
   .folha-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
   @media screen and (max-width:1100px){.folha .mapas{grid-template-columns:1fr!important}.folha .mapas .campos{grid-row:auto!important}.folha .atvs-wrap{grid-column:1!important;grid-row:auto!important}.folha .rodape-grid{grid-template-columns:1fr 1fr!important}}
 
-  /* ---- BOTÃO DE AJUDA MÓVEL ---- */
-  #ajuda-fab{position:fixed;right:20px;bottom:20px;z-index:180;background:linear-gradient(135deg,var(--teal),var(--teal-d));color:#fff;border:none;border-radius:30px;padding:12px 18px;font-size:14px;font-weight:800;box-shadow:0 8px 22px rgba(15,110,86,.45);cursor:grab;user-select:none;touch-action:none;display:none}
-  #ajuda-fab:hover{filter:brightness(1.06)}
-  #ajuda-fab:active{cursor:grabbing}
   .modal.ajuda{max-width:640px;max-height:88vh;overflow:auto}
   .modal .subt{font-weight:800;color:var(--teal-d);margin:10px 0 4px;font-size:13px}
   .modal ul{margin:0 0 6px 18px;font-size:13px;line-height:1.6}
@@ -202,7 +209,6 @@
     #modal-bg{display:none!important}
     body.print-folha #sec-folha .card{display:none!important}
     body.print-folha .folha{border:none;border-radius:0;padding:0;zoom:.78}
-    #ajuda-fab{display:none!important}
     body.print-folha .folha table.fm th,body.print-folha .folha table.fm td{height:13px}
     body.print-folha .folha .mapas{grid-template-columns:repeat(var(--ncol,3),1fr)!important}
     body.print-folha .paleta-sticky{display:none!important}
@@ -258,6 +264,7 @@
       <button data-tab="definicoes" onclick="showTab('definicoes')">⚙️ Definições</button>
       <button onclick="abrirAjuda()" style="background:rgba(255,255,255,.2);color:#fff;border-left-color:rgba(255,255,255,.7)">❓ Ajuda</button>
     </nav>
+    <div id="side-paleta" hidden></div>
     <div class="side-foot">
       <span id="cloud-pill" title="Estado da ligação — clica para sincronizar" onclick="sincronizarAgora()">☁️ …</span>
       <button class="side-icon" onclick="sair()" title="Sair">⏻</button>
@@ -273,7 +280,6 @@
   </main></div>
 </div>
 
-<button id="ajuda-fab" title="Ajuda — arrasta para mover">❓ Ajuda</button>
 <div id="modal-bg" onclick="if(event.target===this)fecharModal()"><div class="modal" id="modal"></div></div>
 <div id="print-area"></div>
 <div id="toast"></div>
@@ -352,7 +358,7 @@ async function fazerLogin(){
   try{ await supaAuthLogin(email, pass); await entrarApp(); }
   catch(e){ loginMsg(e.message||'Falha ao entrar.', false); }
 }
-function sair(){ const f=$('ajuda-fab'); if(f) f.style.display='none'; supaSession=null; LS.del('salas_supa_session'); $('app').style.display='none'; $('login-screen').style.display='flex'; $('lg-pass').value=''; loginMsg(''); }
+function sair(){ supaSession=null; LS.del('salas_supa_session'); $('app').style.display='none'; $('login-screen').style.display='flex'; $('lg-pass').value=''; loginMsg(''); }
 function sessaoExpirou(){ supaSession=null; LS.del('salas_supa_session'); $('app').style.display='none'; $('login-screen').style.display='flex'; loginMsg('A sessão expirou por segurança. Entra outra vez — os dados estão guardados.', false); }
 
 /* ---------- cloud (config_app: chave/valor) ---------- */
@@ -552,6 +558,7 @@ function valorMes(row, ses){ return row.valorDia.reduce((acc,v,i)=>acc+v*ses[i],
    UI
    ============================================================ */
 function showTab(t){
+  const sp=$('side-paleta'); if(sp) sp.hidden=!(t==='folha'||t==='mapa');
   document.querySelectorAll('nav#tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===t));
   document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active', s.id==='sec-'+t));
   render(t);
@@ -565,6 +572,14 @@ function renderAll(){
 
 /* ---------- PALETA + EDIÇÃO DE ATIVIDADES ---------- */
 let _renderDepois=null;
+function renderPaletaLateral(after){
+  const box=$('side-paleta'); if(!box) return; _renderDepois=after;
+  if(!brush || (brush!=='eraser' && !atv(brush))) brush = D.atividades[0]?D.atividades[0].id:'eraser';
+  let h=`<div class="lbl"><span>Atividade a colocar</span><button onclick="abrirAtividade(null)" title="Nova atividade">+ Nova</button></div>`;
+  D.atividades.forEach(a=>{ h+=`<div class="sp ${brush===a.id?'sel':''}" style="background:${esc(a.cor)}" onclick="brush='${a.id}';_renderDepois()" title="${esc(a.nome)} · ${a.federada?'Federada':'Não federada'}"><span class="nm">${esc(a.nome)}</span><span class="lapis" onclick="event.stopPropagation();abrirAtividade('${a.id}')" title="Editar / eliminar">✏️</span></div>`; });
+  h+=`<div class="sp eraser ${brush==='eraser'?'sel':''}" onclick="brush='eraser';_renderDepois()">🧽 <span class="nm">Borracha (apagar)</span></div>`;
+  box.innerHTML=h; box.hidden=false;
+}
 function paletaHtml(after){
   _renderDepois=after;
   let h=`<div class="palette"><b class="small muted" style="margin-right:4px">Atividade a colocar:</b>`;
@@ -590,28 +605,15 @@ function abrirAtividade(id){
 }
 function fecharModal(){ $('modal-bg').classList.remove('open'); $('modal').classList.remove('ajuda'); }
 
-/* ---------- Botão de Ajuda flutuante e móvel (como no ATL) ---------- */
-let _ajudaInit=false;
-function initAjudaFab(){
-  const fab=$('ajuda-fab'); if(!fab) return; fab.style.display='inline-flex';
-  const pos=LS.get('salas_ajuda_pos'); if(pos&&pos.left!=null){ fab.style.left=Math.min(pos.left,window.innerWidth-80)+'px'; fab.style.top=Math.min(pos.top,window.innerHeight-40)+'px'; fab.style.right='auto'; fab.style.bottom='auto'; }
-  if(_ajudaInit) return; _ajudaInit=true;
-  let drag=false, moved=false, sx=0, sy=0, ox=0, oy=0;
-  const down=e=>{ drag=true; moved=false; const p=e.touches?e.touches[0]:e; sx=p.clientX; sy=p.clientY; const r=fab.getBoundingClientRect(); ox=r.left; oy=r.top; };
-  const move=e=>{ if(!drag) return; const p=e.touches?e.touches[0]:e; const dx=p.clientX-sx, dy=p.clientY-sy; if(Math.abs(dx)>4||Math.abs(dy)>4) moved=true; let nl=ox+dx, nt=oy+dy; nl=Math.max(4,Math.min(window.innerWidth-fab.offsetWidth-4,nl)); nt=Math.max(4,Math.min(window.innerHeight-fab.offsetHeight-4,nt)); fab.style.left=nl+'px'; fab.style.top=nt+'px'; fab.style.right='auto'; fab.style.bottom='auto'; if(e.cancelable&&moved) e.preventDefault(); };
-  const up=()=>{ if(!drag) return; drag=false; if(moved){ const r=fab.getBoundingClientRect(); LS.set('salas_ajuda_pos',{left:Math.round(r.left),top:Math.round(r.top)}); } };
-  fab.addEventListener('mousedown',down); document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
-  fab.addEventListener('touchstart',down,{passive:true}); document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',up);
-  fab.addEventListener('click',()=>{ if(!moved) abrirAjuda(); });
-}
+function initAjudaFab(){}
 function abrirAjuda(){
   $('modal').classList.add('ajuda');
   $('modal').innerHTML=`<h3>❓ Ajuda — Gestão das Salas</h3>
-    <div class="small muted" style="margin-bottom:6px">Guia rápido de cada secção. Podes arrastar este botão de ajuda para onde quiseres.</div>
+    <div class="small muted" style="margin-bottom:6px">Guia rápido de cada secção.</div>
     <div class="subt">📄 Folha completa (o mapa para afixar)</div><ul>
-      <li>Escolhe a atividade na <b>barra do topo</b> (acompanha o scroll) e <b>clica ou arrasta</b> nas meias-horas. Cada linha vai do início ao fim indicado (ex.: aula das 17:30 às 18:30 = linhas 17:30–18:00 e 18:00–18:30).</li>
+      <li>Escolhe a atividade na <b>lista do menu lateral</b> e <b>clica ou arrasta</b> nas meias-horas. Cada linha vai do início ao fim indicado (ex.: aula das 17:30 às 18:30 = linhas 17:30–18:00 e 18:00–18:30).</li>
       <li><b>🧽 Borracha</b> apaga; clicar de novo com a mesma atividade também apaga.</li>
-      <li><b>✏️</b> numa atividade: muda nome, cor, federada ou elimina. <b>+ Nova atividade</b> cria outra.</li>
+      <li><b>✏️</b> numa atividade (menu lateral): muda nome, cor, federada ou elimina. <b>+ Nova</b> cria outra.</li>
       <li>Clica em qualquer <b>texto</b> (títulos, nomes das salas, valores de inscrição, avisos, observações) para o escrever por cima. Tudo fica guardado.</li>
       <li><b>🖶 Imprimir / guardar PDF</b>: sai numa folha A4 horizontal, só o mapa.</li></ul>
     <div class="subt">📆 Mapa de ocupação</div><ul><li>O mesmo mapa em grande, por sala, com a tabela de horas semanais e o valor semanal por atividade.</li></ul>
@@ -623,7 +625,7 @@ function abrirAjuda(){
     <div class="subt">⚙️ Definições</div><ul><li>Dados da associação, dias da semana, ano letivo, horário e tamanho das células, ocupações escondidas, teste da ligação à cloud, cópia de segurança.</li></ul>
     <div class="subt">📚 Anos letivos</div><ul><li>O seletor no menu lateral muda de ano. <b>+ Novo ano letivo</b> cria o seguinte (copiando o atual ou vazio). Em Pagamentos há a comparação entre anos; em Definições podes eliminar um ano.</li></ul>
     <div class="subt">☁️ Cloud</div><ul><li>Entra com a conta da associação (a mesma do ATL). Tudo é guardado e sincronizado; se aparecer a faixa vermelha, verifica a internet e clica em «☁️» para sincronizar.</li></ul>
-    <div class="acoes"><button class="btn" onclick="LS.del('salas_ajuda_pos');const f=$('ajuda-fab');f.style.left='auto';f.style.top='auto';f.style.right='20px';f.style.bottom='20px';fecharModal()">Repor posição do botão</button><button class="btn btn-primary" onclick="fecharModal()">Fechar</button></div>`;
+    <div class="acoes" style="justify-content:flex-end"><button class="btn btn-primary" onclick="fecharModal()">Fechar</button></div>`;
   $('modal-bg').classList.add('open');
 }
 function guardarAtividade(id){
@@ -657,9 +659,9 @@ function renderFolha(){
   const anoTxt=ini.getFullYear()+'/'+String(ini.getFullYear()+1).slice(2);
   const salasT=D.salas.filter(x=>x.tipo!=='campo'), campos=D.salas.filter(x=>x.tipo==='campo');
   const usadas=D.atividades.slice(); // todas as atividades da lista, como no mapa original
-  let h=`<div class="page-head"><div><h2>Folha completa — mapa das atividades</h2><p>Igual ao mapa impresso. Edita diretamente aqui: escolhe uma atividade na barra (que acompanha o scroll) e clica/arrasta nas meias-horas — cada linha mostra início–fim; uma aula das 17:30 às 18:30 = linhas 17:30–18:00 e 18:00–18:30. Clica nos textos (nomes das salas, valores, avisos, observações) para os alterar. «Imprimir» sai numa folha A4 horizontal.</p></div></div>`;
+  let h=`<div class="page-head"><div><h2>Mapa das atividades</h2><p>Escolhe a atividade no menu à esquerda e clica/arrasta nas meias-horas; clica nos textos para os alterar. Dúvidas: <a href="#" onclick="abrirAjuda();return false">❓ Ajuda</a>.</p></div></div>`;
   h+=`<div class="folha-tools"><button class="btn btn-primary" onclick="imprimirFolha()">🖶 Imprimir / guardar PDF</button><label class="small muted"><input type="checkbox" ${folhaMostraValores?'checked':''} onchange="folhaMostraValores=this.checked;renderFolha()"> Juntar tabela de valores a pagar por mês</label></div>`;
-  h+=`<div class="paleta-sticky">${paletaHtml(renderFolha)}</div>`;
+  renderPaletaLateral(renderFolha);
   h+=`<div class="folha" id="folha">`;
   h+=`<div class="fh"><h1><span class="ed" contenteditable="true" onblur="edTexto(this,'nome')">${esc(D.assoc.nome)}</span> - ${T('nipc')} <span class="ed" contenteditable="true" onblur="edTexto(this,'nipc')">${esc(D.assoc.nipc)}</span></h1><div class="sub">${T('morada')} <span class="ed" contenteditable="true" onblur="edTexto(this,'morada')">${esc(D.assoc.morada)}</span> - ${T('contacto')} <span class="ed" contenteditable="true" onblur="edTexto(this,'contacto')">${esc(D.assoc.contacto)}</span></div></div>`;
   h+=`<h2 class="ft">${T('titulo')} - ${anoTxt}</h2>`;
@@ -719,7 +721,7 @@ function renderMapa(){
   let h=`<div class="page-head"><div><h2>Mapa de ocupação das salas</h2><p>Escolhe a atividade em cima e clica (ou arrasta) nas meias-horas para ocupar. Cada linha vai da hora de Início à hora de Fim (ex.: uma aula das 17:30 às 18:30 = linhas 17:30 e 18:00). Cada célula = ${D.passo} minutos; uma aula de 1 hora = ${Math.round(60/D.passo)} célula(s). Para libertar, usa a borracha ou clica de novo com a mesma atividade.</p></div>
     <div class="row"><button class="btn" onclick="imprimirMapa()">🖶 Imprimir mapa</button></div></div>`;
   h+=`<div class="kpis"><div class="kpi"><div class="n">${fmtH(totalH)} h</div><div class="l">horas ocupadas / semana</div></div><div class="kpi"><div class="n">${fmt(totalV)}</div><div class="l">valor semanal total</div></div><div class="kpi"><div class="n">${det.length}</div><div class="l">ocupações (atividade × sala)</div></div></div>`;
-  h+=`<div class="paleta-sticky">${paletaHtml(renderMapa)}</div>`;
+  renderPaletaLateral(renderMapa);
   h+=`<div class="salas-grid">`;
   D.salas.forEach(s=>{
     const hs=det.filter(r=>r.sala.id===s.id).reduce((a,r)=>a+r.horasSemana,0);
