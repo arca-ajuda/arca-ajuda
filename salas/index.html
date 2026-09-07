@@ -454,7 +454,7 @@ function normalizar(v){
   d.salas=Array.isArray(d.salas)?d.salas:base.salas; d.atividades=Array.isArray(d.atividades)?d.atividades:base.atividades;
   d.mapa=d.mapa||{}; d.fechados=Array.isArray(d.fechados)?d.fechados:[]; d.ajustes=d.ajustes||{}; d.precoManual=d.precoManual||{};
   d.horaIni=Number(d.horaIni)||8; d.horaFim=Number(d.horaFim)||22; d.passo=[15,30,60].includes(Number(d.passo))?Number(d.passo):30; d.nMeses=Math.max(1,Math.min(24,Number(d.nMeses)||12));
-  d.acertos=Array.isArray(d.acertos)?d.acertos:[]; d.assoc=Object.assign({},base.assoc,d.assoc||{}); d.rotulos=Object.assign({},base.rotulos,d.rotulos||{}); d.txt=Object.assign({},base.txt,d.txt||{}); d.dias=Array.isArray(d.dias)&&d.dias.length===7?d.dias:DIAS_DEF.slice(); d.diasS=Array.isArray(d.diasS)&&d.diasS.length===7?d.diasS:DIAS_S_DEF.slice(); DIAS=d.dias; DIAS_S=d.diasS; d.salas.forEach(x=>{ if(!x.base) x.base='semana'; if(!x.tipo) x.tipo='sala'; if(x.cobrar===undefined) x.cobrar=true; });
+  d.acertos=Array.isArray(d.acertos)?d.acertos:[]; d.obsManual=d.obsManual||{}; d.assoc=Object.assign({},base.assoc,d.assoc||{}); d.rotulos=Object.assign({},base.rotulos,d.rotulos||{}); d.txt=Object.assign({},base.txt,d.txt||{}); d.dias=Array.isArray(d.dias)&&d.dias.length===7?d.dias:DIAS_DEF.slice(); d.diasS=Array.isArray(d.diasS)&&d.diasS.length===7?d.diasS:DIAS_S_DEF.slice(); DIAS=d.dias; DIAS_S=d.diasS; d.salas.forEach(x=>{ if(!x.base) x.base='semana'; if(!x.tipo) x.tipo='sala'; if(x.cobrar===undefined) x.cobrar=true; });
   if((Number(v.versao)||1)<3 && !d.salas.some(x=>x.tipo==='campo')){ base.salas.filter(x=>x.tipo==='campo').forEach(x=>{ d.salas.push(x); d.mapa[x.id]=base.mapa[x.id]; }); base.atividades.forEach(a=>{ if(!d.atividades.some(b=>b.nome===a.nome)) d.atividades.push(a); }); }
   d.versao=3;
   return d;
@@ -829,11 +829,11 @@ function htmlPrecos(){
       <td>${hs>0?'<span class="small muted">no mapa</span>':`<button class="btn btn-sm btn-danger" onclick="delAtv('${a.id}')">Apagar</button>`}</td></tr>`;
   });
   h+=`</tbody></table></div><p class="small muted" style="margin-top:8px">Para apagar uma atividade ou sala, primeiro liberta as suas células no mapa.</p></div>`;
-  h+=`<div class="card" id="cfg-manuais"><h3>Preços manuais (exceções)</h3><p class="small muted" style="margin-bottom:8px">Se um caso específico tiver um preço acordado diferente do preçário, escreve-o aqui. Deixa em branco para usar o preçário.</p><div class="table-wrap"><table><thead><tr><th>Sala</th><th>Atividade</th><th class="right">Horas/semana</th><th>Escalão</th><th class="right">Preço tabela</th><th>Preço manual (€/h)</th><th class="right">Preço aplicado</th></tr></thead><tbody>`;
+  h+=`<div class="card" id="cfg-manuais"><h3>Preços manuais (exceções)</h3><p class="small muted" style="margin-bottom:8px">Se um caso específico tiver um preço acordado diferente do preçário, escreve-o aqui. Deixa em branco para usar o preçário.</p><div class="table-wrap"><table><thead><tr><th>Sala</th><th>Atividade</th><th class="right">Horas/semana</th><th>Escalão</th><th class="right">Preço tabela</th><th>Preço manual (€/h)</th><th class="right">Preço aplicado</th><th>Observações</th></tr></thead><tbody>`;
   detalhe().forEach(r=>{
     const key=r.sala.id+'|'+r.atv.id; const man=D.precoManual[key]; const tab=r.escalao==='manual'?precoTabela(r.sala,r.horasSemana):{preco:r.preco,escalao:r.escalao};
     h+=`<tr><td>${esc(r.sala.nome)}</td><td>${esc(r.atv.nome)}</td><td class="right mono">${fmtH(r.horasSemana)}</td><td>${tab.escalao}</td><td class="right mono">${fmt(tab.preco)}</td>
-      <td><input class="cell num" type="number" step="0.5" min="0" placeholder="—" value="${man!==undefined&&man!==''?man:''}" onchange="edManual('${key}',this.value)"></td><td class="right mono"><b>${fmt(r.preco)}</b>${r.escalao==='manual'?' <span class="small muted">(manual)</span>':''}</td></tr>`;
+      <td><input class="cell num" type="number" step="0.5" min="0" placeholder="—" value="${man!==undefined&&man!==''?man:''}" onchange="edManual('${key}',this.value)"></td><td class="right mono"><b>${fmt(r.preco)}</b>${r.escalao==='manual'?' <span class="small muted">(manual)</span>':''}</td><td><input class="cell wide" style="min-width:220px" placeholder="ex.: acordo com o professor, desconto…" value="${esc((D.obsManual||{})[key]||'')}" onchange="edObsManual('${key}',this.value)"></td></tr>`;
   });
   h+=`</tbody></table></div></div>`;
   return h;
@@ -844,6 +844,7 @@ function delSala(id){ if(Object.values(D.mapa[id]||{}).some(d=>Object.keys(d).le
 function edAtv(id,k,v){ const a=atv(id); if(!a) return; a[k]= k==='nome'? (v.trim()||a.nome) : (k==='prof'? v.trim() : v); guardar(); renderDefinicoes(); }
 function addAtv(){ const cores=['#FDE9D9','#DDEBF7','#E2EFDA','#FFF2CC','#EAD1DC','#D0E0E3']; D.atividades.push({id:uid(),nome:'NOVA ATIVIDADE',federada:false,cor:cores[D.atividades.length%cores.length]}); guardar(); renderDefinicoes(); }
 function delAtv(id){ const emUso=D.salas.some(s=>horasDia(s.id,id).some(x=>x>0)); if(emUso) return toast('Esta atividade está no mapa. Liberta as células primeiro.',false); D.atividades=D.atividades.filter(a=>a.id!==id); guardar(); renderDefinicoes(); }
+function edObsManual(key,v){ D.obsManual=D.obsManual||{}; if(v.trim()) D.obsManual[key]=v.trim(); else delete D.obsManual[key]; guardar(); }
 function edManual(key,v){ if(v===''||v===null) delete D.precoManual[key]; else D.precoManual[key]=Number(v); guardar(); renderDefinicoes(); }
 
 /* ---------- CALENDÁRIO ---------- */
@@ -906,7 +907,7 @@ function renderPagamentos(){
     D.atividades.forEach(a=>{ det.filter(r=>r.atv.id===a.id).forEach(r=>{
       const dias=r.horasDia.map((hh,k)=>hh>0?`${DIAS_S[k]} ${fmtH(hh)}h`:null).filter(Boolean).join(', ');
       const aulas=r.horasDia.reduce((x,hh,k)=>x+(hh>0?ses[k]:0),0), horas=r.horasDia.reduce((x,hh,k)=>x+hh*ses[k],0);
-      h+=`<tr><td><span class="legend"><span><i style="background:${esc(a.cor)}"></i><b>${esc(a.nome)}</b></span></span></td><td>${esc(r.sala.nome)}</td><td class="small">${dias}</td><td class="right mono">${aulas}</td><td class="right mono">${fmtH(horas)}</td><td>${r.escalao}</td><td class="right mono">${fmt(r.preco)}</td><td class="right mono"><b>${fmt(valorMes(r,ses))}</b></td></tr>`;
+      h+=`<tr><td><span class="legend"><span><i style="background:${esc(a.cor)}"></i><b>${esc(a.nome)}</b></span></span></td><td>${esc(r.sala.nome)}</td><td class="small">${dias}</td><td class="right mono">${aulas}</td><td class="right mono">${fmtH(horas)}</td><td title="${esc((D.obsManual||{})[r.sala.id+'|'+r.atv.id]||'')}">${r.escalao}${(D.obsManual||{})[r.sala.id+'|'+r.atv.id]?' <span class="small muted">📝</span>':''}</td><td class="right mono">${fmt(r.preco)}</td><td class="right mono"><b>${fmt(valorMes(r,ses))}</b></td></tr>`;
     }); });
     h+=`<tr class="total"><td colspan="7">TOTAL ${m.nome.toUpperCase()} (sem acertos)</td><td class="right mono">${fmt(tot-totAc)}</td></tr></tbody></table></div></div>`;
     // acertos manuais do mês
