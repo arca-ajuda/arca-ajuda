@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARCA d'Ajuda — Livro de Atas</title>
+<link rel="icon" href="data:,">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* ---------- tokens (identidade do site ARCA: navy + âmbar) ---------- */
+:root{
+  --bg:#F3F5F8; --surface:#ffffff; --surface-2:#EEF2F7;
+  --ink:#1a1a1a; --ink-muted:#5b6470;
+  --border:#E1E6ED; --border-strong:#CBD3DD;
+  --primary:#2E6199; --primary-dark:#1B4570; --primary-contrast:#ffffff;
+  --accent:#BA7517; --accent-dark:#8A5A05; --accent-bg:#FAEEDA;
+  --danger:#A23B2E; --danger-bg:#FAECE7;
+  --lock:#5b5f66; --lock-bg:#E6E8EA;
+  --focus:#2E6199;
+  --shadow:0 1px 3px rgba(16,24,40,.06),0 6px 18px rgba(16,24,40,.05);
+  --font-display:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --font-body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Inter',sans-serif;
+  --font-mono:'IBM Plex Mono','SFMono-Regular',Consolas,monospace;
+  --font-print:'Times New Roman',Times,serif;
+}
+*{box-sizing:border-box;}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:14.5px;line-height:1.5;}
+h1,h2,h3{font-family:var(--font-display);font-weight:700;letter-spacing:-.01em;text-wrap:balance;margin:0;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;color:inherit;}
+.mono{font-family:var(--font-mono);}
+.tabular{font-variant-numeric:tabular-nums;}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
+
+/* ---------- shell (igual aos outros módulos do site) ---------- */
+#appRoot{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:64px;background:linear-gradient(90deg,#1B4570 0%,#2E6199 60%,#2F7A8F 100%);box-shadow:0 3px 12px rgba(27,69,112,.28);position:sticky;top:0;z-index:100;gap:12px;}
+.logo-wrap{display:flex;align-items:center;gap:12px;min-width:0;}
+.logo-badge{width:48px;height:48px;border-radius:50%;background:#fff;color:#1B4570;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,.2);overflow:hidden;flex-shrink:0;}
+.logo-badge img{width:100%;height:100%;object-fit:cover;}
+.logo-text{font-size:16px;font-weight:600;color:#fff;}
+.logo-sub{font-size:11px;color:rgba(255,255,255,.75);margin-top:1px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.user-chip{color:#fff;font-size:12px;text-align:right;line-height:1.3;}
+.user-chip small{color:rgba(255,255,255,.7);}
+.icon-btn{--c:#83BEDD;width:42px;height:42px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 55%,#fff) 100%);color:#2B3440;box-shadow:0 2px 6px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;transition:transform .12s;}
+.icon-btn:hover{transform:translateY(-1px);filter:brightness(1.06);}
+.icon-btn svg{width:19px;height:19px;}
+.icon-btn.sair{--c:#DC9A92;}.icon-btn.ajuda{--c:#83BEDD;}
+.ml-btn{--c:#1B4570;display:flex;align-items:stretch;width:100%;border:none;border-radius:9px;overflow:hidden;cursor:pointer;color:#fff;font-weight:700;font-size:12.5px;letter-spacing:.5px;text-transform:uppercase;background:linear-gradient(135deg,#1B4570,#2E6199 60%,#2F7A8F);box-shadow:0 3px 9px rgba(27,69,112,.4);text-decoration:none;padding:0;font-family:inherit;text-align:left;transition:transform .12s;}
+.ml-btn:hover{transform:translateX(3px);filter:brightness(1.08);}
+.ml-lbl{flex:1;padding:12px 13px;display:flex;align-items:center;white-space:nowrap;}
+.ml-ico{width:40px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.22);font-size:16px;}
+#login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#12314F,#1B4570);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px;}
+#login-overlay .box{background:#fff;border-radius:16px;padding:28px 26px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.35);}
+#login-overlay .field{margin-top:10px;}
+.mobile-tabs{display:none;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.mobile-tabs .btn{flex:1;}
+.shell{display:flex;flex:1;min-height:0;}
+.sidebar{width:290px;flex:none;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:64px;height:calc(100vh - 64px);}
+.sidebar-top{padding:16px 14px 10px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--border);}
+.sidebar-top input[type=search]{border:1px solid var(--border-strong);border-radius:9px;padding:8px 11px;background:var(--bg);font-size:13px;width:100%;}
+.ata-list{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:4px;}
+.ata-item{display:flex;flex-direction:column;gap:3px;text-align:left;width:100%;padding:9px 11px;border-radius:9px;border:1px solid transparent;background:none;color:var(--ink);}
+.ata-item:hover{background:var(--surface-2);}
+.ata-item.active{background:var(--surface-2);border-color:var(--border-strong);}
+.ata-item .l1{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.ata-item .num{font-family:var(--font-display);font-weight:700;font-size:17px;}
+.ata-item .l2{font-size:12px;color:var(--ink-muted);display:flex;justify-content:space-between;gap:8px;}
+.ata-item .l2 span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sidebar-footer{padding:12px 14px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px;}
+.side-link{background:none;border:none;text-align:left;padding:6px 4px;color:var(--ink-muted);font-size:12.5px;font-weight:600;border-radius:6px;}
+.side-link:hover{background:var(--surface-2);color:var(--ink);}
+.side-link.active{color:var(--primary);}
+.legend{font-size:10.5px;color:var(--ink-muted);line-height:1.6;padding:0 4px;}
+
+.main{flex:1;min-width:0;padding:24px 30px 60px;overflow-y:auto;}
+.main-inner{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:18px;}
+
+/* ---------- pills / status ---------- */
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+.pill-rascunho{background:var(--accent-bg);color:var(--accent-dark);}
+.pill-fechada{background:var(--surface-2);color:var(--primary);border:1px solid var(--border-strong);}
+.pill-bloqueada{background:var(--lock-bg);color:var(--lock);}
+.pill-reaberta{background:var(--danger-bg);color:var(--danger);}
+
+.status-banner{border:1px solid var(--border-strong);background:var(--surface-2);border-radius:10px;padding:10px 14px;font-size:12.8px;color:var(--ink-muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.status-banner.warn{border-color:var(--danger);background:var(--danger-bg);color:var(--danger);}
+.status-banner.lock{border-color:var(--lock);background:var(--lock-bg);color:var(--lock);}
+.status-banner.ok{border-color:var(--primary);color:var(--primary);}
+.status-banner b{color:inherit;}
+.status-banner .grow{flex:1;min-width:200px;}
+
+/* ---------- buttons ---------- */
+.btn{appearance:none;border:1px solid transparent;border-radius:9px;padding:9px 14px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;}
+.btn-primary{background:linear-gradient(135deg,#1B4570,#2E6199);color:#fff;box-shadow:0 3px 10px rgba(27,69,112,.28);}
+.btn-primary:hover{filter:brightness(1.08);}
+.btn-ghost{background:none;border-color:var(--border-strong);color:var(--ink);}
+.btn-ghost:hover{background:var(--surface-2);}
+.btn-accent{background:var(--accent);color:#1a1204;}
+.btn-accent:hover{background:var(--accent-dark);color:#fff;}
+.btn-danger{background:none;border-color:var(--danger);color:var(--danger);}
+.btn-danger:hover{background:var(--danger-bg);}
+.btn-sm{padding:6px 10px;font-size:12px;border-radius:7px;}
+.btn[disabled]{opacity:.5;cursor:not-allowed;}
+
+/* ---------- editor ---------- */
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;padding-bottom:12px;border-bottom:3px solid var(--primary);}
+.page-head h2{font-size:26px;}
+.page-head .sub{font-size:12.5px;color:var(--ink-muted);margin-top:2px;}
+.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+
+.section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);}
+.section h3{font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--primary);margin-bottom:14px;padding-bottom:8px;border-bottom:1px dashed var(--border-strong);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.section h3 .hint{font-family:var(--font-body);font-weight:500;font-size:11px;letter-spacing:0;text-transform:none;color:var(--ink-muted);}
+.field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px 16px;}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0;}
+.field.span2{grid-column:span 2;}
+.field.full{grid-column:1/-1;}
+.field label{font-size:11.5px;font-weight:600;color:var(--ink-muted);}
+.field input,.field select,.field textarea{border:1px solid var(--border-strong);border-radius:8px;padding:8px 10px;background:var(--bg);font-size:13.5px;width:100%;}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--focus);outline-offset:1px;border-color:var(--focus);}
+.field textarea{min-height:60px;resize:vertical;line-height:1.5;}
+.field .help{font-size:11px;color:var(--ink-muted);}
+fieldset[disabled] .field input,fieldset[disabled] .field select,fieldset[disabled] .field textarea{background:var(--surface-2);color:var(--ink-muted);}
+fieldset{border:none;padding:0;margin:0;min-width:0;display:contents;}
+
+/* presenças */
+.presenca-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:6px 16px;}
+.presenca{display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 8px;border-radius:7px;}
+.presenca:hover{background:var(--surface-2);}
+.presenca input{width:16px;height:16px;accent-color:var(--primary);flex:none;}
+.presenca .cargo{color:var(--ink-muted);font-size:11.5px;margin-left:auto;}
+
+/* ordem de trabalhos */
+.ordem-list{display:flex;flex-direction:column;gap:6px;}
+.ordem-row{display:flex;gap:8px;align-items:center;}
+.ordem-row .n{font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--accent-dark);width:26px;text-align:right;flex:none;}
+.ordem-row input{flex:1;border:1px solid var(--border-strong);border-radius:8px;padding:7px 10px;background:var(--bg);font-size:13.5px;min-width:0;}
+.ordem-row button{border:none;background:none;color:var(--ink-muted);font-size:16px;padding:4px 6px;border-radius:6px;}
+.ordem-row button:hover{background:var(--danger-bg);color:var(--danger);}
+
+/* texto formatado */
+.toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:6px;background:var(--bg);border:1px solid var(--border-strong);border-bottom:none;border-radius:9px 9px 0 0;}
+.toolbar button{border:1px solid transparent;background:none;border-radius:6px;padding:5px 9px;font-size:13px;color:var(--ink);min-width:32px;}
+.toolbar button:hover{background:var(--surface-2);border-color:var(--border-strong);}
+.toolbar .sep{width:1px;background:var(--border-strong);margin:4px 4px;}
+.toolbar .spell{margin-left:auto;font-size:11px;color:var(--ink-muted);align-self:center;padding-right:6px;}
+.editor{min-height:320px;border:1px solid var(--border-strong);border-radius:0 0 9px 9px;padding:16px 20px;background:var(--surface);font-family:var(--font-print);font-size:16.5px;line-height:1.7;color:var(--ink);max-width:100%;}
+.editor:focus{outline:2px solid var(--focus);outline-offset:1px;}
+.editor[contenteditable="false"]{background:var(--surface-2);color:var(--ink-muted);}
+.editor p{margin:0 0 .6em;text-align:justify;}
+.editor h3{font-family:var(--font-print);font-size:1.1em;font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink);border:none;margin:.8em 0 .4em;padding:0;display:block;}
+.editor ul,.editor ol{margin:0 0 .6em;padding-left:1.6em;}
+.editor:empty::before{content:attr(data-placeholder);color:var(--ink-muted);font-style:italic;}
+.editor-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-muted);margin-top:6px;}
+
+/* histórico */
+.hist{display:flex;flex-direction:column;gap:8px;font-size:12.5px;}
+.hist-row{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--border);}
+.hist-row .when{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);white-space:nowrap;min-width:120px;}
+
+/* home / lista */
+.summary-strip{display:flex;gap:18px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;}
+.summary-item{display:flex;flex-direction:column;gap:2px;}
+.summary-item .n{font-family:var(--font-display);font-weight:800;font-size:26px;line-height:1;}
+.summary-item .l{font-size:11px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--surface);box-shadow:var(--shadow);}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px;}
+thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:var(--surface-2);}
+.empty-state{padding:34px 20px;text-align:center;color:var(--ink-muted);font-size:13px;line-height:1.6;}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
+.step h3{font-size:16px;color:var(--ink);margin-bottom:6px;}
+.step p{margin:0;font-size:12.5px;color:var(--ink-muted);}
+
+/* membros */
+.member-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);}
+.member-row .nm{font-weight:600;flex:1;}
+.member-row .cg{color:var(--ink-muted);font-size:12px;}
+.member-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.logo-drop{display:flex;align-items:center;gap:18px;flex-wrap:wrap;border:1px dashed var(--border-strong);border-radius:12px;padding:14px;background:var(--bg);}
+.logo-preview{width:150px;height:90px;border-radius:8px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.logo-preview img{max-width:138px;max-height:80px;object-fit:contain;}
+.file-btn{position:relative;overflow:hidden;}
+.file-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0;}
+
+/* ---------- modais ---------- */
+.modal{display:none;position:fixed;inset:0;z-index:90;align-items:center;justify-content:center;padding:16px;background:rgba(10,16,12,.55);}
+.modal.open{display:flex;}
+.modal-panel{background:var(--surface);border-radius:14px;padding:22px 24px;width:min(520px,100%);max-height:92vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;gap:14px;}
+.modal-panel h3{font-size:20px;}
+.modal-panel p{margin:0;font-size:13px;color:var(--ink-muted);line-height:1.55;}
+.auth-row{display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:end;}
+.auth-row .ok{font-size:12px;color:var(--primary);font-weight:600;}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:6px;border-top:1px solid var(--border);}
+.err-text{font-size:12.5px;color:var(--danger);font-weight:600;min-height:16px;}
+
+.toast{position:fixed;bottom:22px;right:22px;background:var(--primary-dark);color:#fff;padding:11px 18px;border-radius:12px;font-size:13px;font-weight:600;z-index:400;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none;max-width:360px;}
+.toast.show{opacity:1;transform:translateY(0);}
+
+/* ============ IMPRESSÃO — LIVRO DE ATAS ============ */
+.print-overlay{display:none;position:fixed;inset:0;background:#d9dcd3;z-index:600;overflow-y:auto;}
+.print-overlay.show{display:block;}
+.print-bar{position:sticky;top:0;display:flex;justify-content:center;gap:10px;padding:12px;background:#d9dcd3;z-index:2;flex-wrap:wrap;}
+.print-bar button{padding:9px 20px;border:none;border-radius:20px;font-size:13px;font-weight:700;box-shadow:0 2px 10px rgba(0,0,0,.12);}
+.print-bar .pbtn{background:#1a3a6b;color:#fff;}
+.print-bar .sbtn{background:#fff;color:#333;}
+.print-bar .note{font-size:12px;color:#444;align-self:center;}
+.pages{display:flex;flex-direction:column;align-items:center;gap:26px;padding:0 12px 40px;}
+
+.pg{width:210mm;height:297mm;background:#fff;color:#111;box-shadow:0 4px 24px rgba(0,0,0,.18);display:flex;flex-direction:column;font-family:var(--font-print);position:relative;overflow:hidden;}
+.pg-head{height:30mm;padding:11mm 18mm 0;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;border-bottom:2px solid #1a3a6b;margin:0 18mm;padding-left:0;padding-right:0;padding-bottom:3mm;}
+.pg-head .org{display:flex;align-items:center;gap:10px;}
+.pg-head .org-logo{width:46px;height:46px;border-radius:50%;background:#BA7517;color:#241a08;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:16px;flex:none;overflow:hidden;}
+.pg-head .org-logo img{max-width:60px;max-height:46px;object-fit:contain;}
+.pg-head .org-nome{font-size:13pt;font-weight:600;color:#1a3a6b;line-height:1.15;}
+.pg-head .org-sub{font-size:8.5pt;color:#555;}
+.pg-head .doc{text-align:right;font-size:9pt;color:#444;line-height:1.5;}
+.pg-head .doc b{display:block;font-family:var(--font-display);font-size:15pt;color:#1a3a6b;letter-spacing:.03em;font-weight:700;}
+.pg-body{flex:1;min-height:0;margin:0 18mm;padding-top:6mm;overflow:hidden;font-size:12pt;line-height:1.75;}
+.pg-foot{height:18mm;margin:0 18mm;border-top:1px solid #1a3a6b;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:8pt;color:#555;padding-top:2.5mm;}
+.pg-foot .pn{font-family:var(--font-mono);font-size:8.5pt;color:#333;white-space:nowrap;}
+
+.ata-titulo{text-align:center;font-family:var(--font-display);font-size:20pt;font-weight:700;letter-spacing:.08em;color:#1a3a6b;margin:0 0 1mm;}
+.ata-subtitulo{text-align:center;font-size:10.5pt;color:#444;margin:0 0 6mm;font-style:italic;}
+.ata-p{position:relative;overflow:hidden;text-align:justify;margin:0 0 2.2mm;}
+.ata-p::after{content:"————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————";position:absolute;white-space:nowrap;padding-left:5px;color:#333;letter-spacing:-1px;}
+.ata-p.sem-traco::after{content:none;}
+.ata-h{font-weight:600;margin:3mm 0 1.5mm;font-size:12pt;position:relative;overflow:hidden;}
+.ata-h::after{content:"————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————";position:absolute;white-space:nowrap;padding-left:5px;color:#333;letter-spacing:-1px;font-weight:400;}
+.pg-body ul,.pg-body ol{margin:0 0 2mm;padding-left:8mm;}
+.pg-body li{text-align:justify;list-style-position:inside;}
+.assinaturas{display:flex;justify-content:space-between;gap:20mm;margin-top:12mm;page-break-inside:avoid;}
+.assin{flex:1;text-align:center;font-size:10.5pt;}
+.assin .linha{border-top:1px solid #222;margin:14mm 4mm 2mm;}
+.assin .cargo{font-size:9pt;color:#555;}
+.encerra{margin-top:4mm;}
+.ata-mark{position:absolute;right:8mm;top:34mm;font-family:var(--font-mono);font-size:7pt;color:#999;writing-mode:vertical-rl;letter-spacing:.1em;}
+
+@media print{
+  body *{visibility:hidden;}
+  .print-overlay,.print-overlay *{visibility:visible;}
+  html,body{overflow:visible!important;height:auto!important;background:#fff!important;}
+  .print-overlay{position:absolute;top:0;left:0;width:100%;background:#fff;overflow:visible;}
+  .print-bar{display:none!important;}
+  .pages{display:block;padding:0;}
+  .pg{box-shadow:none;margin:0;page-break-after:always;break-after:page;}
+  .pg:last-child{page-break-after:auto;break-after:auto;}
+  @page{size:A4;margin:0;}
+}
+
+@media screen and (max-width:900px){
+  .shell{flex-direction:column;}
+  .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);position:static;height:auto;}
+  .mobile-tabs{display:flex;}
+  .ata-list{max-height:220px;}
+  .main{padding:16px 14px 50px;}
+  .field.span2{grid-column:span 1;}
+  .auth-row{grid-template-columns:1fr;}
+}
+
+</style>
+</head>
+<body>
+
+<!-- LOGIN (mesma conta da app de Sócios) -->
+<div id="login-overlay">
+  <div class="box">
+    <div id="login-logo-area" style="display:flex;justify-content:center;margin-bottom:10px"></div>
+    <div style="text-align:center;font-size:13px;font-weight:700;color:#1B4570;letter-spacing:.5px;text-transform:uppercase">ARCA d'Ajuda</div>
+    <div style="text-align:center;font-size:19px;font-weight:700;margin:4px 0 18px">Livro de Atas</div>
+    <div class="field"><label for="login-email">Email</label><input type="email" id="login-email" placeholder="email da associação" autocomplete="username"></div>
+    <div class="field"><label for="login-pass">Password</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"></div>
+    <div id="login-erro" class="err-text" style="margin-top:10px;text-align:center"></div>
+    <button class="btn btn-primary" id="login-btn" style="width:100%;margin-top:14px">Entrar</button>
+    <div style="text-align:center;margin-top:12px;font-size:11.5px;color:var(--ink-muted)">Mesmo email e password da app de Sócios.</div>
+  </div>
+</div>
+
+<div id="appRoot">
+  <div class="topbar">
+    <div class="logo-wrap">
+      <div class="logo-badge" id="logo-badge">AR</div>
+      <div>
+        <div class="logo-text">ARCA d'Ajuda</div>
+        <div class="logo-sub">Livro de Atas · Direção e Assembleia Geral</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-chip"><div id="user-email">—</div><small id="storePill">sessão iniciada</small> · <small id="drive-chip">☁ Drive</small></div>
+      <button class="icon-btn ajuda" id="btnAjuda" title="Ajuda">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </button>
+      <button class="icon-btn sair" id="btnSair" title="Sair">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="shell">
+    <nav class="sidebar">
+      <div class="sidebar-top">
+        <a class="ml-btn" href="../index.html" title="Menu Geral"><span class="ml-lbl">Menu Geral</span><span class="ml-ico">🏠</span></a>
+        <button class="btn btn-primary" id="btnNova">+ Nova ata</button>
+        <input type="search" id="searchBox" placeholder="Procurar por número, assunto ou data…">
+      </div>
+      <div class="ata-list" id="ataList"></div>
+      <div class="sidebar-footer">
+        <button class="side-link" data-nav="home">☰ Painel</button>
+        <button class="side-link" data-nav="config">🔑 PINs da Direção e definições</button>
+        <div class="legend">Uma ata fechada pode ser corrigida durante 5 dias. Depois só reabre com o PIN de dois membros da Direção. A lista da Direção vem da app de Sócios.</div>
+      </div>
+    </nav>
+    <main class="main"><div class="main-inner" id="app"></div></main>
+  </div>
+</div>
+
+<!-- modal: autorização de dois membros -->
+<div class="modal" id="authModal">
+  <div class="modal-panel">
+    <h3 id="authTitle">Autorização da Direção</h3>
+    <p id="authText">Esta ação precisa da autorização de dois membros da Direção. Cada um escolhe o seu nome e introduz o seu PIN.</p>
+    <div class="field"><label for="authMotivo">Motivo (fica registado no histórico da ata)</label><input type="text" id="authMotivo" placeholder="Ex.: corrigir o nome de um presente no ponto dois"></div>
+    <div class="auth-row">
+      <div class="field"><label>1.º membro</label><select id="auth1"></select></div>
+      <div class="field"><label>PIN</label><input type="password" id="pin1" inputmode="numeric" maxlength="8" autocomplete="off"></div>
+    </div>
+    <div class="auth-row">
+      <div class="field"><label>2.º membro</label><select id="auth2"></select></div>
+      <div class="field"><label>PIN</label><input type="password" id="pin2" inputmode="numeric" maxlength="8" autocomplete="off"></div>
+    </div>
+    <div class="err-text" id="authErr"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="authCancel">Cancelar</button>
+      <button class="btn btn-accent" id="authOk">Autorizar</button>
+    </div>
+  </div>
+</div>
+
+<!-- modal: confirmar -->
+<div class="modal" id="confirmModal">
+  <div class="modal-panel">
+    <h3 id="confirmTitle">Confirmar</h3>
+    <p id="confirmText"></p>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="confirmCancel">Cancelar</button>
+      <button class="btn btn-primary" id="confirmOk">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- modal: definir PIN de um membro -->
+<div class="modal" id="memberModal">
+  <div class="modal-panel">
+    <h3>PIN de membro da Direção</h3>
+    <p id="memberText">O PIN é pessoal: serve para este membro autorizar a reabertura de atas bloqueadas. Escolhe 4 a 8 algarismos.</p>
+    <div class="field"><label>Membro</label><input type="text" id="mNome" disabled></div>
+    <div class="auth-row">
+      <div class="field"><label for="mPin">PIN</label><input type="password" id="mPin" inputmode="numeric" maxlength="8" autocomplete="new-password"></div>
+      <div class="field"><label for="mPin2">Repetir PIN</label><input type="password" id="mPin2" inputmode="numeric" maxlength="8" autocomplete="new-password"></div>
+    </div>
+    <div class="err-text" id="memberErr"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="memberCancel">Cancelar</button>
+      <button class="btn btn-primary" id="memberOk">Guardar PIN</button>
+    </div>
+  </div>
+</div>
+
+<!-- modal: ajuda -->
+<div class="modal" id="ajudaModal">
+  <div class="modal-panel" style="width:min(640px,100%)">
+    <h3>❓ Como usar o Livro de Atas</h3>
+    <div style="font-size:13.5px;line-height:1.8;color:var(--ink)">
+      <p><b>1. Nova ata</b> — o número é atribuído automaticamente (1/2026, 2/2026…). Preenche o tipo de reunião, data, horas, local, quem presidiu e secretariou; marca as presenças (a lista vem da Direção registada na app de Sócios) e escreve a ordem de trabalhos.</p>
+      <p><b>2. Texto</b> — escreve as deliberações no editor com negrito, itálico, títulos de ponto e listas. A correção ortográfica em português é a do navegador (sublinhado vermelho; botão direito para corrigir). Tudo é guardado automaticamente.</p>
+      <p><b>3. Imprimir</b> — botão 🖨. A ata sai em A4 com cabeçalho e rodapé em todas as páginas, os parágrafos traçados até à margem, a abertura por extenso e as linhas de assinatura. Escolhe "Guardar como PDF" para ficar com o ficheiro.</p>
+      <p><b>4. Fechar</b> — quando a ata estiver aprovada, "Fechar ata". Durante 5 dias ainda podes corrigir; depois fica bloqueada.</p>
+      <p><b>5. Reabrir</b> — uma ata bloqueada só volta a ser editável com o PIN de dois membros diferentes da Direção. Fica registado quem autorizou, quando e porquê, e o texto anterior é guardado.</p>
+      <p><b>6. Google Drive</b> — ao fechar uma ata, o PDF é guardado automaticamente na pasta ARCA d'Ajuda / Atas do Google Drive (a mesma ligação da app de Sócios), e existe uma cópia de segurança de todas as atas em Backups. Se o Drive não estiver ligado, liga-o em "PINs da Direção e definições".</p>
+      <p><b>7. PINs</b> — em "PINs da Direção" cada membro define o seu PIN. Os membros e cargos alteram-se na app de Sócios → Configurações → Direção, e aparecem aqui automaticamente.</p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-primary" id="ajudaOk">Fechar</button></div>
+  </div>
+</div>
+
+<!-- impressão -->
+<div class="print-overlay" id="printOverlay">
+  <div class="print-bar">
+    <button class="pbtn" id="btnImprimir">🖨 Imprimir / Guardar PDF</button>
+    <button class="sbtn" id="btnFecharPrint">✕ Fechar</button>
+    <span class="note">Na impressora escolhe A4, sem margens adicionais, e "Guardar como PDF" se quiseres o ficheiro.</span>
+  </div>
+  <div class="pages" id="pages"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   SESSÃO SUPABASE (partilhada com a app de Sócios e Ofícios)
+   ============================================================ */
+var SUPA_URL = 'https://yfsyifypsrqnwkqkfrnm.supabase.co';
+var SUPA_KEY = 'sb_publishable_AkzlMeHlYHDyl0HzeC7_qg__j_Y6C9W';
+var LS = {
+  get:function(k){ try{ var v=localStorage.getItem(k); return v? JSON.parse(v):null; }catch(e){ return null; } },
+  set:function(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+var supaSession = LS.get('arca_supa_session');
+
+function supaAuthLogin(email, password){
+  return fetch(SUPA_URL+'/auth/v1/token?grant_type=password', {method:'POST', headers:{'Content-Type':'application/json','apikey':SUPA_KEY}, body:JSON.stringify({email:email,password:password})})
+    .then(function(res){ return res.json().then(function(data){ if(!res.ok) throw new Error(data.error_description||data.msg||'Email ou password incorretos.'); supaSession=data; LS.set('arca_supa_session', data); return data; }); });
+}
+function supaRefreshSession(){
+  if(!supaSession || !supaSession.refresh_token) return Promise.resolve(false);
+  return fetch(SUPA_URL+'/auth/v1/token?grant_type=refresh_token', {method:'POST', headers:{'Content-Type':'application/json','apikey':SUPA_KEY}, body:JSON.stringify({refresh_token:supaSession.refresh_token})})
+    .then(function(res){ return res.json().then(function(data){ if(!res.ok) return false; supaSession=data; LS.set('arca_supa_session', data); return true; }); })
+    .catch(function(){ return false; });
+}
+function supaLogout(){ supaSession=null; LS.set('arca_supa_session', null); location.reload(); }
+function mostrarLogin(msg){
+  document.getElementById('login-overlay').style.display='flex';
+  var e=document.getElementById('login-erro'); e.textContent=msg||'';
+}
+function supaFetch(path, method, body, extraHeaders, _tentativa){
+  method=method||'GET'; _tentativa=_tentativa||0;
+  var headers={'apikey':SUPA_KEY,'Content-Type':'application/json'};
+  headers['Authorization']='Bearer '+((supaSession&&supaSession.access_token)||SUPA_KEY);
+  if(method!=='GET') headers['Prefer']='return=representation';
+  if(extraHeaders) Object.assign(headers, extraHeaders);
+  var opts={method:method, headers:headers}; if(body) opts.body=JSON.stringify(body);
+  return fetch(SUPA_URL+'/rest/v1/'+path, opts).then(function(res){
+    if(res.status===401){
+      if(_tentativa===0) return supaRefreshSession().then(function(ok){ if(ok) return supaFetch(path, method, body, extraHeaders, 1); supaSession=null; LS.set('arca_supa_session',null); mostrarLogin('A tua sessão expirou. Entra novamente.'); throw new Error('AUTH_EXPIRED'); });
+      supaSession=null; LS.set('arca_supa_session',null); mostrarLogin('A tua sessão expirou. Entra novamente.'); throw new Error('AUTH_EXPIRED');
+    }
+    return res.text().then(function(text){ if(!res.ok) throw new Error(text||('Erro '+res.status)); return text? JSON.parse(text):null; });
+  });
+}
+function fazerLogin(){
+  var email=document.getElementById('login-email').value.trim(), pass=document.getElementById('login-pass').value;
+  var erro=document.getElementById('login-erro'); erro.textContent='';
+  var btn=document.getElementById('login-btn'); btn.disabled=true; btn.textContent='A entrar…';
+  supaAuthLogin(email, pass).then(function(){ document.getElementById('login-overlay').style.display='none'; return iniciar(); })
+    .catch(function(e){ erro.textContent=e.message; })
+    .then(function(){ btn.disabled=false; btn.textContent='Entrar'; });
+}
+function lerConfig(chaves){
+  return supaFetch('config_app?chave=in.('+chaves.join(',')+')').then(function(rows){ var d={}; (rows||[]).forEach(function(r){ d[r.chave]=r.valor||''; }); return d; }).catch(function(e){ console.warn('config_app:', e); return {}; });
+}
+function guardarChaveConfig(chave, valor){
+  return supaFetch('config_app?chave=eq.'+encodeURIComponent(chave)).then(function(ex){
+    if(ex && ex.length) return supaFetch('config_app?chave=eq.'+encodeURIComponent(chave),'PATCH',{valor:valor});
+    return supaFetch('config_app','POST',{chave:chave, valor:valor});
+  });
+}
+
+/* ---- logótipo (IndexedDB partilhada no mesmo dispositivo, como nos Ofícios) ---- */
+function idbOpen(){ return new Promise(function(resolve,reject){ var req=indexedDB.open('arca_db',1); req.onupgradeneeded=function(){ if(!req.result.objectStoreNames.contains('ficheiros')) req.result.createObjectStore('ficheiros'); }; req.onsuccess=function(){ resolve(req.result); }; req.onerror=function(){ reject(req.error); }; }); }
+function idbGet(k){ return idbOpen().then(function(db){ return new Promise(function(r){ var q=db.transaction('ficheiros','readonly').objectStore('ficheiros').get(k); q.onsuccess=function(){ r(q.result||''); }; q.onerror=function(){ r(''); }; }); }).catch(function(){ return ''; }); }
+function idbSet(k,v){ return idbOpen().then(function(db){ return new Promise(function(r,j){ var tx=db.transaction('ficheiros','readwrite'); tx.objectStore('ficheiros').put(v,k); tx.oncomplete=function(){ r(); }; tx.onerror=function(){ j(tx.error); }; }); }).catch(function(){}); }
+
+/* ============================================================
+   CONSTANTES
+   ============================================================ */
+var DIAS_CORRECAO = 5;
+var TIPOS = ["Reunião de Direção","Assembleia Geral Ordinária","Assembleia Geral Extraordinária","Reunião do Conselho Fiscal","Outra reunião"];
+var ORGAO_POR_TIPO = {
+  "Reunião de Direção":"a Direção",
+  "Assembleia Geral Ordinária":"a Assembleia Geral",
+  "Assembleia Geral Extraordinária":"a Assembleia Geral, em sessão extraordinária,",
+  "Reunião do Conselho Fiscal":"o Conselho Fiscal",
+  "Outra reunião":"a reunião"
+};
+var ASSOC_DEFAULT = {
+  nome:"ARCA d'Ajuda",
+  nomeCompleto:"Associação Recreativa e Cultural da Ajuda",
+  morada:"Rua Velha da Ajuda, n.º 89 r/c LA, 9000-749 Funchal",
+  nipc:"",
+  contactos:"",
+  sede:"na sede da Associação, na Rua Velha da Ajuda, n.º 89 r/c LA, Funchal"
+};
+var PIN_SALT = "arca-atas::";
+
+/* ============================================================
+   ESTADO
+   ============================================================ */
+var state = {
+  view:{name:"home"},
+  storeMode:"loading",
+  atas:[], loaded:false,
+  settings:{assoc:Object.assign({}, ASSOC_DEFAULT), membros:[], logo:null},
+  search:"",
+  dirty:false, saveTimer:null, currentId:null, lastSaved:null
+};
+
+/* ============================================================
+   UTILITÁRIOS
+   ============================================================ */
+function esc(s){ if(s===undefined||s===null) return ""; return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+function $(id){ return document.getElementById(id); }
+function todayISO(){ var d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function nowHM(){ var d=new Date(); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+function fmtDate(iso){ if(!iso) return "—"; var p=iso.split("-"); return p.length===3? p[2]+"/"+p[1]+"/"+p[0] : esc(iso); }
+function fmtDateTime(iso){ if(!iso) return "—"; try{ var d=new Date(iso); return d.toLocaleDateString("pt-PT")+" "+d.toLocaleTimeString("pt-PT",{hour:"2-digit",minute:"2-digit"}); }catch(e){ return esc(iso); } }
+function newId(){ return "a"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function toast(msg){ var el=$("toast"); el.textContent=msg; el.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(function(){ el.classList.remove("show"); },2600); }
+function addDays(iso, n){ var d=new Date(iso); d.setDate(d.getDate()+n); return d; }
+
+/* ---- números por extenso (português europeu) ---- */
+var UNI = ["zero","um","dois","três","quatro","cinco","seis","sete","oito","nove","dez","onze","doze","treze","catorze","quinze","dezasseis","dezassete","dezoito","dezanove"];
+var DEZ = ["","","vinte","trinta","quarenta","cinquenta","sessenta","setenta","oitenta","noventa"];
+var CEN = ["","cento","duzentos","trezentos","quatrocentos","quinhentos","seiscentos","setecentos","oitocentos","novecentos"];
+function extenso(n, fem){
+  n = Math.floor(Number(n)||0);
+  if(n===0) return "zero";
+  if(n===100) return "cem";
+  var partes=[];
+  var mil = Math.floor(n/1000), resto = n%1000;
+  if(mil){ partes.push(mil===1 ? "mil" : extenso(mil)+" mil"); }
+  if(resto){
+    var c=Math.floor(resto/100), r=resto%100;
+    var s=[];
+    if(c) s.push(CEN[c]);
+    if(r){
+      if(r<20){ var u=UNI[r]; if(fem && r===1) u="uma"; if(fem && r===2) u="duas"; s.push(u); }
+      else { var d=Math.floor(r/10), un=r%10; var t=DEZ[d]; if(un){ var uu=UNI[un]; if(fem && un===1) uu="uma"; if(fem && un===2) uu="duas"; t+=" e "+uu; } s.push(t); }
+    }
+    partes.push(s.join(" e "));
+  }
+  return partes.join(mil && resto && (resto<100 || resto%100===0) ? " e " : " ");
+}
+var MESES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+function dataExtenso(iso){
+  if(!iso) return "";
+  var p=iso.split("-"); var ano=Number(p[0]), mes=Number(p[1]), dia=Number(p[2]);
+  var diaTxt = dia===1 ? "Ao primeiro dia" : "Aos "+extenso(dia)+" dias";
+  return diaTxt+" do mês de "+MESES[mes-1]+" de "+extenso(ano);
+}
+function horaExtenso(hm){
+  if(!hm) return "";
+  var p=hm.split(":"); var h=Number(p[0]), m=Number(p[1]||0);
+  var s = extenso(h, true)+(h===1?" hora":" horas");
+  if(m) s += " e "+extenso(m)+(m===1?" minuto":" minutos");
+  return s;
+}
+
+/* ---- hash de PIN ---- */
+function hashPin(pin){
+  var txt = PIN_SALT + String(pin||"");
+  if(window.crypto && crypto.subtle && window.TextEncoder){
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(txt)).then(function(buf){
+      return Array.prototype.map.call(new Uint8Array(buf), function(b){ return b.toString(16).padStart(2,"0"); }).join("");
+    });
+  }
+  var h=5381; for(var i=0;i<txt.length;i++){ h=((h<<5)+h+txt.charCodeAt(i))|0; }
+  return Promise.resolve("fb"+(h>>>0).toString(16));
+}
+
+/* ---- saneamento do HTML do editor ---- */
+var ALLOWED = {P:1,BR:1,B:1,STRONG:1,I:1,EM:1,U:1,S:1,UL:1,OL:1,LI:1,H3:1,DIV:1};
+function sanitize(html){
+  var tmp=document.createElement("div"); tmp.innerHTML=html||"";
+  function walk(node){
+    var out="";
+    node.childNodes.forEach(function(ch){
+      if(ch.nodeType===3){ out+=esc(ch.nodeValue); return; }
+      if(ch.nodeType!==1) return;
+      var tag=ch.tagName;
+      if(!ALLOWED[tag]){ out+=walk(ch); return; }
+      if(tag==="DIV") tag="P";
+      if(tag==="STRONG") tag="B";
+      if(tag==="EM") tag="I";
+      if(tag==="BR"){ out+="<br>"; return; }
+      var inner=walk(ch);
+      if(tag==="P" && !inner.replace(/<br>|&nbsp;|\s/g,"")) return;
+      out+="<"+tag.toLowerCase()+">"+inner+"</"+tag.toLowerCase()+">";
+    });
+    return out;
+  }
+  var res = walk(tmp);
+  // texto solto fora de parágrafos → embrulha
+  if(res && !/^\s*<(p|h3|ul|ol)/i.test(res)) res = "<p>"+res+"</p>";
+  return res;
+}
+function textoPlano(html){ var t=document.createElement("div"); t.innerHTML=html||""; return (t.textContent||"").replace(/\s+/g," ").trim(); }
+
+/* ============================================================
+   ESTADO DA ATA (rascunho / fechada / bloqueada / reaberta)
+   ============================================================ */
+function estadoAta(a){
+  if(!a.fechadaEm) return a.reaberta ? "reaberta" : "rascunho";
+  var limite = addDays(a.fechadaEm, DIAS_CORRECAO);
+  return (new Date() > limite) ? "bloqueada" : "fechada";
+}
+function podeEditar(a){ var e=estadoAta(a); return e!=="bloqueada"; }
+function pillHtml(a){
+  var e=estadoAta(a);
+  if(e==="rascunho") return '<span class="pill pill-rascunho">Rascunho</span>';
+  if(e==="reaberta") return '<span class="pill pill-reaberta">Reaberta</span>';
+  if(e==="fechada") return '<span class="pill pill-fechada">Fechada</span>';
+  return '<span class="pill pill-bloqueada">🔒 Bloqueada</span>';
+}
+function proximoNumero(){
+  var ano = new Date().getFullYear();
+  var max = 0;
+  state.atas.forEach(function(a){ if(a.ano===ano && a.seq>max) max=a.seq; });
+  return {seq:max+1, ano:ano, numero:(max+1)+"/"+ano};
+}
+function membrosComPin(){ return state.settings.membros.filter(function(m){ return m.pinHash; }); }
+
+
+
+/* ============================================================
+   ARMAZENAMENTO — tabela `atas` no Supabase
+   ============================================================ */
+var COLS = {numero:"numero", seq:"seq", ano:"ano", tipo:"tipo", data:"data", horaInicio:"hora_inicio", horaFim:"hora_fim", local:"local",
+  presidiu:"presidiu", secretariou:"secretariou", presencas:"presencas", convidados:"convidados", ausencias:"ausencias", ordem:"ordem", corpo:"corpo",
+  aberturaAuto:"abertura_auto", fechadaEm:"fechada_em", reaberta:"reaberta", fechos:"fechos", reaberturas:"reaberturas", versoes:"versoes",
+  criadaEm:"criada_em", atualizadaEm:"atualizada_em", driveFileId:"drive_file_id", driveEm:"drive_em"};
+function toRow(obj){ var r={}; Object.keys(COLS).forEach(function(k){ if(obj[k]!==undefined) r[COLS[k]]=obj[k]; }); if(r.data==="") r.data=null; if(r.fechada_em==="") r.fechada_em=null; return r; }
+function fromRow(r){
+  var o={id:String(r.id)};
+  Object.keys(COLS).forEach(function(k){ o[k]=r[COLS[k]]; });
+  o.presencas=o.presencas||[]; o.ordem=o.ordem||[]; o.fechos=o.fechos||[]; o.reaberturas=o.reaberturas||[]; o.versoes=o.versoes||[];
+  o.corpo=o.corpo||""; o.horaInicio=o.horaInicio||""; o.horaFim=o.horaFim||""; o.local=o.local||""; o.presidiu=o.presidiu||""; o.secretariou=o.secretariou||"";
+  o.convidados=o.convidados||""; o.ausencias=o.ausencias||"";
+  if(o.aberturaAuto===null||o.aberturaAuto===undefined) o.aberturaAuto=true;
+  return o;
+}
+
+var Store = {
+  refresh:function(){
+    state.loaded=true;
+    renderSidebar();
+    if(state.view.name==="home") renderHome();
+    if(state.view.name==="ata" && !state.dirty){
+      var cur=findAta(state.view.id);
+      if(!cur || cur.atualizadaEm!==state.lastSaved) renderAta(state.view.id);
+    }
+  },
+  reload:function(){
+    return supaFetch('atas?order=ano.desc,seq.desc').then(function(rows){
+      state.atas=(rows||[]).map(fromRow); state.storeMode="cloud"; renderStorePill(); Store.refresh();
+    }).catch(function(e){
+      if(String(e.message)==='AUTH_EXPIRED') return;
+      console.error(e); state.storeMode="erro"; state.loaded=true; renderStorePill();
+      $("app").innerHTML='<div class="status-banner warn"><span class="grow">Não foi possível carregar as atas: '+esc(String(e.message).slice(0,200))+'.<br>Se ainda não criaste as tabelas no Supabase, corre o ficheiro <b>instalacao.sql</b> no SQL Editor.</span></div>';
+    });
+  },
+  add:function(payload){
+    return supaFetch('atas','POST',toRow(payload)).then(function(rows){
+      var a=fromRow(rows[0]); state.atas=[a].concat(state.atas); Store.refresh(); return a.id;
+    });
+  },
+  update:function(id, patch){
+    state.atas=state.atas.map(function(a){ return a.id===id? Object.assign({},a,patch):a; });
+    renderSidebar();
+    return supaFetch('atas?id=eq.'+encodeURIComponent(id),'PATCH',toRow(patch)).then(function(){});
+  },
+  remove:function(id){
+    state.atas=state.atas.filter(function(a){ return a.id!==id; });
+    return supaFetch('atas?id=eq.'+encodeURIComponent(id),'DELETE').then(function(){ Store.refresh(); });
+  },
+  /* PIN de um membro (tabela direcao_pins, chave = n.º de sócio) */
+  savePin:function(membro, pinHash){
+    return supaFetch('direcao_pins','POST',{socio_num:Number(membro.id), nome:membro.nome, pin_hash:pinHash, atualizado_em:new Date().toISOString()},
+      {'Prefer':'return=representation,resolution=merge-duplicates'}).then(function(){
+        state.settings.membros=state.settings.membros.map(function(m){ return m.id===membro.id? Object.assign({},m,{pinHash:pinHash}):m; });
+      });
+  },
+  removePin:function(membro){
+    return supaFetch('direcao_pins?socio_num=eq.'+Number(membro.id),'DELETE').then(function(){
+      state.settings.membros=state.settings.membros.map(function(m){ return m.id===membro.id? Object.assign({},m,{pinHash:null}):m; });
+    });
+  }
+};
+function renderStorePill(){
+  var el=$("storePill");
+  if(state.storeMode==="cloud") el.textContent="base de dados ligada";
+  else if(state.storeMode==="erro") el.textContent="sem ligação à base de dados";
+  else el.textContent="a carregar…";
+}
+
+/* ---- Direção: lida da app de Sócios (direcao_membros + socios) e PINs (direcao_pins) ---- */
+function carregarDirecao(){
+  return supaFetch('direcao_membros?order=ordem.asc,id.asc').then(function(rows){
+    var nums=(rows||[]).map(function(r){ return r.socio_num; }).filter(function(n){ return n!==null && n!==undefined; });
+    var pNomes = nums.length ? supaFetch('socios?num=in.('+nums.join(',')+')&select=num,nome') : Promise.resolve([]);
+    var pPins = supaFetch('direcao_pins?select=socio_num,pin_hash').catch(function(e){ console.warn('direcao_pins:', e); return []; });
+    return Promise.all([pNomes, pPins]).then(function(res){
+      var nomes={}; (res[0]||[]).forEach(function(s){ nomes[s.num]=s.nome; });
+      var pins={}; (res[1]||[]).forEach(function(p){ pins[p.socio_num]=p.pin_hash; });
+      state.settings.membros=(rows||[]).filter(function(r){ return r.socio_num!==null && r.socio_num!==undefined && nomes[r.socio_num]; })
+        .map(function(r){ return {id:String(r.socio_num), nome:nomes[r.socio_num], cargo:r.cargo||"", pinHash:pins[r.socio_num]||null}; });
+    });
+  }).catch(function(e){ if(String(e.message)!=='AUTH_EXPIRED') console.warn('direção:', e); });
+}
+function carregarAssociacao(){
+  return lerConfig(['assoc_nome','assoc_nif','assoc_email','assoc_tel','assoc_morada','assoc_site','atas_local_reunioes']).then(function(c){
+    var a=state.settings.assoc;
+    var nome=c.assoc_nome||"";
+    if(nome){ if(/ARCA/i.test(nome) && nome.length<20){ a.nome=nome; a.nomeCompleto="Associação Recreativa e Cultural da Ajuda"; } else { a.nomeCompleto=nome; a.nome=/ARCA/i.test(nome)? "ARCA d'Ajuda" : nome; } }
+    if(c.assoc_morada) a.morada=c.assoc_morada;
+    a.nipc=c.assoc_nif||"";
+    a.contactos=[c.assoc_tel? 'Tel. '+c.assoc_tel:'', c.assoc_email, c.assoc_site].filter(Boolean).join(' · ');
+    if(c.atas_local_reunioes) a.sede=c.atas_local_reunioes;
+  });
+}
+function carregarLogo(){
+  return idbGet('arca_logo').then(function(l){
+    if(l){ state.settings.logo=l; return; }
+    return lerConfig(['logo_arca']).then(function(c){ if(c.logo_arca && c.logo_arca.indexOf('data:')===0) state.settings.logo=c.logo_arca; });
+  }).then(renderBrand);
+}
+function renderBrand(){
+  var b=$("logo-badge"), l=$("login-logo-area");
+  if(state.settings.logo){ b.innerHTML='<img src="'+state.settings.logo+'" alt="logo">'; if(l) l.innerHTML='<img src="'+state.settings.logo+'" style="height:64px;width:64px;border-radius:50%;object-fit:cover">'; }
+}
+
+/* ============================================================
+   NAVEGAÇÃO
+   ============================================================ */
+function navTo(view){
+  if(state.dirty && state.view.name==="ata" && (view.name!=="ata" || view.id!==state.view.id)) flushSave();
+  state.view=view;
+  document.querySelectorAll(".side-link").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-nav")===view.name); });
+  if(view.name==="home") renderHome();
+  else if(view.name==="ata") renderAta(view.id);
+  else if(view.name==="config") renderConfig();
+  renderSidebar();
+  $("app").scrollIntoView({block:"start"});
+}
+
+/* ============================================================
+   BARRA LATERAL
+   ============================================================ */
+function renderSidebar(){
+  var q=(state.search||"").toLowerCase();
+  var list=state.atas.filter(function(a){
+    if(!q) return true;
+    var hay=(a.numero||"")+" "+(a.tipo||"")+" "+(a.data||"")+" "+fmtDate(a.data)+" "+(a.ordem||[]).join(" ")+" "+textoPlano(a.corpo).slice(0,400);
+    return hay.toLowerCase().indexOf(q)>-1;
+  });
+  list.sort(function(a,b){ return (b.data||"").localeCompare(a.data||"") || (b.criadaEm||"").localeCompare(a.criadaEm||""); });
+  var el=$("ataList");
+  if(!state.loaded){ el.innerHTML='<div class="empty-state">A carregar…</div>'; return; }
+  if(!list.length){ el.innerHTML='<div class="empty-state">'+(state.atas.length? "Nenhuma ata corresponde à pesquisa." : "Ainda não há atas.<br>Clica em “+ Nova ata”.")+'</div>'; return; }
+  el.innerHTML=list.map(function(a){
+    var active = state.view.name==="ata" && state.view.id===a.id;
+    return '<button class="ata-item'+(active?" active":"")+'" data-open="'+esc(a.id)+'">'
+      +'<div class="l1"><span class="num">Ata n.º '+esc(a.numero)+'</span>'+pillHtml(a)+'</div>'
+      +'<div class="l2"><span>'+esc(a.tipo||"")+'</span><span class="mono">'+fmtDate(a.data)+'</span></div>'
+      +'</button>';
+  }).join("");
+}
+
+/* ============================================================
+   PAINEL
+   ============================================================ */
+function renderHome(){
+  var n={rascunho:0,reaberta:0,fechada:0,bloqueada:0};
+  state.atas.forEach(function(a){ n[estadoAta(a)]++; });
+  var html='<div class="page-head"><div><h2>Livro de Atas</h2><div class="sub">'+esc(state.settings.assoc.nomeCompleto)+'</div></div>'
+    +'<div class="actions"><button class="btn btn-primary" id="homeNova">+ Nova ata</button></div></div>';
+
+  if(state.loaded && membrosComPin().length<2) html+='<div class="status-banner"><span class="grow">Para a regra dos dois membros funcionar, pelo menos <b>dois membros da Direção</b> têm de definir o seu PIN em “PINs da Direção”.</span><button class="btn btn-ghost btn-sm" data-nav="config">Definir PINs</button></div>';
+
+  html+='<div class="summary-strip">'
+    +'<div class="summary-item"><span class="n tabular">'+state.atas.length+'</span><span class="l">Atas no livro</span></div>'
+    +'<div class="summary-item"><span class="n tabular" style="color:var(--accent-dark)">'+(n.rascunho+n.reaberta)+'</span><span class="l">Em redação</span></div>'
+    +'<div class="summary-item"><span class="n tabular" style="color:var(--primary)">'+n.fechada+'</span><span class="l">Fechadas (corrigíveis)</span></div>'
+    +'<div class="summary-item"><span class="n tabular" style="color:var(--lock)">'+n.bloqueada+'</span><span class="l">Bloqueadas</span></div>'
+    +'</div>';
+
+  var recent=state.atas.slice().sort(function(a,b){ return (b.data||"").localeCompare(a.data||""); }).slice(0,12);
+  if(recent.length){
+    html+='<div class="table-wrap"><table><thead><tr><th>Ata</th><th>Reunião</th><th>Data</th><th>Estado</th><th>Ordem de trabalhos</th><th></th></tr></thead><tbody>';
+    recent.forEach(function(a){
+      var e=estadoAta(a);
+      var est=pillHtml(a);
+      if(e==="fechada") est+='<div style="font-size:10.5px;color:var(--ink-muted);margin-top:3px">corrigível até '+addDays(a.fechadaEm,DIAS_CORRECAO).toLocaleDateString("pt-PT")+'</div>';
+      html+='<tr><td class="mono" style="font-weight:600">'+esc(a.numero)+'</td><td>'+esc(a.tipo)+'</td><td class="mono tabular">'+fmtDate(a.data)+'</td><td>'+est+'</td>'
+        +'<td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc((a.ordem||[]).filter(Boolean).join(" · ")||"—")+'</td>'
+        +'<td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" data-open="'+esc(a.id)+'">Abrir</button> <button class="btn btn-ghost btn-sm" data-print="'+esc(a.id)+'">🖨</button></td></tr>';
+    });
+    html+='</tbody></table></div>';
+  } else {
+    html+='<div class="steps">'
+      +'<div class="step"><h3>1. Redigir</h3><p>Preenche data, local e presenças; escreve os pontos e as deliberações no editor. O texto é corrigido ortograficamente pelo navegador (pt-PT).</p></div>'
+      +'<div class="step"><h3>2. Fechar</h3><p>Ao fechar a ata, começa a contar o prazo de '+DIAS_CORRECAO+' dias para pequenas correções. Depois fica bloqueada.</p></div>'
+      +'<div class="step"><h3>3. Imprimir</h3><p>Sai em A4 com cabeçalho e rodapé em todas as páginas, linhas incompletas traçadas e espaço para assinaturas.</p></div>'
+      +'<div class="step"><h3>4. Reabrir (se preciso)</h3><p>Uma ata bloqueada só volta a ser editável com o PIN de dois membros da Direção — e tudo fica no histórico.</p></div>'
+      +'</div>';
+  }
+  $("app").innerHTML=html;
+  var b=$("homeNova"); if(b) b.addEventListener("click", novaAta);
+}
+
+/* ============================================================
+   NOVA ATA
+   ============================================================ */
+function novaAta(){
+  var p=proximoNumero();
+  var membros=state.settings.membros.map(function(m){ return {nome:m.nome, cargo:m.cargo, presente:true}; });
+  var pres = state.settings.membros.filter(function(m){ return /^presidente/i.test(m.cargo||""); })[0];
+  var sec = state.settings.membros.filter(function(m){ return /secret/i.test(m.cargo||""); })[0];
+  var payload={
+    numero:p.numero, seq:p.seq, ano:p.ano,
+    tipo:TIPOS[0], data:todayISO(), horaInicio:nowHM(), horaFim:"",
+    local:state.settings.assoc.sede||"", presidiu:pres?pres.nome:"", secretariou:sec?sec.nome:"",
+    presencas:membros, convidados:"", ausencias:"",
+    ordem:["Informações","",""], corpo:"", aberturaAuto:true,
+    fechadaEm:null, reaberta:false, reaberturas:[], versoes:[],
+    criadaEm:new Date().toISOString(), atualizadaEm:new Date().toISOString()
+  };
+  Store.add(payload).then(function(id){ navTo({name:"ata", id:id}); toast("Ata n.º "+p.numero+" criada."); })
+    .catch(function(e){ toast("Não foi possível criar a ata: "+(e&&e.message||"erro")); });
+}
+
+/* ============================================================
+   EDITOR DA ATA
+   ============================================================ */
+function findAta(id){ return state.atas.filter(function(a){ return a.id===id; })[0]; }
+
+function renderAta(id){
+  var a=findAta(id);
+  if(!a){ $("app").innerHTML='<div class="empty-state">Ata não encontrada (pode ter sido eliminada).</div>'; return; }
+  state.currentId=id;
+  var e=estadoAta(a), editavel=podeEditar(a);
+  var html='';
+  html+='<div class="page-head"><div>'+pillHtml(a)+'<h2 style="margin-top:6px">Ata n.º '+esc(a.numero)+'</h2><div class="sub">'+esc(a.tipo)+' · '+fmtDate(a.data)+'</div></div>'
+    +'<div class="actions">'
+    +'<button class="btn btn-ghost" data-print="'+esc(a.id)+'">🖨 Pré-visualizar / imprimir</button>'
+    +'<button class="btn btn-ghost" id="btnDrive" title="Guarda o PDF desta ata na pasta ARCA d\'Ajuda/Atas do Google Drive">☁ Guardar no Drive</button>'
+    +(e==="rascunho"||e==="reaberta" ? '<button class="btn btn-primary" id="btnFechar">Fechar ata</button>' : '')
+    +(e==="bloqueada" ? '<button class="btn btn-accent" id="btnReabrir">🔓 Pedir reabertura</button>' : '')
+    +'</div></div>';
+
+  if(e==="rascunho") html+='<div class="status-banner"><span class="grow">Rascunho: escreve à vontade, tudo é guardado automaticamente. Quando a ata estiver aprovada, clica em <b>Fechar ata</b>.</span></div>';
+  if(e==="reaberta") html+='<div class="status-banner warn"><span class="grow">Ata <b>reaberta</b> com autorização da Direção. Faz as correções e volta a <b>fechar</b> — as alterações ficam registadas no histórico.</span></div>';
+  if(e==="fechada") html+='<div class="status-banner ok"><span class="grow">Ata fechada em '+fmtDateTime(a.fechadaEm)+'. Ainda podes fazer correções até <b>'+addDays(a.fechadaEm,DIAS_CORRECAO).toLocaleDateString("pt-PT",{day:"numeric",month:"long"})+'</b>; a partir daí fica bloqueada.</span></div>';
+  if(e==="bloqueada") html+='<div class="status-banner lock"><span class="grow">🔒 Ata <b>bloqueada</b> desde '+addDays(a.fechadaEm,DIAS_CORRECAO).toLocaleDateString("pt-PT")+'. Para a alterar é necessária a autorização de <b>dois membros da Direção</b>.</span></div>';
+
+  var dis = editavel ? '' : ' disabled';
+  html+='<fieldset'+dis+'>';
+  // --- identificação
+  html+='<div class="section"><h3>Reunião</h3><div class="field-grid">'
+    +'<div class="field"><label>Número</label><input type="text" data-f="numero" value="'+esc(a.numero)+'"></div>'
+    +'<div class="field span2"><label>Tipo de reunião</label><select data-f="tipo">'+TIPOS.map(function(t){ return '<option'+(t===a.tipo?" selected":"")+'>'+esc(t)+'</option>'; }).join("")+'</select></div>'
+    +'<div class="field"><label>Data</label><input type="date" data-f="data" value="'+esc(a.data)+'"></div>'
+    +'<div class="field"><label>Hora de início</label><input type="time" data-f="horaInicio" value="'+esc(a.horaInicio)+'"></div>'
+    +'<div class="field"><label>Hora de encerramento</label><input type="time" data-f="horaFim" value="'+esc(a.horaFim)+'"></div>'
+    +'<div class="field full"><label>Local</label><input type="text" data-f="local" value="'+esc(a.local)+'" placeholder="na sede da Associação…"></div>'
+    +'<div class="field span2"><label>Presidiu</label><input type="text" data-f="presidiu" value="'+esc(a.presidiu)+'"></div>'
+    +'<div class="field span2"><label>Secretariou (redige a ata)</label><input type="text" data-f="secretariou" value="'+esc(a.secretariou)+'"></div>'
+    +'</div></div>';
+
+  // --- presenças
+  html+='<div class="section"><h3>Presenças <span class="hint">a lista da Direção vem da app de Sócios</span></h3>';
+  if((a.presencas||[]).length){
+    html+='<div class="presenca-list">'+a.presencas.map(function(p,i){
+      return '<label class="presenca"><input type="checkbox" data-pres="'+i+'"'+(p.presente?" checked":"")+'> <span>'+esc(p.nome)+'</span><span class="cargo">'+esc(p.cargo)+'</span></label>';
+    }).join("")+'</div>';
+  } else {
+    html+='<div class="help" style="font-size:12.5px;color:var(--ink-muted)">A Direção ainda não tem sócios associados na app de Sócios. Podes indicar os presentes no campo abaixo.</div>';
+  }
+  html+='<div class="field-grid" style="margin-top:12px">'
+    +'<div class="field span2"><label>Outros presentes / convidados</label><textarea data-f="convidados" placeholder="Ex.: Maria Silva (sócia n.º 120), João Nunes (treinador)">'+esc(a.convidados)+'</textarea></div>'
+    +'<div class="field span2"><label>Faltas justificadas</label><textarea data-f="ausencias" placeholder="Ex.: Ana Freitas, por motivos profissionais">'+esc(a.ausencias)+'</textarea></div>'
+    +'</div></div>';
+
+  // --- ordem de trabalhos
+  html+='<div class="section"><h3>Ordem de trabalhos</h3><div class="ordem-list" id="ordemList">'
+    +(a.ordem||[]).map(function(o,i){ return '<div class="ordem-row"><span class="n">'+(i+1)+'.</span><input type="text" data-ordem="'+i+'" value="'+esc(o)+'" placeholder="Ponto '+(i+1)+'"><button type="button" data-ordem-del="'+i+'" title="Remover" '+(editavel?"":"disabled")+'>×</button></div>'; }).join("")
+    +'</div><button type="button" class="btn btn-ghost btn-sm" id="ordemAdd" style="margin-top:8px"'+dis+'>+ Ponto</button></div>';
+
+  // --- texto
+  html+='<div class="section"><h3>Texto da ata <span class="hint">deliberações, votações, intervenções</span></h3>'
+    +'<label class="presenca" style="margin-bottom:10px;padding:0"><input type="checkbox" data-f="aberturaAuto"'+(a.aberturaAuto!==false?" checked":"")+'> <span>Gerar automaticamente o parágrafo de abertura (data por extenso, local, presenças e ordem de trabalhos) e o de encerramento</span></label>'
+    +'<div class="toolbar" id="toolbar">'
+    +'<button type="button" data-cmd="bold" title="Negrito (Ctrl+B)"><b>N</b></button>'
+    +'<button type="button" data-cmd="italic" title="Itálico (Ctrl+I)"><i>I</i></button>'
+    +'<button type="button" data-cmd="underline" title="Sublinhado (Ctrl+U)"><u>S</u></button>'
+    +'<span class="sep"></span>'
+    +'<button type="button" data-cmd="formatBlock" data-val="h3" title="Título de ponto">Título</button>'
+    +'<button type="button" data-cmd="formatBlock" data-val="p" title="Parágrafo normal">¶</button>'
+    +'<button type="button" data-cmd="insertUnorderedList" title="Lista">• Lista</button>'
+    +'<button type="button" data-cmd="insertOrderedList" title="Lista numerada">1. Lista</button>'
+    +'<span class="sep"></span>'
+    +'<button type="button" data-cmd="undo" title="Anular">↶</button>'
+    +'<button type="button" data-cmd="redo" title="Refazer">↷</button>'
+    +'<button type="button" data-cmd="removeFormat" title="Limpar formatação">Aa</button>'
+    +'<span class="spell">Correção ortográfica pt-PT: ativa no navegador (sublinhado vermelho)</span>'
+    +'</div>'
+    +'<div class="editor" id="editor" contenteditable="'+(editavel?"true":"false")+'" spellcheck="true" lang="pt-PT" data-placeholder="Ponto um — Informações. O presidente informou…">'+sanitize(a.corpo)+'</div>'
+    +'<div class="editor-meta"><span id="wordCount"></span><span id="saveState">'+(a.atualizadaEm? "guardada "+fmtDateTime(a.atualizadaEm):"")+'</span></div>'
+    +'</div>';
+  html+='</fieldset>';
+
+  // --- histórico
+  var hist=[];
+  hist.push({em:a.criadaEm, txt:"Ata criada"});
+  (a.reaberturas||[]).forEach(function(r){ hist.push({em:r.em, txt:"Reaberta com autorização de "+esc((r.por||[]).join(" e "))+(r.motivo? " — motivo: "+esc(r.motivo):"")}); });
+  (a.fechos||[]).forEach(function(f){ hist.push({em:f, txt:"Ata fechada"}); });
+  if(a.fechadaEm) hist.push({em:a.fechadaEm, txt:"Ata fechada (versão em vigor)"});
+  hist.sort(function(x,y){ return (x.em||"").localeCompare(y.em||""); });
+  html+='<div class="section"><h3>Histórico</h3><div class="hist">'+hist.map(function(h){ return '<div class="hist-row"><span class="when">'+fmtDateTime(h.em)+'</span><span>'+h.txt+'</span></div>'; }).join("")+'</div>';
+  if((a.versoes||[]).length) html+='<p style="font-size:12px;color:var(--ink-muted);margin:10px 0 0">'+a.versoes.length+' versão(ões) anterior(es) do texto guardada(s) para auditoria.</p>';
+  html+='<p style="font-size:12.5px;margin:10px 0 0">☁ Google Drive: '+(a.driveFileId? 'PDF guardado em '+fmtDateTime(a.driveEm)+' · <a href="https://drive.google.com/file/d/'+esc(a.driveFileId)+'/view" target="_blank" rel="noopener">abrir no Drive</a>' : '<span style="color:var(--ink-muted)">ainda não guardada</span>')+' <span id="driveState" style="color:var(--ink-muted)"></span></p>';
+  html+='<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'
+    +(e==="rascunho" && !(a.fechos||[]).length ? '<button class="btn btn-danger btn-sm" id="btnEliminar">Eliminar rascunho</button>' : '<button class="btn btn-danger btn-sm" id="btnEliminarAuth">Eliminar ata (2 autorizações)</button>')
+    +'</div></div>';
+
+  $("app").innerHTML=html;
+  bindAtaEvents(a, editavel);
+  updateWordCount();
+}
+
+function bindAtaEvents(a, editavel){
+  var app=$("app");
+  app.querySelectorAll("[data-f]").forEach(function(el){
+    el.addEventListener(el.type==="checkbox"?"change":"input", function(){ markDirty(); });
+  });
+  app.querySelectorAll("[data-pres]").forEach(function(el){ el.addEventListener("change", markDirty); });
+  app.querySelectorAll("[data-ordem]").forEach(function(el){ el.addEventListener("input", markDirty); });
+  app.querySelectorAll("[data-ordem-del]").forEach(function(el){
+    el.addEventListener("click", function(){
+      var cur=collectForm(); cur.ordem.splice(Number(el.getAttribute("data-ordem-del")),1);
+      commitAndRerender(cur);
+    });
+  });
+  var add=$("ordemAdd"); if(add) add.addEventListener("click", function(){ var cur=collectForm(); cur.ordem.push(""); commitAndRerender(cur); setTimeout(function(){ var ins=app.querySelectorAll("[data-ordem]"); if(ins.length) ins[ins.length-1].focus(); },30); });
+
+  var ed=$("editor");
+  ed.addEventListener("input", function(){ markDirty(); updateWordCount(); });
+  ed.addEventListener("paste", function(ev){
+    ev.preventDefault();
+    var html=(ev.clipboardData||window.clipboardData).getData("text/html");
+    var txt=(ev.clipboardData||window.clipboardData).getData("text/plain");
+    var clean = html ? sanitize(html) : esc(txt).replace(/\n{2,}/g,"</p><p>").replace(/\n/g,"<br>");
+    document.execCommand("insertHTML", false, clean);
+  });
+  $("toolbar").addEventListener("click", function(ev){
+    var b=ev.target.closest("button[data-cmd]"); if(!b || !editavel) return;
+    ed.focus();
+    document.execCommand(b.getAttribute("data-cmd"), false, b.getAttribute("data-val")||null);
+    markDirty();
+  });
+
+  var f=$("btnFechar"); if(f) f.addEventListener("click", function(){ fecharAta(a.id); });
+  var dv=$("btnDrive"); if(dv) dv.addEventListener("click", function(){ flushSave().then(function(){ guardarAtaNoDrive(a.id, false); }); });
+  var r=$("btnReabrir"); if(r) r.addEventListener("click", function(){ pedirReabertura(a.id); });
+  var d=$("btnEliminar"); if(d) d.addEventListener("click", function(){
+    confirmar("Eliminar rascunho?", "A ata n.º "+a.numero+" ainda não foi fechada. Esta ação não pode ser desfeita.", function(){ Store.remove(a.id).then(function(){ toast("Rascunho eliminado."); navTo({name:"home"}); }); });
+  });
+  var da=$("btnEliminarAuth"); if(da) da.addEventListener("click", function(){
+    pedirAutorizacao("Eliminar a ata n.º "+a.numero, "Eliminar uma ata do livro é uma ação grave. Precisa da autorização de dois membros da Direção.", function(){
+      Store.remove(a.id).then(function(){ toast("Ata eliminada."); navTo({name:"home"}); });
+    });
+  });
+}
+
+function updateWordCount(){
+  var ed=$("editor"), wc=$("wordCount"); if(!ed||!wc) return;
+  var t=(ed.textContent||"").trim(); var n=t? t.split(/\s+/).length:0;
+  wc.textContent=n+" palavra"+(n===1?"":"s");
+}
+
+/* ---- recolha do formulário e gravação automática ---- */
+function collectForm(){
+  var a=findAta(state.currentId); if(!a) return null;
+  var cur=Object.assign({}, a);
+  document.querySelectorAll("#app [data-f]").forEach(function(el){
+    var k=el.getAttribute("data-f");
+    cur[k] = el.type==="checkbox" ? el.checked : el.value;
+  });
+  var m=String(cur.numero||"").match(/^(\d+)\s*\/\s*(\d{4})$/);
+  if(m){ cur.seq=Number(m[1]); cur.ano=Number(m[2]); }
+  cur.presencas=(a.presencas||[]).map(function(p,i){ var cb=document.querySelector('#app [data-pres="'+i+'"]'); return Object.assign({},p,{presente: cb? cb.checked : p.presente}); });
+  cur.ordem=Array.prototype.map.call(document.querySelectorAll("#app [data-ordem]"), function(el){ return el.value; });
+  var ed=$("editor"); if(ed) cur.corpo=sanitize(ed.innerHTML);
+  return cur;
+}
+function markDirty(){
+  state.dirty=true;
+  var s=$("saveState"); if(s) s.textContent="a guardar…";
+  clearTimeout(state.saveTimer);
+  state.saveTimer=setTimeout(flushSave, 900);
+}
+function patchFrom(cur){
+  return {numero:cur.numero, seq:cur.seq, ano:cur.ano, tipo:cur.tipo, data:cur.data, horaInicio:cur.horaInicio, horaFim:cur.horaFim, local:cur.local,
+    presidiu:cur.presidiu, secretariou:cur.secretariou, presencas:cur.presencas, convidados:cur.convidados, ausencias:cur.ausencias,
+    ordem:cur.ordem, corpo:cur.corpo, aberturaAuto:cur.aberturaAuto!==false, atualizadaEm:new Date().toISOString()};
+}
+function flushSave(){
+  clearTimeout(state.saveTimer);
+  if(!state.dirty || state.view.name!=="ata") return Promise.resolve();
+  var cur=collectForm(); if(!cur){ state.dirty=false; return Promise.resolve(); }
+  if(!podeEditar(cur)){ state.dirty=false; return Promise.resolve(); }
+  var patch=patchFrom(cur);
+  state.dirty=false; state.lastSaved=patch.atualizadaEm;
+  return Store.update(cur.id, patch).then(function(){
+    var s=$("saveState"); if(s && !state.dirty) s.textContent="guardada "+fmtDateTime(patch.atualizadaEm);
+    fazerBackupDriveAuto();
+  }).catch(function(e){ var s=$("saveState"); if(s) s.textContent="⚠ não guardada: "+(e&&e.message||"erro"); state.dirty=true; });
+}
+function commitAndRerender(cur){
+  var patch=patchFrom(cur); state.dirty=false; state.lastSaved=patch.atualizadaEm;
+  Store.update(cur.id, patch).then(function(){ renderAta(cur.id); });
+}
+
+/* ---- fechar / reabrir ---- */
+function fecharAta(id){
+  flushSave().then(function(){
+    var a=findAta(id); if(!a) return;
+    if(!textoPlano(a.corpo)){ toast("A ata ainda não tem texto."); return; }
+    confirmar("Fechar a ata n.º "+a.numero+"?", "A partir de agora contam "+DIAS_CORRECAO+" dias para correções. Depois disso a ata fica bloqueada e só reabre com a autorização de dois membros da Direção.", function(){
+      var agora=new Date().toISOString();
+      var patch={fechadaEm:agora, reaberta:false, fechos:(a.fechos||[]).concat(a.fechadaEm? [a.fechadaEm]:[]), atualizadaEm:agora};
+      Store.update(id, patch).then(function(){ toast("Ata fechada."); renderAta(id); fazerBackupDriveAuto(); return guardarAtaNoDrive(id, true); });
+    });
+  });
+}
+function pedirReabertura(id){
+  var a=findAta(id); if(!a) return;
+  pedirAutorizacao("Reabrir a ata n.º "+a.numero, "A ata está bloqueada há mais de "+DIAS_CORRECAO+" dias. Dois membros da Direção têm de autorizar a reabertura. O texto atual fica guardado como versão anterior.", function(nomes, motivo){
+    var agora=new Date().toISOString();
+    var versoes=(a.versoes||[]).concat([{em:agora, fechadaEm:a.fechadaEm, corpo:a.corpo, ordem:a.ordem}]).slice(-5);
+    var patch={fechadaEm:null, reaberta:true, fechos:(a.fechos||[]).concat([a.fechadaEm]),
+      reaberturas:(a.reaberturas||[]).concat([{em:agora, por:nomes, motivo:motivo||""}]), versoes:versoes, atualizadaEm:agora};
+    Store.update(id, patch).then(function(){ toast("Ata reaberta. Não te esqueças de a fechar de novo."); renderAta(id); });
+  });
+}
+
+/* ============================================================
+   AUTORIZAÇÃO DE DOIS MEMBROS
+   ============================================================ */
+var authCb=null;
+function pedirAutorizacao(titulo, texto, cb){
+  var ms=membrosComPin();
+  if(ms.length<2){ toast("São precisos pelo menos dois membros da Direção com PIN. Define-os em “PINs da Direção”."); return; }
+  authCb=cb;
+  $("authTitle").textContent=titulo; $("authText").textContent=texto; $("authErr").textContent="";
+  $("authMotivo").value=""; $("pin1").value=""; $("pin2").value="";
+  var opts=ms.map(function(m){ return '<option value="'+esc(m.id)+'">'+esc(m.nome)+' — '+esc(m.cargo)+'</option>'; }).join("");
+  $("auth1").innerHTML=opts; $("auth2").innerHTML=opts; $("auth2").selectedIndex=1;
+  $("authModal").classList.add("open"); $("authMotivo").focus();
+}
+function verificarAutorizacao(){
+  var id1=$("auth1").value, id2=$("auth2").value, p1=$("pin1").value, p2=$("pin2").value;
+  var err=$("authErr"); err.textContent="";
+  if(id1===id2){ err.textContent="Têm de ser dois membros diferentes."; return; }
+  if(!p1||!p2){ err.textContent="Introduz os dois PINs."; return; }
+  var m1=state.settings.membros.filter(function(m){ return m.id===id1; })[0];
+  var m2=state.settings.membros.filter(function(m){ return m.id===id2; })[0];
+  $("authOk").disabled=true;
+  Promise.all([hashPin(p1), hashPin(p2)]).then(function(h){
+    $("authOk").disabled=false;
+    if(h[0]!==m1.pinHash || h[1]!==m2.pinHash){ err.textContent="PIN incorreto para "+(h[0]!==m1.pinHash? m1.nome : m2.nome)+"."; $("pin1").value=""; $("pin2").value=""; return; }
+    var motivo=$("authMotivo").value.trim();
+    $("authModal").classList.remove("open");
+    var cb=authCb; authCb=null;
+    if(cb) cb([m1.nome, m2.nome], motivo);
+  });
+}
+$("authOk").addEventListener("click", verificarAutorizacao);
+$("authCancel").addEventListener("click", function(){ $("authModal").classList.remove("open"); authCb=null; });
+$("pin2").addEventListener("keydown", function(e){ if(e.key==="Enter") verificarAutorizacao(); });
+
+var confirmCb=null;
+function confirmar(titulo, texto, cb){ confirmCb=cb; $("confirmTitle").textContent=titulo; $("confirmText").textContent=texto; $("confirmModal").classList.add("open"); }
+$("confirmOk").addEventListener("click", function(){ $("confirmModal").classList.remove("open"); var cb=confirmCb; confirmCb=null; if(cb) cb(); });
+$("confirmCancel").addEventListener("click", function(){ $("confirmModal").classList.remove("open"); confirmCb=null; });
+
+
+/* ============================================================
+   IMPRESSÃO — LIVRO DE ATAS (A4, cabeçalho/rodapé, paginação)
+   ============================================================ */
+function ordinal(i){ var o=["primeiro","segundo","terceiro","quarto","quinto","sexto","sétimo","oitavo","nono","décimo","décimo primeiro","décimo segundo"]; return o[i]||("n.º "+(i+1)); }
+
+function blocosDaAta(a){
+  var s=state.settings.assoc;
+  var blocks=[];
+  var titulo=document.createElement("div"); titulo.className="ata-titulo"; titulo.textContent="ATA N.º "+(a.numero||"");
+  var sub=document.createElement("div"); sub.className="ata-subtitulo"; sub.textContent=(a.tipo||"")+" · "+fmtDate(a.data);
+  blocks.push(titulo, sub);
+
+  if(a.aberturaAuto!==false){
+    var presentes=(a.presencas||[]).filter(function(p){ return p.presente; }).map(function(p){ return p.nome+(p.cargo? " ("+p.cargo+")":""); });
+    var ordem=(a.ordem||[]).map(function(o){ return o.trim(); }).filter(Boolean);
+    var orgao=ORGAO_POR_TIPO[a.tipo]||"a reunião";
+    var t = dataExtenso(a.data)+(a.horaInicio? ", pelas "+horaExtenso(a.horaInicio):"")+", reuniu "+(a.local? a.local.trim().replace(/\.$/,"")+", ":"")+orgao+" da "+(s.nomeCompleto||s.nome)
+      +(a.presidiu? ", sob a presidência de "+a.presidiu:"")+(a.secretariou? ", secretariada por "+a.secretariou:"")
+      +(ordem.length? ", com a seguinte ordem de trabalhos: "+ordem.map(function(o,i){ return "Ponto "+extenso(i+1)+" — "+o.replace(/[.;]$/,""); }).join("; ")+"." : ".");
+    blocks.push(p(t));
+    var pres="";
+    if(presentes.length) pres+="Estiveram presentes "+presentes.join(", ")+".";
+    if(a.convidados && a.convidados.trim()) pres+=(pres?" ":"")+"Participaram ainda "+a.convidados.trim().replace(/\.$/,"")+".";
+    if(a.ausencias && a.ausencias.trim()) pres+=(pres?" ":"")+"Faltaram, com justificação, "+a.ausencias.trim().replace(/\.$/,"")+".";
+    if(pres) blocks.push(p(pres));
+  }
+
+  var tmp=document.createElement("div"); tmp.innerHTML=sanitize(a.corpo);
+  Array.prototype.forEach.call(tmp.children, function(ch){
+    var tag=ch.tagName;
+    if(tag==="P"){ ch.className="ata-p"; blocks.push(ch); }
+    else if(tag==="H3"){ ch.className="ata-h"; blocks.push(ch); }
+    else if(tag==="UL"||tag==="OL"){ Array.prototype.forEach.call(ch.querySelectorAll("li"), function(li){ li.className="ata-p"; }); blocks.push(ch); }
+    else { var w=p(""); w.innerHTML=ch.innerHTML; blocks.push(w); }
+  });
+
+  if(a.aberturaAuto!==false){
+    var enc="Nada mais havendo a tratar, "+(a.horaFim? "foi a reunião encerrada pelas "+horaExtenso(a.horaFim)+", ":"foi a reunião dada por encerrada, ")
+      +"da qual se lavrou a presente ata que, depois de lida e aprovada, vai ser assinada"
+      +(a.presidiu? " por quem presidiu":"")+(a.secretariou? (a.presidiu?" e":"")+" por mim, "+a.secretariou+", que a secretariei e redigi":"")+".";
+    var pe=p(enc); pe.classList.add("encerra"); blocks.push(pe);
+  }
+
+  var ass=document.createElement("div"); ass.className="assinaturas";
+  ass.innerHTML='<div class="assin"><div class="linha"></div><div>'+esc(a.presidiu||"")+'</div><div class="cargo">Presidiu</div></div>'
+    +'<div class="assin"><div class="linha"></div><div>'+esc(a.secretariou||"")+'</div><div class="cargo">Secretariou</div></div>';
+  blocks.push(ass);
+  return blocks;
+
+  function p(txt){ var el=document.createElement("p"); el.className="ata-p"; el.textContent=txt; return el; }
+}
+
+function novaPagina(a){
+  var s=state.settings.assoc;
+  var pg=document.createElement("div"); pg.className="pg";
+  var logo = state.settings.logo ? '<img src="'+state.settings.logo+'" alt="">' : esc((s.nome||"A").charAt(0).toUpperCase());
+  pg.innerHTML='<div class="pg-head"><div class="org"><div class="org-logo">'+logo+'</div><div><div class="org-nome">'+esc(s.nomeCompleto||s.nome)+'</div><div class="org-sub">'+esc(s.nome)+(s.nipc? ' · NIPC '+esc(s.nipc):'')+'</div></div></div>'
+    +'<div class="doc">Livro de Atas<b>Ata n.º '+esc(a.numero)+'</b>'+esc(a.tipo||"")+'</div></div>'
+    +'<div class="pg-body"></div>'
+    +'<div class="pg-foot"><div>'+esc(s.morada||"")+(s.contactos? ' · '+esc(s.contactos):'')+'</div><div class="pn"></div></div>';
+  return pg;
+}
+
+/* corta um bloco de texto no último limite de palavra que ainda cabe;
+   devolve o resto como novo bloco (ou null se nada couber) */
+function cortarBloco(block, limitBottom){
+  var walker=document.createTreeWalker(block, NodeFilter.SHOW_TEXT, null);
+  var range=document.createRange();
+  var cutNode=null, cutOffset=0, node, anyFits=false;
+  while((node=walker.nextNode())){
+    var txt=node.nodeValue, i=0;
+    while(i<txt.length){
+      var j=txt.indexOf(" ", i+1); if(j<0) j=txt.length;
+      range.setStart(node, i); range.setEnd(node, j);
+      var rects=range.getClientRects(); var bottom=rects.length? rects[rects.length-1].bottom : 0;
+      if(bottom>limitBottom){ if(cutNode===null && !anyFits) return null; if(cutNode===null){ cutNode=node; cutOffset=i; } break; }
+      anyFits=true; cutNode=null; i=j;
+    }
+    if(cutNode) break;
+  }
+  if(!cutNode){ return null; }
+  var r=document.createRange(); r.setStart(cutNode, cutOffset); r.setEndAfter(block.lastChild);
+  var frag=r.extractContents();
+  var rest=block.cloneNode(false); rest.appendChild(frag);
+  // limpa espaços à volta do corte
+  if(rest.firstChild && rest.firstChild.nodeType===3) rest.firstChild.nodeValue=rest.firstChild.nodeValue.replace(/^\s+/,"");
+  if(!(rest.textContent||"").trim()) return null;
+  return rest;
+}
+
+function paginar(a, container){
+  container.innerHTML="";
+  var blocks=blocosDaAta(a);
+  var pg=novaPagina(a); container.appendChild(pg);
+  var body=pg.querySelector(".pg-body");
+  var guard=0;
+  while(blocks.length && guard++<400){
+    var b=blocks.shift();
+    body.appendChild(b);
+    var limit=body.getBoundingClientRect().bottom;
+    var overflow = b.getBoundingClientRect().bottom > limit + 0.5;
+    if(!overflow) continue;
+    var splittable = b.tagName==="P" || b.tagName==="LI";
+    var rest=null;
+    if(splittable){
+      rest=cortarBloco(b, limit);
+      if(rest===null){
+        if(body.children.length>1){ body.removeChild(b); rest=b; }
+      } else if(b.getBoundingClientRect().bottom > limit+0.5 && body.children.length>1){
+        // o corte não resolveu: leva o bloco inteiro para a página seguinte
+        while(rest.firstChild) b.appendChild(rest.firstChild);
+        body.removeChild(b); rest=b;
+      }
+    } else if(b.tagName==="UL"||b.tagName==="OL"){
+      var items=Array.prototype.slice.call(b.children);
+      body.removeChild(b);
+      var first=b.cloneNode(false); body.appendChild(first);
+      var restItems=[];
+      for(var k=0;k<items.length;k++){
+        first.appendChild(items[k]);
+        if(items[k].getBoundingClientRect().bottom>limit+0.5){ first.removeChild(items[k]); restItems=items.slice(k); break; }
+      }
+      if(!first.children.length){
+        if(body.children.length===1){ first.appendChild(items[0]); restItems=items.slice(1); }
+        else { body.removeChild(first); restItems=items; }
+      }
+      if(restItems.length){
+        var restList=b.cloneNode(false);
+        restItems.forEach(function(it){ restList.appendChild(it); });
+        if(b.tagName==="OL") restList.setAttribute("start", String(Number(b.getAttribute("start")||1)+first.children.length));
+        rest=restList;
+      }
+    } else {
+      if(body.children.length>1){ body.removeChild(b); rest=b; }
+    }
+    if(rest){
+      pg=novaPagina(a); container.appendChild(pg); body=pg.querySelector(".pg-body");
+      blocks.unshift(rest);
+    }
+  }
+  var pages=container.querySelectorAll(".pg");
+  pages.forEach(function(p,i){ p.querySelector(".pn").textContent="Ata n.º "+(a.numero||"")+" · Página "+(i+1)+" de "+pages.length; });
+}
+
+function abrirImpressao(id){
+  flushSave().then(function(){
+    var a=findAta(id); if(!a) return;
+    $("printOverlay").classList.add("show");
+    document.body.style.overflow="hidden";
+    // espera pelas fontes para medir corretamente
+    var go=function(){ paginar(a, $("pages")); };
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(go); else go();
+  });
+}
+function fecharImpressao(){ $("printOverlay").classList.remove("show"); document.body.style.overflow=""; }
+$("btnImprimir").addEventListener("click", function(){ window.print(); });
+$("btnFecharPrint").addEventListener("click", fecharImpressao);
+
+
+/* ============================================================
+   EVENTOS GLOBAIS
+   ============================================================ */
+document.addEventListener("click", function(e){
+  var t=e.target.closest("[data-open],[data-print],[data-nav]"); if(!t) return;
+  if(t.hasAttribute("data-open")) navTo({name:"ata", id:t.getAttribute("data-open")});
+  else if(t.hasAttribute("data-print")) abrirImpressao(t.getAttribute("data-print"));
+  else if(t.hasAttribute("data-nav")) navTo({name:t.getAttribute("data-nav")});
+});
+$("btnNova").addEventListener("click", novaAta);
+$("searchBox").addEventListener("input", function(){ state.search=this.value; renderSidebar(); });
+document.querySelectorAll(".modal").forEach(function(m){ m.addEventListener("click", function(e){ if(e.target===m){ m.classList.remove("open"); authCb=null; confirmCb=null; } }); });
+document.addEventListener("keydown", function(e){
+  if(e.key==="Escape"){ if($("printOverlay").classList.contains("show")) fecharImpressao(); document.querySelectorAll(".modal.open").forEach(function(m){ m.classList.remove("open"); }); }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="s"){ e.preventDefault(); flushSave().then(function(){ toast("Guardado."); }); }
+});
+window.addEventListener("beforeunload", function(){ if(state.dirty) flushSave(); });
+document.addEventListener("visibilitychange", function(){ if(document.hidden && state.dirty) flushSave(); });
+// reavalia estados (fechada → bloqueada) a cada minuto
+setInterval(function(){ if(state.view.name!=="ata" || !state.dirty){ renderSidebar(); if(state.view.name==="home") renderHome(); } }, 60000);
+
+
+
+
+/* ============================================================
+   GOOGLE DRIVE — mesma ligação e mesma pasta da app de Sócios
+   ("ARCA d'Ajuda" → "Atas" para os PDFs, "Backups" para a cópia JSON)
+   ============================================================ */
+var GDRIVE_CLIENT_ID = '853058400861-ih32rr8mhqah7b59tgv3tfjkme1s6plg.apps.googleusercontent.com';
+var GDRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+var gdriveToken=null, gdriveTokenExpiry=0, gdriveClient=null, gdrivePending=[];
+var driveEmailPreferido='', gdriveContaLigada='';
+function gdriveValid(){ return !!gdriveToken && Date.now()<gdriveTokenExpiry; }
+
+function gdriveLerContaLigada(){
+  if(!gdriveValid()){ gdriveContaLigada=''; return Promise.resolve(''); }
+  return fetch('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)', {headers:{Authorization:'Bearer '+gdriveToken}})
+    .then(function(r){ return r.ok? r.json():null; }).then(function(j){ if(j) gdriveContaLigada=((j.user&&j.user.emailAddress)||'').toLowerCase(); })
+    .catch(function(e){ console.warn('conta Drive:', e); })
+    .then(function(){ try{ localStorage.setItem('arca_gdrive_conta', gdriveContaLigada); }catch(e){} atualizarEstadoDrive(); return gdriveContaLigada; });
+}
+function carregarConfigDrive(){
+  return lerConfig(['drive_email']).then(function(c){ driveEmailPreferido=(c.drive_email||'').trim().toLowerCase(); atualizarEstadoDrive(); });
+}
+function gdriveInit(){
+  if(gdriveClient) return gdriveClient;
+  if(!(window.google && google.accounts && google.accounts.oauth2)) return null;
+  try{
+    gdriveClient=google.accounts.oauth2.initTokenClient({
+      client_id:GDRIVE_CLIENT_ID, scope:GDRIVE_SCOPE,
+      callback:function(resp){
+        var fila=gdrivePending; gdrivePending=[];
+        if(resp && resp.access_token){
+          gdriveToken=resp.access_token;
+          gdriveTokenExpiry=Date.now()+((resp.expires_in? resp.expires_in*1000:3600000))-60000;
+          try{ localStorage.setItem('arca_gdrive_tok', JSON.stringify({t:gdriveToken,e:gdriveTokenExpiry})); }catch(e){}
+          gdriveLerContaLigada();
+          fila.forEach(function(p){ try{ p.ok&&p.ok(); }catch(e){ console.error(e); } });
+        } else {
+          fila.forEach(function(p){ try{ p.err&&p.err(resp); }catch(e){ console.error(e); } });
+        }
+      }
+    });
+  }catch(e){ console.error('Drive init falhou:', e); gdriveClient=null; }
+  return gdriveClient;
+}
+function gdriveAuth(callback, onFail, silent){
+  if(gdriveValid()){ callback&&callback(); return; }
+  gdriveInit();
+  if(!gdriveClient){ onFail&&onFail(); return; }
+  gdrivePending.push({ok:callback, err:onFail});
+  try{ var opts= silent? {prompt:''}:{}; if(driveEmailPreferido) opts.hint=driveEmailPreferido; gdriveClient.requestAccessToken(opts); }
+  catch(e){ onFail&&onFail(e); }
+}
+function gdriveConnectInteractive(){
+  gdriveAuth(function(){ toast('Google Drive ligado ✓'); atualizarEstadoDrive(); fazerBackupDrive(true); },
+             function(){ toast('Não foi possível ligar ao Google Drive.'); });
+}
+function gdriveMudarConta(){
+  var tokenAntigo=gdriveToken;
+  var continuar=function(){
+    gdriveToken=null; gdriveTokenExpiry=0; gdriveContaLigada='';
+    try{ localStorage.removeItem('arca_gdrive_tok'); localStorage.removeItem('arca_gdrive_conta'); }catch(e){}
+    atualizarEstadoDrive(); gdriveInit();
+    if(!gdriveClient){ toast('Google ainda não carregou. Tenta de novo daqui a instantes.'); return; }
+    gdrivePending.push({ok:function(){ toast('Google Drive ligado noutra conta ✓'); gdriveLerContaLigada().then(function(){ fazerBackupDrive(true); }); }, err:function(){ toast('Não foi possível ligar ao Google Drive.'); }});
+    var opts={prompt:'select_account'}; if(driveEmailPreferido) opts.hint=driveEmailPreferido;
+    try{ gdriveClient.requestAccessToken(opts); }catch(e){ toast('Não foi possível ligar ao Google Drive.'); }
+  };
+  if(tokenAntigo && window.google && google.accounts && google.accounts.oauth2 && google.accounts.oauth2.revoke){
+    try{ google.accounts.oauth2.revoke(tokenAntigo, continuar); setTimeout(function(){ if(gdriveToken===tokenAntigo) continuar(); },1500); }catch(e){ continuar(); }
+  } else continuar();
+}
+function gdriveAutoConnect(){
+  try{
+    var raw=localStorage.getItem('arca_gdrive_tok');
+    if(raw){ var o=JSON.parse(raw); if(o&&o.t&&o.e&&Date.now()<o.e){ gdriveToken=o.t; gdriveTokenExpiry=o.e; } }
+    gdriveContaLigada=localStorage.getItem('arca_gdrive_conta')||'';
+  }catch(e){}
+  if(gdriveValid()){ atualizarEstadoDrive(); if(!gdriveContaLigada) gdriveLerContaLigada(); return; }
+  var tries=0;
+  var tryConnect=function(){
+    if(gdriveInit()){ gdriveAuth(function(){ atualizarEstadoDrive(); }, function(){ atualizarEstadoDrive(); }, true); return; }
+    if(tries++<10) setTimeout(tryConnect,500);
+  };
+  tryConnect();
+}
+var _gdriveFolderCache={};
+function gdriveFindOrCreateFolder(name, parentId){
+  var cacheKey=(parentId||'root')+'/'+name;
+  if(_gdriveFolderCache[cacheKey]) return _gdriveFolderCache[cacheKey];
+  var nomeEsc=name.replace(/'/g,"\\'");
+  var q=encodeURIComponent("name='"+nomeEsc+"' and mimeType='application/vnd.google-apps.folder' and trashed=false and '"+(parentId||'root')+"' in parents");
+  var promise=fetch('https://www.googleapis.com/drive/v3/files?q='+q, {headers:{'Authorization':'Bearer '+gdriveToken}})
+    .then(function(r){ return r.json(); }).then(function(data){
+      if(data.files && data.files.length) return data.files[0].id;
+      var body={name:name, mimeType:'application/vnd.google-apps.folder'}; if(parentId) body.parents=[parentId];
+      return fetch('https://www.googleapis.com/drive/v3/files',{method:'POST', headers:{'Authorization':'Bearer '+gdriveToken,'Content-Type':'application/json'}, body:JSON.stringify(body)})
+        .then(function(r){ return r.json(); }).then(function(c){ return c.id; });
+    });
+  _gdriveFolderCache[cacheKey]=promise;
+  promise.catch(function(){ delete _gdriveFolderCache[cacheKey]; });
+  return promise;
+}
+function gdriveGetSubfolder(sub){ return gdriveFindOrCreateFolder("ARCA d'Ajuda").then(function(root){ return gdriveFindOrCreateFolder(sub, root); }); }
+
+function uploadToGDriveReplace(fileData, fileName, mimeType, subfolder){
+  return new Promise(function(resolve, reject){
+    gdriveAuth(function(){
+      var folderId;
+      gdriveGetSubfolder(subfolder).then(function(fid){
+        folderId=fid;
+        var q=encodeURIComponent("name='"+fileName.replace(/'/g,"\\'")+"' and '"+folderId+"' in parents and trashed=false");
+        return fetch('https://www.googleapis.com/drive/v3/files?q='+q, {headers:{'Authorization':'Bearer '+gdriveToken}}).then(function(r){ return r.json(); });
+      }).then(function(existing){
+        var dels=(existing.files||[]).map(function(f){ return fetch('https://www.googleapis.com/drive/v3/files/'+f.id, {method:'DELETE', headers:{'Authorization':'Bearer '+gdriveToken}}); });
+        return Promise.all(dels);
+      }).then(function(){
+        var base64=fileData.split(',')[1]; var bytes=atob(base64); var arr=new Uint8Array(bytes.length);
+        for(var i=0;i<bytes.length;i++) arr[i]=bytes.charCodeAt(i);
+        var form=new FormData();
+        form.append('metadata', new Blob([JSON.stringify({name:fileName, parents:[folderId]})], {type:'application/json'}));
+        form.append('file', new Blob([arr], {type:mimeType}));
+        return fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {method:'POST', headers:{'Authorization':'Bearer '+gdriveToken}, body:form});
+      }).then(function(r){ return r.json(); }).then(function(up){ if(!up || !up.id) throw new Error('Upload sem resposta'); resolve(up.id); })
+      .catch(reject);
+    }, function(){ reject(new Error('Google Drive não ligado')); });
+  });
+}
+function atualizarEstadoDrive(){
+  var el=$("drive-status"); if(!el) return;
+  var ultimo=LS.get('arca_atas_ultimo_backup');
+  if(gdriveValid()){
+    el.innerHTML='🟢 Ligado ao Google Drive'+(gdriveContaLigada? ' (<b>'+esc(gdriveContaLigada)+'</b>)':'')+(ultimo? ' — último backup: '+new Date(ultimo).toLocaleString('pt-PT'):' — ainda sem backup');
+    if(driveEmailPreferido && gdriveContaLigada && gdriveContaLigada!==driveEmailPreferido) el.innerHTML+='<br><span style="color:var(--accent-dark)">⚠️ A conta ligada é diferente da configurada na app de Sócios (<b>'+esc(driveEmailPreferido)+'</b>). Usa “Mudar de conta”.</span>';
+  } else {
+    el.textContent='⚪ Google Drive não ligado'+(driveEmailPreferido? ' — conta configurada: '+driveEmailPreferido:'');
+  }
+  var chip=$("drive-chip"); if(chip) chip.textContent= gdriveValid()? '☁ Drive ligado':'☁ Drive desligado';
+}
+
+/* ---- cópia de segurança de todas as atas (JSON), como nos Sócios ---- */
+var _backupEmCurso=false;
+function fazerBackupDrive(manual){
+  if(!gdriveValid()){ if(manual) toast('Liga primeiro o Google Drive.'); return Promise.resolve(); }
+  if(_backupEmCurso){ if(manual) toast('Já há um backup em curso…'); return Promise.resolve(); }
+  _backupEmCurso=true;
+  var dados={aplicacao:"ARCA d'Ajuda — Livro de Atas", exportadoEm:new Date().toISOString(), atas:state.atas};
+  var dataUrl='data:application/json;base64,'+btoa(unescape(encodeURIComponent(JSON.stringify(dados,null,2))));
+  return uploadToGDriveReplace(dataUrl, 'ARCA_Atas_backup.json', 'application/json', 'Backups').then(function(){
+    LS.set('arca_atas_ultimo_backup', new Date().toISOString());
+    if(manual) toast('✓ Backup das atas guardado no Google Drive.');
+    atualizarEstadoDrive();
+  }).catch(function(e){ console.error(e); if(manual) toast('Não foi possível fazer o backup no Drive.'); })
+    .then(function(){ _backupEmCurso=false; });
+}
+function fazerBackupDriveAuto(){
+  if(!gdriveValid()) return;
+  var ultimo=LS.get('arca_atas_ultimo_backup');
+  if(ultimo && (Date.now()-new Date(ultimo).getTime())<3*60*1000) return;
+  fazerBackupDrive(false);
+}
+
+/* ---- PDF de uma ata (exatamente como a pré-visualização) → pasta "Atas" ---- */
+function carregarScript(src){ return new Promise(function(res, rej){ var s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=function(){ rej(new Error('Falha a carregar '+src)); }; document.head.appendChild(s); }); }
+function garantirLibsPdf(){
+  var p=Promise.resolve();
+  if(!window.html2canvas) p=p.then(function(){ return carregarScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'); });
+  if(!(window.jspdf && window.jspdf.jsPDF)) p=p.then(function(){ return carregarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'); });
+  return p;
+}
+function nomeFicheiroAta(a){ var n=String(a.numero||'').replace(/\//g,'-').replace(/[^\w\-]/g,'_'); return 'Ata_'+n+'.pdf'; }
+function gerarPdfDaAta(a){
+  return garantirLibsPdf().then(function(){
+    var overlay=$("printOverlay"); var jaAberto=overlay.classList.contains("show");
+    if(!jaAberto){ overlay.classList.add("show"); document.body.style.overflow="hidden"; }
+    var note=overlay.querySelector('.note'); var noteOld=note.textContent; note.textContent='A gerar o PDF para o Google Drive…';
+    var ready = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    return ready.then(function(){ paginar(a, $("pages")); })
+      .then(function(){
+        var pages=Array.prototype.slice.call(document.querySelectorAll('#pages .pg'));
+        var pdf=new window.jspdf.jsPDF({unit:'mm', format:'a4', orientation:'portrait', compress:true});
+        var chain=Promise.resolve();
+        pages.forEach(function(pg, i){
+          chain=chain.then(function(){ return window.html2canvas(pg, {scale:2, useCORS:true, backgroundColor:'#ffffff', logging:false}); })
+            .then(function(canvas){ if(i>0) pdf.addPage(); pdf.addImage(canvas.toDataURL('image/jpeg',0.9), 'JPEG', 0, 0, 210, 297); });
+        });
+        return chain.then(function(){ return pdf.output('datauristring'); });
+      })
+      .then(function(uri){ note.textContent=noteOld; if(!jaAberto) fecharImpressao(); return uri; },
+            function(e){ note.textContent=noteOld; if(!jaAberto) fecharImpressao(); throw e; });
+  });
+}
+var _driveAtaEmCurso={};
+function guardarAtaNoDrive(id, silencioso){
+  var a=findAta(id); if(!a) return Promise.resolve();
+  if(!gdriveValid()){ if(!silencioso) toast('Liga primeiro o Google Drive (em “PINs da Direção e definições”).'); return Promise.resolve(); }
+  if(_driveAtaEmCurso[id]) return Promise.resolve();
+  _driveAtaEmCurso[id]=true;
+  var st=$("driveState"); if(st) st.textContent='a guardar no Drive…';
+  return gerarPdfDaAta(a).then(function(uri){ return uploadToGDriveReplace(uri, nomeFicheiroAta(a), 'application/pdf', 'Atas'); })
+    .then(function(fileId){
+      var agora=new Date().toISOString();
+      return Store.update(id, {driveFileId:fileId, driveEm:agora}).then(function(){ toast('✓ Ata guardada no Google Drive (pasta ARCA d\'Ajuda/Atas).'); if(state.view.name==="ata" && state.view.id===id && !state.dirty) renderAta(id); });
+    })
+    .catch(function(e){ console.error(e); toast('Não foi possível guardar a ata no Drive: '+String(e.message||e).slice(0,120)); if(st) st.textContent=''; })
+    .then(function(){ delete _driveAtaEmCurso[id]; });
+}
+
+/* ============================================================
+   PINs DA DIREÇÃO E DEFINIÇÕES
+   ============================================================ */
+function renderConfig(){
+  var s=state.settings, ms=s.membros;
+  var html='<div class="page-head"><div><h2>PINs da Direção e definições</h2><div class="sub">Os membros e cargos vêm da app de Sócios (Configurações → Direção). Aqui cada um define o seu PIN.</div></div></div>';
+  html+='<div class="section"><h3>Membros da Direção <span class="hint">'+ms.length+' com sócio associado · '+membrosComPin().length+' com PIN</span></h3>';
+  if(ms.length){
+    html+='<div class="member-list">'+ms.map(function(m){
+      return '<div class="member-row"><span class="nm">'+esc(m.nome)+'</span><span class="cg">'+esc(m.cargo)+' · sócio n.º '+esc(m.id)+'</span>'
+        +(m.pinHash? '<span class="pill pill-fechada">PIN ativo</span>':'<span class="pill pill-rascunho">sem PIN</span>')
+        +'<button class="btn btn-ghost btn-sm" data-member-pin="'+esc(m.id)+'">'+(m.pinHash? 'Novo PIN':'Definir PIN')+'</button>'
+        +(m.pinHash? '<button class="btn btn-danger btn-sm" data-member-clear="'+esc(m.id)+'">Anular PIN</button>':'')+'</div>';
+    }).join("")+'</div>';
+  } else {
+    html+='<div class="empty-state">Não há membros da Direção com sócio associado. Vai à app de <b>Sócios → Configurações → Direção</b> e escolhe o sócio de cada cargo; depois volta aqui.</div>';
+  }
+  html+='<div class="help" style="font-size:12px;color:var(--ink-muted);margin-top:10px">Para reabrir uma ata bloqueada são precisos dois membros com PIN. Depois de existirem dois PINs, mudar ou anular um PIN exige também duas autorizações.</div></div>';
+
+  html+='<div class="section"><h3>Cabeçalho e rodapé <span class="hint">dados da app de Sócios</span></h3>'
+    +'<div style="font-size:13px;line-height:1.9"><b>'+esc(s.assoc.nomeCompleto)+'</b>'+(s.assoc.nipc? ' · NIPC '+esc(s.assoc.nipc):'')+'<br>'+esc(s.assoc.morada||'—')+'<br>'+esc(s.assoc.contactos||'—')+'</div>'
+    +'<div class="help" style="font-size:12px;color:var(--ink-muted);margin-top:8px">Para alterar nome, NIF, morada ou contactos, edita-os em Sócios → Configurações → Associação; aparecem aqui automaticamente.</div>'
+    +'<div class="field" style="margin-top:14px"><label for="cfgSede">Local habitual das reuniões (entra no parágrafo de abertura)</label><input type="text" id="cfgSede" value="'+esc(s.assoc.sede)+'"><span class="help">Escreve como se lê na frase: “reuniu <i>na sede da Associação, na Rua…</i>”.</span></div>'
+    +'<div style="margin-top:10px;display:flex;justify-content:flex-end"><button class="btn btn-primary" id="cfgSedeSave">Guardar local</button></div></div>';
+
+  html+='<div class="section"><h3>Google Drive <span class="hint">mesma conta e pasta da app de Sócios</span></h3>'
+    +'<div id="drive-status" style="font-size:13px;line-height:1.7">…</div>'
+    +'<div class="help" style="font-size:12px;color:var(--ink-muted);margin:6px 0 12px">Cada ata fechada é guardada em PDF na pasta <b>ARCA d\'Ajuda / Atas</b> do Google Drive, e todas as atas ficam também na cópia de segurança <b>Backups / ARCA_Atas_backup.json</b> (atualizada automaticamente). A conta Google preferida define-se na app de Sócios.</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary btn-sm" id="driveLigar">🔗 Ligar Google Drive</button><button class="btn btn-ghost btn-sm" id="driveMudar">🔁 Mudar de conta</button><button class="btn btn-ghost btn-sm" id="driveBackup">☁ Fazer backup agora</button><button class="btn btn-ghost btn-sm" id="driveTodas">📄 Guardar PDF de todas as atas fechadas</button></div></div>';
+  html+='<div class="section"><h3>Logótipo</h3><div class="logo-drop"><div class="logo-preview" id="logoPreview">'+(s.logo? '<img src="'+s.logo+'" alt="logótipo">' : '<span style="font-size:11px;color:#888">sem logótipo</span>')+'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:12.5px;color:var(--ink-muted)">Partilhado com as outras apps neste dispositivo. Se não aparecer, carrega-o aqui.</span>'
+    +'<label class="btn btn-ghost btn-sm file-btn">Escolher imagem<input type="file" id="logoFile" accept="image/*"></label></div></div></div>';
+  $("app").innerHTML=html;
+
+  $("app").querySelectorAll("[data-member-pin]").forEach(function(b){ b.addEventListener("click", function(){
+    var m=ms.filter(function(x){ return x.id===b.getAttribute("data-member-pin"); })[0]; if(!m) return;
+    var act=function(){ abrirMembro(m); };
+    if(m.pinHash && membrosComPin().length>=2) pedirAutorizacao("Novo PIN para "+m.nome, "Mudar o PIN de um membro exige a autorização de dois membros da Direção.", act); else act();
+  }); });
+  $("app").querySelectorAll("[data-member-clear]").forEach(function(b){ b.addEventListener("click", function(){
+    var m=ms.filter(function(x){ return x.id===b.getAttribute("data-member-clear"); })[0]; if(!m) return;
+    var act=function(){ Store.removePin(m).then(function(){ toast("PIN anulado."); renderConfig(); }).catch(function(e){ toast("Erro: "+e.message.slice(0,120)); }); };
+    if(membrosComPin().length>=2) pedirAutorizacao("Anular o PIN de "+m.nome, "Anular um PIN exige a autorização de dois membros da Direção.", act);
+    else confirmar("Anular o PIN de "+m.nome+"?", "Este membro deixa de poder autorizar reaberturas até definir um novo PIN.", act);
+  }); });
+  atualizarEstadoDrive();
+  $("driveLigar").addEventListener("click", gdriveConnectInteractive);
+  $("driveMudar").addEventListener("click", gdriveMudarConta);
+  $("driveBackup").addEventListener("click", function(){ fazerBackupDrive(true); });
+  $("driveTodas").addEventListener("click", function(){
+    if(!gdriveValid()){ toast('Liga primeiro o Google Drive.'); return; }
+    var lista=state.atas.filter(function(a){ return a.fechadaEm; });
+    if(!lista.length){ toast('Não há atas fechadas.'); return; }
+    var chain=Promise.resolve(); lista.forEach(function(a){ chain=chain.then(function(){ return guardarAtaNoDrive(a.id, true); }); });
+    chain.then(function(){ toast('✓ '+lista.length+' ata(s) guardada(s) no Drive.'); });
+  });
+  $("cfgSedeSave").addEventListener("click", function(){
+    var v=$("cfgSede").value.trim();
+    guardarChaveConfig('atas_local_reunioes', v).then(function(){ state.settings.assoc.sede=v; toast("Local guardado."); }).catch(function(e){ toast("Erro: "+e.message.slice(0,120)); });
+  });
+  $("logoFile").addEventListener("change", function(){
+    var f=this.files&&this.files[0]; if(!f) return;
+    var img=new Image(); var url=URL.createObjectURL(f);
+    img.onload=function(){
+      var max=400, sc=Math.min(1, max/Math.max(img.width,img.height));
+      var c=document.createElement("canvas"); c.width=Math.round(img.width*sc); c.height=Math.round(img.height*sc);
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      state.settings.logo=c.toDataURL("image/png"); URL.revokeObjectURL(url);
+      idbSet('arca_logo', state.settings.logo).then(function(){ toast("Logótipo guardado."); renderBrand(); renderConfig(); });
+    };
+    img.src=url;
+  });
+}
+var memberEditing=null;
+function abrirMembro(m){
+  memberEditing=m;
+  $("mNome").value=m.nome+" — "+m.cargo; $("mPin").value=""; $("mPin2").value=""; $("memberErr").textContent="";
+  $("memberModal").classList.add("open"); $("mPin").focus();
+}
+$("memberCancel").addEventListener("click", function(){ $("memberModal").classList.remove("open"); });
+$("memberOk").addEventListener("click", function(){
+  var p=$("mPin").value, p2=$("mPin2").value, err=$("memberErr");
+  if(!memberEditing) return;
+  if(!/^\d{4,8}$/.test(p)){ err.textContent="O PIN deve ter 4 a 8 algarismos."; return; }
+  if(p!==p2){ err.textContent="Os PINs não coincidem."; return; }
+  hashPin(p).then(function(h){ return Store.savePin(memberEditing, h); })
+    .then(function(){ $("memberModal").classList.remove("open"); toast("PIN guardado."); renderConfig(); })
+    .catch(function(e){ err.textContent="Não foi possível guardar: "+(e&&e.message? e.message.slice(0,140):"erro"); });
+});
+
+/* ============================================================
+   ARRANQUE
+   ============================================================ */
+function iniciar(){
+  $("user-email").textContent=(supaSession&&supaSession.user&&supaSession.user.email)||'';
+  renderSidebar(); renderHome();
+  carregarLogo();
+  return Promise.all([carregarAssociacao(), carregarDirecao(), carregarConfigDrive()]).then(function(){ return Store.reload(); }).then(function(){ try{ gdriveAutoConnect(); }catch(e){ console.warn('drive:', e); } });
+}
+$("login-btn").addEventListener("click", fazerLogin);
+$("login-pass").addEventListener("keydown", function(e){ if(e.key==="Enter") fazerLogin(); });
+$("btnSair").addEventListener("click", function(){ confirmar("Sair da conta neste dispositivo?", "Vais precisar do email e password para voltar a entrar.", supaLogout); });
+$("btnAjuda").addEventListener("click", function(){ $("ajudaModal").classList.add("open"); });
+$("ajudaOk").addEventListener("click", function(){ $("ajudaModal").classList.remove("open"); });
+
+// recarrega a lista de vez em quando (outro dispositivo pode ter alterado atas)
+setInterval(function(){ if(state.storeMode==="cloud" && !state.dirty && !document.hidden) Store.reload(); }, 120000);
+
+(function(){
+  renderStorePill();
+  if(supaSession && supaSession.access_token){
+    iniciar().catch(function(e){ if(String(e.message)!=='AUTH_EXPIRED') console.error(e); });
+  } else { carregarLogo(); mostrarLogin(); }
+})();
+})();
+
+</script>
+</body>
+</html>
