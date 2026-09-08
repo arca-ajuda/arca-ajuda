@@ -47,6 +47,37 @@
   }
   .brand{display:flex;align-items:center;gap:14px;}
   .brand img{height:min(9vh,64px);width:auto;}
+  .brand-logo{position:relative;display:flex;align-items:center;}
+  .logo-edit-btn{
+    position:absolute;right:-8px;bottom:-6px;width:22px;height:22px;border-radius:50%;
+    background:#fff;border:1px solid #ECE7DA;box-shadow:0 2px 6px rgba(20,20,10,.15);
+    font-size:11px;color:var(--text-2);cursor:pointer;display:flex;align-items:center;justify-content:center;
+    padding:0;
+  }
+  .logo-edit-btn:hover{color:var(--teal-d);border-color:var(--teal);}
+  .logo-edit-btn[hidden]{display:none;}
+  .logo-popover{left:0;right:auto;width:240px;}
+  .logo-popover-txt{font-size:11px;color:var(--text-2);line-height:1.4;margin-bottom:10px;}
+  .logo-preview{
+    width:100%;height:70px;border:1.5px dashed #E4DFCF;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;margin-bottom:10px;background:#FBFAF5;
+    overflow:hidden;
+  }
+  .logo-preview img{max-width:85%;max-height:85%;object-fit:contain;}
+  .logo-preview .empty{font-size:10.5px;color:var(--text-3);text-align:center;padding:0 8px;}
+  .btn-file{
+    display:block;width:100%;text-align:center;padding:7px 9px;background:var(--teal);color:#fff;
+    border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;position:relative;box-sizing:border-box;
+  }
+  .btn-file:hover{background:var(--teal-d);}
+  .btn-file input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;}
+  .btn-remove{
+    display:block;width:100%;margin-top:7px;padding:6px 9px;background:none;border:1px solid #ECE7DA;
+    border-radius:7px;font-size:11.5px;color:var(--coral-d);cursor:pointer;
+  }
+  .btn-remove:hover{border-color:var(--coral);background:var(--coral-l);}
+  .btn-remove[hidden]{display:none;}
+  .logo-hint{display:block;font-size:10px;color:var(--text-3);margin-top:8px;line-height:1.35;}
   .brand-text h1{
     font-size:clamp(20px,2.6vh,28px);font-weight:800;letter-spacing:-.02em;color:var(--teal-d);
   }
@@ -72,12 +103,37 @@
     justify-content:center;
     box-shadow:0 1px 2px rgba(20,20,10,.03);
     transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-    position:relative;overflow:hidden;
+    position:relative;overflow:hidden;z-index:0;
   }
   .card::before{
-    content:"";position:absolute;left:0;top:0;bottom:0;width:4px;
-    background:var(--accent,var(--teal));opacity:.85;
+    content:"";position:absolute;left:0;top:0;bottom:0;width:5px;z-index:2;
+    background:var(--accent,var(--teal));opacity:.9;
+    box-shadow:0 0 10px 1px var(--accent,var(--teal));
   }
+  .card-photo{
+    position:absolute;inset:0;z-index:-3;pointer-events:none;
+    background-size:cover;background-position:center;
+    filter:saturate(1.2) contrast(1.02);opacity:.85;
+  }
+  .card-tint{
+    position:absolute;inset:0;z-index:-2;pointer-events:none;
+    background:linear-gradient(140deg,var(--accent-d,var(--teal-d)) 0%,var(--accent,var(--teal)) 42%,transparent 78%);
+    opacity:.48;mix-blend-mode:multiply;
+  }
+  .card-fade{
+    position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:linear-gradient(0deg,rgba(255,255,255,.97) 0%,rgba(255,255,255,.88) 27%,rgba(255,255,255,.32) 58%,rgba(255,255,255,.04) 100%);
+  }
+  .card.secondary .card-photo, .card.placeholder .card-photo{opacity:.55;}
+  .card.secondary .card-fade, .card.placeholder .card-fade{
+    background:linear-gradient(0deg,rgba(251,250,245,.97) 0%,rgba(251,250,245,.9) 30%,rgba(251,250,245,.5) 62%,rgba(251,250,245,.2) 100%);
+  }
+  .card.secondary .card-tint, .card.placeholder .card-tint{opacity:.3;}
+  .icon{box-shadow:0 1px 3px rgba(20,20,10,.18);}
+  .icon svg{width:58%;height:58%;color:var(--accent-d,var(--teal-d));}
+  .card.secondary .icon svg{color:var(--text-2);}
+  .card.placeholder .icon svg{color:var(--text-3);}
+  .arrow{background:rgba(255,255,255,.85);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;}
   a.card:hover, a.card:focus-visible{
     transform:translateY(-3px);
     box-shadow:0 10px 24px rgba(20,20,10,.10);
@@ -170,7 +226,20 @@
 
   <header>
     <div class="brand">
-      <img src="logo.png" alt="Logo ARCA d'Ajuda" onerror="this.style.display='none'">
+      <div class="brand-logo">
+        <img id="brandLogo" src="logo.png" alt="Logo ARCA d'Ajuda" onerror="this.style.display='none'">
+        <button id="logoEditBtn" class="logo-edit-btn" type="button" title="Alterar logótipo" hidden>✎</button>
+        <div id="logoPopover" class="auth-popover logo-popover" hidden>
+          <p class="logo-popover-txt">O logótipo aparece no topo desta página. Fica guardado neste dispositivo (browser).</p>
+          <div class="logo-preview" id="logoPreviewBox"><span class="empty">Sem logótipo personalizado</span></div>
+          <label class="btn-file" id="logoChooseBtn">Escolher imagem
+            <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+          </label>
+          <button class="btn-remove" id="removeLogoBtn" type="button" hidden>Remover logótipo</button>
+          <span class="logo-hint">PNG com fundo transparente fica melhor. A imagem é reduzida automaticamente.</span>
+          <div id="logoMsg" class="auth-error" hidden></div>
+        </div>
+      </div>
       <div class="brand-text">
         <h1>ARCA d'Ajuda</h1>
         <p>Associação Recreativa e Cultural da Ajuda · Funchal, Madeira</p>
@@ -195,26 +264,30 @@
   <main>
     <div class="grid">
 
-      <a class="card" style="--accent:var(--teal);--accent-l:var(--teal-l)" href="financeiro/">
-        <div class="card-top"><div class="icon">💶</div><span class="arrow">→</span></div>
+      <a class="card" style="--accent:var(--teal);--accent-l:var(--teal-l);--accent-d:var(--teal-d)" href="financeiro/">
+        <div class="card-photo" style="background-image:url('img/bg_financeiro.jpg')"></div><div class="card-tint"></div><div class="card-fade"></div>
+        <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 8.5c-1-1-2.2-1.3-3.4-.9-1.6.5-2.6 2-2.6 4.4s1 3.9 2.6 4.4c1.2.4 2.4.1 3.4-.9"/><path d="M7.5 10.5h6M7.5 13.5h5.5"/></svg></div><span class="arrow">→</span></div>
         <h3>Gestão Financeira</h3>
         <p>Receitas, despesas e contas da associação.</p>
       </a>
 
-      <a class="card" style="--accent:var(--sky);--accent-l:var(--sky-l)" href="socios/">
-        <div class="card-top"><div class="icon">👥<span class="notif-badge" id="badge-socios" hidden>0</span></div><span class="arrow">→</span></div>
+      <a class="card" style="--accent:var(--sky);--accent-l:var(--sky-l);--accent-d:var(--sky-d)" href="socios/">
+        <div class="card-photo" style="background-image:url('img/bg_socios.jpg')"></div><div class="card-tint"></div><div class="card-fade"></div>
+        <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/><circle cx="17" cy="9" r="2.3"/><path d="M15.3 13.2c2.2.3 3.7 2 3.7 4.3"/></svg><span class="notif-badge" id="badge-socios" hidden>0</span></div><span class="arrow">→</span></div>
         <h3>Gestão de Sócios</h3>
         <p>Registo de sócios, quotas e contactos.</p>
       </a>
 
-      <a class="card" style="--accent:var(--coral);--accent-l:var(--coral-l)" href="oficios/">
-        <div class="card-top"><div class="icon">📝</div><span class="arrow">→</span></div>
+      <a class="card" style="--accent:var(--coral);--accent-l:var(--coral-l);--accent-d:var(--coral-d)" href="oficios/">
+        <div class="card-photo" style="background-image:url('img/bg_oficios.jpg')"></div><div class="card-tint"></div><div class="card-fade"></div>
+        <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h8l4 4V20a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z"/><path d="M14 3.5V8h4"/><path d="M8 13h5M8 16h6.5"/></svg></div><span class="arrow">→</span></div>
         <h3>Ofícios e Protocolos</h3>
         <p>Ofícios, cartas e documentos oficiais.</p>
       </a>
 
-      <a class="card" style="--accent:var(--purple);--accent-l:var(--purple-l)" href="atl/">
-        <div class="card-top"><div class="icon">🧒<span class="notif-badge" id="badge-atl" hidden>0</span></div><span class="arrow">→</span></div>
+      <a class="card" style="--accent:var(--purple);--accent-l:var(--purple-l);--accent-d:var(--purple-d)" href="atl/">
+        <div class="card-photo" style="background-image:url('img/bg_atl.jpg')"></div><div class="card-tint"></div><div class="card-fade"></div>
+        <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 14.5 9l6 .8-4.4 4 1.2 5.9L12 16.8l-5.3 2.9 1.2-5.9-4.4-4L9.5 9 12 3.5Z"/></svg><span class="notif-badge" id="badge-atl" hidden>0</span></div><span class="arrow">→</span></div>
         <h3>ATL — ARCA Kids</h3>
         <p>Atividades e presenças por QR code.</p>
       </a>
@@ -223,43 +296,49 @@
 
     <div class="grid row-3" style="flex:1.85 1 0">
 
-      <a class="card secondary" href="parceiros/" target="_blank" rel="noopener">
-        <div class="card-top"><div class="icon">🎁</div></div>
+      <a class="card secondary" style="--accent-d:var(--pink-d)" href="parceiros/" target="_blank" rel="noopener">
+        <div class="card-photo" style="background-image:url('img/bg_beneficios.jpg')"></div><div class="card-tint"></div><div class="card-fade"></div>
+        <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9.5" width="16" height="10.5" rx="1"/><path d="M4 13h16"/><path d="M12 9.5V20"/><path d="M12 9.5c-1.6 0-3.2-.7-3.2-2.4 0-1.2 1-2.1 2.1-2.1 1.7 0 2.4 1.7 2.4 3.2M12 9.5c1.6 0 3.2-.7 3.2-2.4 0-1.2-1-2.1-2.1-2.1-1.7 0-2.4 1.7-2.4 3.2"/></svg></div></div>
         <h3>Benefícios</h3>
         <p>Parcerias e vantagens para os sócios.</p>
         <span class="badge external">↗ Abre em nova aba</span>
       </a>
 
-      <a class="card secondary" href="carrinha/" target="_blank" rel="noopener">
-        <div class="card-top"><div class="icon">🚐</div></div>
+      <a class="card secondary" style="--accent-d:var(--amber-d)" href="carrinha/" target="_blank" rel="noopener">
+        <div class="card-photo" style="background-image:url('img/bg_qr.jpg')"></div><div class="card-tint"></div><div class="card-fade"></div>
+        <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="6" height="6" rx=".7"/><rect x="14.5" y="3.5" width="6" height="6" rx=".7"/><rect x="3.5" y="14.5" width="6" height="6" rx=".7"/><path d="M14.5 15h2.5v2.5h-2.5zM19.5 15h1v1M14.5 19.5h1M17.5 19.5h2.5v1"/></svg></div></div>
         <h3>QR</h3>
-        <p>Gestão do transporte da associação — e outros usos por QR code.</p>
+        <p>Divulgação dos benefícios da ARCA através da leitura do QR code.</p>
         <span class="badge external">↗ Abre em nova aba</span>
       </a>
 
-      <a class="card secondary" href="salas/" target="_blank" rel="noopener">
-        <div class="card-top"><div class="icon">🏠</div></div>
+      <a class="card secondary" style="--accent-d:var(--teal-d)" href="salas/" target="_blank" rel="noopener">
+        <div class="card-photo" style="background-image:url('img/bg_salas.jpg')"></div><div class="card-tint"></div><div class="card-fade"></div>
+        <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9.5L12 3.5l8 6V20"/><path d="M9.5 20v-6.5h5V20"/></svg></div></div>
         <h3>Gestão das Salas ARCA</h3>
         <p>Mapa e ocupação das salas.</p>
         <span class="badge external">↗ Abre em nova aba</span>
       </a>
 
-      <div class="card placeholder">
-        <div class="card-top"><div class="icon">📋</div></div>
+      <div class="card placeholder" style="--accent-d:var(--purple-d)">
+        <div class="card-photo" style="background-image:url('img/bg_atas.jpg')"></div><div class="card-tint"></div><div class="card-fade"></div>
+        <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4.5" width="14" height="16.5" rx="1.5"/><rect x="8.5" y="3" width="7" height="3" rx="1"/><path d="M8.5 12.5l2 2 4-4.3"/><path d="M8.5 16.5h7"/></svg></div></div>
         <h3>Atas</h3>
         <p>Atas de reuniões e assembleias.</p>
         <span class="badge soon">Em breve</span>
       </div>
 
-      <div class="card placeholder">
-        <div class="card-top"><div class="icon">🖊️</div></div>
+      <a class="card secondary" style="--accent-d:var(--coral-d)" href="inscricoes/" target="_blank" rel="noopener">
+        <div class="card-photo" style="background-image:url('img/bg_fichas.jpg')"></div><div class="card-tint"></div><div class="card-fade"></div>
+        <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="3.5" width="15" height="17" rx="1.3"/><rect x="7.3" y="7.3" width="2.6" height="2.6" rx=".5"/><path d="M11.5 8.6h6.3"/><rect x="7.3" y="12.3" width="2.6" height="2.6" rx=".5"/><path d="M11.5 13.6h6.3"/></svg></div></div>
         <h3>Fichas de Inscrição</h3>
-        <p>Fichas de inscrição para atividades.</p>
-        <span class="badge soon">Em breve</span>
-      </div>
+        <p>Fichas de inscrição digitais para atividades.</p>
+        <span class="badge external">↗ Abre em nova aba</span>
+      </a>
 
-      <div class="card placeholder">
-        <div class="card-top"><div class="icon">🌐</div></div>
+      <div class="card placeholder" style="--accent-d:var(--sky-d)">
+        <div class="card-photo" style="background-image:url('img/bg_site.jpg')"></div><div class="card-tint"></div><div class="card-fade"></div>
+        <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.8 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.8-3.8-9S9.5 5.5 12 3Z"/></svg></div></div>
         <h3>Site &amp; Notícias</h3>
         <p>Site público, ligado ao Facebook/Instagram.</p>
         <span class="badge next">Próxima fase</span>
@@ -282,6 +361,7 @@
     const SUPA_KEY = 'sb_publishable_AkzlMeHlYHDyl0HzeC7_qg__j_Y6C9W';
     const SESSION_KEY = 'arca_hub_session';
     const SEEN_SOCIOS_KEY = 'arca_hub_seen_socios_id';
+    const LS_LOGO_KEY = 'arca_hub_logo_v1';
 
     function getSession(){ try{ return JSON.parse(localStorage.getItem(SESSION_KEY)||'null'); }catch(e){ return null; } }
     function setSession(s){ try{ localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }catch(e){} }
@@ -377,17 +457,91 @@
 
     function updateAuthUI(session){
       const btn = document.getElementById('authBtn');
+      const logoBtn = document.getElementById('logoEditBtn');
       if(session){
         btn.textContent = '🟢 ' + (session.email||'Sessão') + ' · Sair';
         btn.dataset.mode = 'logout';
+        if(logoBtn) logoBtn.hidden = false;
       }else{
         btn.textContent = '🔒 Entrar';
         btn.dataset.mode = 'login';
         document.querySelectorAll('.notif-badge').forEach(function(b){ b.hidden = true; });
+        if(logoBtn) logoBtn.hidden = true;
+        const logoPop = document.getElementById('logoPopover');
+        if(logoPop) logoPop.hidden = true;
+      }
+    }
+
+    /* ============================================================
+       LOGÓTIPO (upload local, mesmo padrão das outras apps ARCA)
+       ============================================================ */
+    function applyCustomLogo(){
+      try{
+        const saved = localStorage.getItem(LS_LOGO_KEY);
+        if(saved){
+          const img = document.getElementById('brandLogo');
+          img.src = saved;
+          img.style.display = '';
+        }
+      }catch(e){}
+    }
+
+    function processLogoFile(file, onDone, onError){
+      if(!file.type || file.type.indexOf('image/') !== 0){
+        onError('O ficheiro tem de ser uma imagem (PNG, JPG ou WEBP).');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onerror = function(){ onError('Não foi possível ler a imagem.'); };
+      reader.onload = function(){
+        const img = new Image();
+        img.onerror = function(){ onError('Não foi possível abrir a imagem.'); };
+        img.onload = function(){
+          const max = 420;
+          const w = img.width, h = img.height;
+          const scale = Math.min(1, max / Math.max(w, h));
+          const cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = cw; canvas.height = ch;
+          canvas.getContext('2d').drawImage(img, 0, 0, cw, ch);
+          let out = canvas.toDataURL('image/png');
+          if(out.length > 150000){
+            const flat = document.createElement('canvas');
+            flat.width = cw; flat.height = ch;
+            const fx = flat.getContext('2d');
+            fx.fillStyle = '#ffffff'; fx.fillRect(0, 0, cw, ch);
+            fx.drawImage(img, 0, 0, cw, ch);
+            out = flat.toDataURL('image/jpeg', 0.85);
+          }
+          if(out.length > 200000){ onError('A imagem é demasiado grande. Usa um logótipo mais pequeno.'); return; }
+          onDone(out);
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function refreshLogoPreview(){
+      const box = document.getElementById('logoPreviewBox');
+      const removeBtn = document.getElementById('removeLogoBtn');
+      const chooseBtn = document.getElementById('logoChooseBtn');
+      if(!box) return;
+      let saved = null;
+      try{ saved = localStorage.getItem(LS_LOGO_KEY); }catch(e){}
+      if(saved){
+        box.innerHTML = '<img src="' + saved + '" alt="Logótipo atual">';
+        if(removeBtn) removeBtn.hidden = false;
+        if(chooseBtn) chooseBtn.firstChild.textContent = 'Substituir imagem';
+      }else{
+        box.innerHTML = '<span class="empty">Sem logótipo personalizado</span>';
+        if(removeBtn) removeBtn.hidden = true;
+        if(chooseBtn) chooseBtn.firstChild.textContent = 'Escolher imagem';
       }
     }
 
     document.addEventListener('DOMContentLoaded', function(){
+      applyCustomLogo();
+
       const btn = document.getElementById('authBtn');
       const popover = document.getElementById('authPopover');
       const form = document.getElementById('loginForm');
@@ -402,6 +556,50 @@
         if(popover.hidden) return;
         if(!popover.contains(ev.target) && ev.target !== btn) popover.hidden = true;
       });
+
+      const logoBtn = document.getElementById('logoEditBtn');
+      const logoPopover = document.getElementById('logoPopover');
+      const logoFile = document.getElementById('logoFile');
+      const removeLogoBtn = document.getElementById('removeLogoBtn');
+      const logoMsg = document.getElementById('logoMsg');
+
+      if(logoBtn){
+        logoBtn.addEventListener('click', function(){
+          refreshLogoPreview();
+          logoMsg.hidden = true;
+          logoPopover.hidden = !logoPopover.hidden;
+        });
+        document.addEventListener('click', function(ev){
+          if(logoPopover.hidden) return;
+          if(!logoPopover.contains(ev.target) && ev.target !== logoBtn) logoPopover.hidden = true;
+        });
+        logoFile.addEventListener('change', function(){
+          const file = logoFile.files && logoFile.files[0];
+          if(!file) return;
+          logoMsg.hidden = true;
+          processLogoFile(file, function(dataUrl){
+            try{ localStorage.setItem(LS_LOGO_KEY, dataUrl); }catch(e){
+              logoMsg.textContent = 'Não foi possível guardar (armazenamento cheio).';
+              logoMsg.hidden = false;
+              return;
+            }
+            applyCustomLogo();
+            refreshLogoPreview();
+            logoFile.value = '';
+          }, function(errMsg){
+            logoMsg.textContent = errMsg;
+            logoMsg.hidden = false;
+            logoFile.value = '';
+          });
+        });
+        removeLogoBtn.addEventListener('click', function(){
+          try{ localStorage.removeItem(LS_LOGO_KEY); }catch(e){}
+          const img = document.getElementById('brandLogo');
+          img.src = 'logo.png';
+          img.style.display = '';
+          refreshLogoPreview();
+        });
+      }
 
       form.addEventListener('submit', async function(ev){
         ev.preventDefault();
