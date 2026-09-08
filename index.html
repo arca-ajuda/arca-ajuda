@@ -117,12 +117,16 @@
     position:relative;overflow:hidden;
     border:2.5px solid var(--accent,#E4DFCF);
   }
+  .card::before{
+    content:"";position:absolute;inset:0;background-image:var(--img);
+    background-size:cover;background-position:center;opacity:.05;pointer-events:none;
+  }
   a.card:hover, a.card:focus-visible{
     transform:translateY(-3px);
     box-shadow:0 3px 0 rgba(20,20,10,.04), 0 14px 26px rgba(30,30,20,.13);
   }
   .card-media{
-    position:relative;flex:0 0 auto;height:9.6vh;overflow:hidden;
+    position:relative;z-index:1;flex:0 0 auto;height:13.2vh;overflow:hidden;
     background:var(--accent-l,#F3F1E8);
   }
   .card-media img{
@@ -131,17 +135,17 @@
     transition:transform .4s ease;
   }
   .card-media::after{
-    content:"";position:absolute;left:0;right:0;bottom:-1px;height:62%;pointer-events:none;
-    background:linear-gradient(180deg, transparent 0%, rgba(255,255,255,.22) 38%, rgba(255,255,255,.72) 70%, #fff 100%);
+    content:"";position:absolute;left:0;right:0;bottom:-1px;height:72%;pointer-events:none;
+    background:linear-gradient(180deg, transparent 0%, rgba(255,255,255,.16) 32%, rgba(255,255,255,.55) 58%, rgba(255,255,255,.9) 82%, #fff 100%);
   }
   a.card:hover .card-media img, a.card:focus-visible .card-media img{transform:scale(1.06);}
   .card.secondary .card-media img, .card.placeholder .card-media img{filter:saturate(.85) contrast(1.0);opacity:.92;}
 
-  .card-body{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;justify-content:space-between;padding:1vh 1vw 1.1vh;gap:.6vh;}
+  .card-body{position:relative;z-index:1;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;justify-content:space-between;padding:.7vh 1vw .55vh;gap:.3vh;}
   .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
   .icon{
-    position:relative;margin-top:-2.6vh;
-    width:clamp(30px,4.2vh,40px);height:clamp(30px,4.2vh,40px);border-radius:50%;
+    position:relative;margin-top:-2.1vh;
+    width:clamp(28px,3.8vh,36px);height:clamp(28px,3.8vh,36px);border-radius:50%;
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
     background:#fff;
     border:2px solid var(--accent,#E4DFCF);
@@ -164,12 +168,12 @@
     font-family:'Fraunces',serif;font-weight:600;
     font-size:clamp(13px,1.8vh,16px);letter-spacing:-.005em;line-height:1.2;color:var(--text);
   }
-  .card p{font-size:clamp(10.5px,1.35vh,12.5px);color:var(--text-2);line-height:1.35;margin-top:3px;}
+  .card p{font-size:clamp(10.5px,1.3vh,12.5px);color:var(--text-2);line-height:1.28;margin-top:2px;}
 
   .badge{
     display:inline-flex;align-items:center;font-size:9.5px;font-weight:800;
-    padding:3px 8px;border-radius:99px;letter-spacing:.03em;width:fit-content;
-    margin-top:7px;
+    padding:2.5px 8px;border-radius:99px;letter-spacing:.03em;width:fit-content;
+    margin-top:3px;
     background:var(--accent-l,#F3F1E8);color:var(--accent-d,var(--text-2));border:1px solid rgba(0,0,0,.05);
   }
   .badge.soon{background:var(--amber-l);color:var(--amber-d);}
@@ -221,7 +225,7 @@
     header{border-radius:16px;}
     .grid{grid-template-columns:repeat(2,1fr);height:auto;margin-bottom:1.4vh;}
     .grid:last-child{margin-bottom:0;}
-    .card-media{height:120px;}
+    .card-media{height:150px;}
     .card-body{padding:12px;}
   }
 </style>
@@ -268,7 +272,7 @@
   <main>
     <div class="grid">
 
-      <a class="card" style="--accent:var(--teal);--accent-l:var(--teal-l);--accent-d:var(--teal-d)" href="financeiro/">
+      <a class="card" style="--accent:var(--teal);--accent-l:var(--teal-l);--accent-d:var(--teal-d);--img:url('img/bg_financeiro.jpg')" href="financeiro/">
         <div class="card-media"><img src="img/bg_financeiro.jpg" alt="" loading="lazy"></div>
         <div class="card-body">
           <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 8.5c-1-1-2.2-1.3-3.4-.9-1.6.5-2.6 2-2.6 4.4s1 3.9 2.6 4.4c1.2.4 2.4.1 3.4-.9"/><path d="M7.5 10.5h6M7.5 13.5h5.5"/></svg></div><span class="arrow">→</span></div>
@@ -279,7 +283,7 @@
         </div>
       </a>
 
-      <a class="card" style="--accent:var(--sky);--accent-l:var(--sky-l);--accent-d:var(--sky-d)" href="socios/">
+      <a class="card" style="--accent:var(--sky);--accent-l:var(--sky-l);--accent-d:var(--sky-d);--img:url('img/bg_socios.jpg')" href="socios/">
         <div class="card-media"><img src="img/bg_socios.jpg" alt="" loading="lazy"></div>
         <div class="card-body">
           <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/><circle cx="17" cy="9" r="2.3"/><path d="M15.3 13.2c2.2.3 3.7 2 3.7 4.3"/></svg><span class="notif-badge" id="badge-socios" hidden>0</span></div><span class="arrow">→</span></div>
@@ -290,7 +294,7 @@
         </div>
       </a>
 
-      <a class="card" style="--accent:var(--coral);--accent-l:var(--coral-l);--accent-d:var(--coral-d)" href="oficios/">
+      <a class="card" style="--accent:var(--coral);--accent-l:var(--coral-l);--accent-d:var(--coral-d);--img:url('img/bg_oficios.jpg')" href="oficios/">
         <div class="card-media"><img src="img/bg_oficios.jpg" alt="" loading="lazy"></div>
         <div class="card-body">
           <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h8l4 4V20a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z"/><path d="M14 3.5V8h4"/><path d="M8 13h5M8 16h6.5"/></svg></div><span class="arrow">→</span></div>
@@ -301,7 +305,7 @@
         </div>
       </a>
 
-      <a class="card" style="--accent:var(--purple);--accent-l:var(--purple-l);--accent-d:var(--purple-d)" href="atl/">
+      <a class="card" style="--accent:var(--purple);--accent-l:var(--purple-l);--accent-d:var(--purple-d);--img:url('img/bg_atl.jpg')" href="atl/">
         <div class="card-media"><img src="img/bg_atl.jpg" alt="" loading="lazy"></div>
         <div class="card-body">
           <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 14.5 9l6 .8-4.4 4 1.2 5.9L12 16.8l-5.3 2.9 1.2-5.9-4.4-4L9.5 9 12 3.5Z"/></svg><span class="notif-badge" id="badge-atl" hidden>0</span></div><span class="arrow">→</span></div>
@@ -316,7 +320,7 @@
 
     <div class="grid row-3" style="flex:1.85 1 0">
 
-      <a class="card secondary" style="--accent:var(--pink);--accent-l:var(--pink-l);--accent-d:var(--pink-d)" href="parceiros/" target="_blank" rel="noopener">
+      <a class="card secondary" style="--accent:var(--pink);--accent-l:var(--pink-l);--accent-d:var(--pink-d);--img:url('img/bg_beneficios.jpg')" href="parceiros/" target="_blank" rel="noopener">
         <div class="card-media"><img src="img/bg_beneficios.jpg" alt="" loading="lazy"></div>
         <div class="card-body">
           <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9.5" width="16" height="10.5" rx="1"/><path d="M4 13h16"/><path d="M12 9.5V20"/><path d="M12 9.5c-1.6 0-3.2-.7-3.2-2.4 0-1.2 1-2.1 2.1-2.1 1.7 0 2.4 1.7 2.4 3.2M12 9.5c1.6 0 3.2-.7 3.2-2.4 0-1.2-1-2.1-2.1-2.1-1.7 0-2.4 1.7-2.4 3.2"/></svg></div><span class="arrow">→</span></div>
@@ -328,7 +332,7 @@
         </div>
       </a>
 
-      <a class="card secondary" style="--accent:var(--amber);--accent-l:var(--amber-l);--accent-d:var(--amber-d)" href="carrinha/" target="_blank" rel="noopener">
+      <a class="card secondary" style="--accent:var(--amber);--accent-l:var(--amber-l);--accent-d:var(--amber-d);--img:url('img/bg_qr.jpg')" href="carrinha/" target="_blank" rel="noopener">
         <div class="card-media"><img src="img/bg_qr.jpg" alt="" loading="lazy"></div>
         <div class="card-body">
           <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="6" height="6" rx=".7"/><rect x="14.5" y="3.5" width="6" height="6" rx=".7"/><rect x="3.5" y="14.5" width="6" height="6" rx=".7"/><path d="M14.5 15h2.5v2.5h-2.5zM19.5 15h1v1M14.5 19.5h1M17.5 19.5h2.5v1"/></svg></div><span class="arrow">→</span></div>
@@ -340,7 +344,7 @@
         </div>
       </a>
 
-      <a class="card secondary" style="--accent:var(--teal);--accent-l:var(--teal-l);--accent-d:var(--teal-d)" href="salas/" target="_blank" rel="noopener">
+      <a class="card secondary" style="--accent:var(--teal);--accent-l:var(--teal-l);--accent-d:var(--teal-d);--img:url('img/bg_salas.jpg')" href="salas/" target="_blank" rel="noopener">
         <div class="card-media"><img src="img/bg_salas.jpg" alt="" loading="lazy"></div>
         <div class="card-body">
           <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9.5L12 3.5l8 6V20"/><path d="M9.5 20v-6.5h5V20"/></svg></div><span class="arrow">→</span></div>
@@ -352,7 +356,7 @@
         </div>
       </a>
 
-      <div class="card placeholder" style="--accent:var(--purple);--accent-l:var(--purple-l);--accent-d:var(--purple-d)">
+      <div class="card placeholder" style="--accent:var(--purple);--accent-l:var(--purple-l);--accent-d:var(--purple-d);--img:url('img/bg_atas.jpg')">
         <div class="card-media"><img src="img/bg_atas.jpg" alt="" loading="lazy"></div>
         <div class="card-body">
           <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4.5" width="14" height="16.5" rx="1.5"/><rect x="8.5" y="3" width="7" height="3" rx="1"/><path d="M8.5 12.5l2 2 4-4.3"/><path d="M8.5 16.5h7"/></svg></div></div>
@@ -364,7 +368,7 @@
         </div>
       </div>
 
-      <a class="card secondary" style="--accent:var(--coral);--accent-l:var(--coral-l);--accent-d:var(--coral-d)" href="inscricoes/" target="_blank" rel="noopener">
+      <a class="card secondary" style="--accent:var(--coral);--accent-l:var(--coral-l);--accent-d:var(--coral-d);--img:url('img/bg_fichas.jpg')" href="inscricoes/" target="_blank" rel="noopener">
         <div class="card-media"><img src="img/bg_fichas.jpg" alt="" loading="lazy"></div>
         <div class="card-body">
           <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="3.5" width="15" height="17" rx="1.3"/><rect x="7.3" y="7.3" width="2.6" height="2.6" rx=".5"/><path d="M11.5 8.6h6.3"/><rect x="7.3" y="12.3" width="2.6" height="2.6" rx=".5"/><path d="M11.5 13.6h6.3"/></svg></div><span class="arrow">→</span></div>
@@ -376,7 +380,7 @@
         </div>
       </a>
 
-      <div class="card placeholder" style="--accent:var(--sky);--accent-l:var(--sky-l);--accent-d:var(--sky-d)">
+      <div class="card placeholder" style="--accent:var(--sky);--accent-l:var(--sky-l);--accent-d:var(--sky-d);--img:url('img/bg_site.jpg')">
         <div class="card-media"><img src="img/bg_site.jpg" alt="" loading="lazy"></div>
         <div class="card-body">
           <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.8 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.8-3.8-9S9.5 5.5 12 3Z"/></svg></div></div>
