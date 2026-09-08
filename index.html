@@ -110,6 +110,18 @@
   }
   .grid.row-3{grid-template-columns:repeat(3,1fr);}
 
+  .view-full{display:flex;flex-direction:column;gap:1.4vh;flex:1 1 auto;min-height:0;}
+  .view-full[hidden]{display:none;}
+  .view-public{display:flex;flex-direction:column;gap:1.6vh;flex:1 1 auto;min-height:0;align-items:stretch;justify-content:center;}
+  .view-public[hidden]{display:none;}
+  .public-hint{
+    text-align:center;font-size:clamp(12px,1.6vh,14px);color:var(--text-2);
+    background:#fff;border:1px solid #ECE7DA;border-radius:var(--radius);
+    padding:1vh 1.5vw;max-width:640px;margin:0 auto;
+  }
+  .public-hint strong{color:var(--text);}
+  .view-public .grid.row-3{flex:0 1 62vh;max-width:1000px;margin:0 auto;width:100%;}
+
   .card{
     background:#fff;border-radius:var(--radius);
     display:flex;flex-direction:column;
@@ -275,6 +287,7 @@
   </header>
 
   <main>
+    <div id="fullView" class="view-full" hidden>
     <div class="grid">
 
       <a class="card" style="--accent:var(--teal);--accent-l:var(--teal-l);--accent-d:var(--teal-d);--img:url('img/bg_financeiro.jpg')" href="financeiro/">
@@ -424,6 +437,53 @@
       </div>
 
     </div>
+    </div>
+
+    <div id="publicView" class="view-public">
+      <p class="public-hint">As ferramentas de gestão da ARCA ficam reservadas a sócios e direção. <strong>Inicia sessão</strong> (canto superior direito) para aceder a tudo.</p>
+      <div class="grid row-3">
+
+        <a class="card secondary" style="--accent:var(--pink);--accent-l:var(--pink-l);--accent-d:var(--pink-d);--img:url('img/bg_beneficios.jpg')" href="parceiros/" target="_blank" rel="noopener">
+          <div class="card-media"><img src="img/bg_beneficios.jpg" alt="" loading="lazy">
+            <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9.5" width="16" height="10.5" rx="1"/><path d="M4 13h16"/><path d="M12 9.5V20"/><path d="M12 9.5c-1.6 0-3.2-.7-3.2-2.4 0-1.2 1-2.1 2.1-2.1 1.7 0 2.4 1.7 2.4 3.2M12 9.5c1.6 0 3.2-.7 3.2-2.4 0-1.2-1-2.1-2.1-2.1-1.7 0-2.4 1.7-2.4 3.2"/></svg></div><span class="arrow">→</span></div>
+          </div>
+          <div class="card-body">
+            <div>
+              <h3>Benefícios</h3>
+              <p>Parcerias e vantagens para os sócios.</p>
+              <span class="badge external">↗ Abre em nova aba</span>
+            </div>
+          </div>
+        </a>
+
+        <a class="card secondary" style="--accent:var(--amber);--accent-l:var(--amber-l);--accent-d:var(--amber-d);--img:url('img/bg_qr.jpg')" href="carrinha/" target="_blank" rel="noopener">
+          <div class="card-media"><img src="img/bg_qr.jpg" alt="" loading="lazy">
+            <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="6" height="6" rx=".7"/><rect x="14.5" y="3.5" width="6" height="6" rx=".7"/><rect x="3.5" y="14.5" width="6" height="6" rx=".7"/><path d="M14.5 15h2.5v2.5h-2.5zM19.5 15h1v1M14.5 19.5h1M17.5 19.5h2.5v1"/></svg></div><span class="arrow">→</span></div>
+          </div>
+          <div class="card-body">
+            <div>
+              <h3>QR</h3>
+              <p>Divulgação dos benefícios da ARCA através da leitura do QR code.</p>
+              <span class="badge external">↗ Abre em nova aba</span>
+            </div>
+          </div>
+        </a>
+
+        <div class="card placeholder" style="--accent:var(--sky);--accent-l:var(--sky-l);--accent-d:var(--sky-d);--img:url('img/bg_site.jpg')">
+          <div class="card-media"><img src="img/bg_site.jpg" alt="" loading="lazy">
+            <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.8 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.8-3.8-9S9.5 5.5 12 3Z"/></svg></div></div>
+          </div>
+          <div class="card-body">
+            <div>
+              <h3>Site &amp; Notícias</h3>
+              <p>Site público, ligado ao Facebook/Instagram.</p>
+              <span class="badge next">Próxima fase</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
   </main>
 
   <footer>
@@ -538,10 +598,14 @@
     function updateAuthUI(session){
       const btn = document.getElementById('authBtn');
       const logoBtn = document.getElementById('logoEditBtn');
+      const fullView = document.getElementById('fullView');
+      const publicView = document.getElementById('publicView');
       if(session){
         btn.textContent = '🟢 ' + (session.email||'Sessão') + ' · Sair';
         btn.dataset.mode = 'logout';
         if(logoBtn) logoBtn.hidden = false;
+        if(fullView) fullView.hidden = false;
+        if(publicView) publicView.hidden = true;
       }else{
         btn.textContent = '🔒 Entrar';
         btn.dataset.mode = 'login';
@@ -549,6 +613,8 @@
         if(logoBtn) logoBtn.hidden = true;
         const logoPop = document.getElementById('logoPopover');
         if(logoPop) logoPop.hidden = true;
+        if(fullView) fullView.hidden = true;
+        if(publicView) publicView.hidden = false;
       }
     }
 
