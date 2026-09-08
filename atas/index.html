@@ -378,7 +378,7 @@ tbody tr:hover{background:var(--surface-2);}
     <h3>❓ Como usar o Livro de Atas</h3>
     <div style="font-size:13.5px;line-height:1.8;color:var(--ink)">
       <p><b>1. Nova ata</b> — o número é atribuído automaticamente (1/2026, 2/2026…). Preenche o tipo de reunião, data, horas, local, quem presidiu e secretariou; marca as presenças (a lista vem da Direção registada na app de Sócios) e escreve a ordem de trabalhos.</p>
-      <p><b>2. Texto</b> — escreve as deliberações no editor com negrito, itálico, títulos de ponto e listas. A correção ortográfica em português é a do navegador (sublinhado vermelho; botão direito para corrigir). Tudo é guardado automaticamente.</p>
+      <p><b>2. Texto</b> — escreve as deliberações no editor com negrito, itálico, títulos de ponto e listas. A correção ortográfica em português é a do navegador (sublinhado vermelho; botão direito para corrigir). Carrega em <b>💾 Guardar ata</b> (ou Ctrl+S) para guardar; de qualquer forma, as alterações são também guardadas automaticamente enquanto escreves.</p>
       <p><b>3. Imprimir</b> — botão 🖨. A ata sai em A4 com cabeçalho e rodapé em todas as páginas, os parágrafos traçados até à margem, a abertura por extenso e as linhas de assinatura. Escolhe "Guardar como PDF" para ficar com o ficheiro.</p>
       <p><b>4. Fechar</b> — quando a ata estiver aprovada, "Fechar ata". Durante 5 dias ainda podes corrigir; depois fica bloqueada.</p>
       <p><b>5. Reabrir</b> — uma ata bloqueada só volta a ser editável com o PIN de dois membros diferentes da Direção. Fica registado quem autorizou, quando e porquê, e o texto anterior é guardado.</p>
@@ -840,6 +840,7 @@ function renderAta(id){
   var html='';
   html+='<div class="page-head"><div>'+pillHtml(a)+'<h2 style="margin-top:6px">Ata n.º '+esc(a.numero)+'</h2><div class="sub">'+esc(a.tipo)+' · '+fmtDate(a.data)+'</div></div>'
     +'<div class="actions">'
+    +(editavel ? '<button class="btn btn-primary" id="btnGuardar" title="Guarda já todas as alterações (Ctrl+S)">💾 Guardar ata</button>' : '')
     +'<button class="btn btn-ghost" data-print="'+esc(a.id)+'">🖨 Pré-visualizar / imprimir</button>'
     +'<button class="btn btn-ghost" id="btnDrive" title="Guarda o PDF desta ata na pasta ARCA d\'Ajuda/Atas do Google Drive">☁ Guardar no Drive</button>'
     +(e==="rascunho"||e==="reaberta" ? '<button class="btn btn-primary" id="btnFechar">Fechar ata</button>' : '')
@@ -964,6 +965,12 @@ function bindAtaEvents(a, editavel){
   });
 
   var f=$("btnFechar"); if(f) f.addEventListener("click", function(){ fecharAta(a.id); });
+  var g=$("btnGuardar"); if(g) g.addEventListener("click", function(){
+    g.disabled=true; g.textContent="A guardar…";
+    if(!state.dirty) markDirty();
+    flushSave().then(function(){ g.disabled=false; g.textContent="✓ Guardada"; toast("Ata guardada."); setTimeout(function(){ g.textContent="💾 Guardar ata"; },1800); })
+      .catch(function(){ g.disabled=false; g.textContent="💾 Guardar ata"; });
+  });
   var dv=$("btnDrive"); if(dv) dv.addEventListener("click", function(){ flushSave().then(function(){ guardarAtaNoDrive(a.id, false); }); });
   var r=$("btnReabrir"); if(r) r.addEventListener("click", function(){ pedirReabertura(a.id); });
   var d=$("btnEliminar"); if(d) d.addEventListener("click", function(){
@@ -999,7 +1006,8 @@ function collectForm(){
 }
 function markDirty(){
   state.dirty=true;
-  var s=$("saveState"); if(s) s.textContent="a guardar…";
+  var s=$("saveState"); if(s) s.textContent="alterações por guardar…";
+  var g=$("btnGuardar"); if(g && !g.disabled) g.textContent="💾 Guardar ata •";
   clearTimeout(state.saveTimer);
   state.saveTimer=setTimeout(flushSave, 900);
 }
@@ -1017,6 +1025,7 @@ function flushSave(){
   state.dirty=false; state.lastSaved=patch.atualizadaEm;
   return Store.update(cur.id, patch).then(function(){
     var s=$("saveState"); if(s && !state.dirty) s.textContent="guardada "+fmtDateTime(patch.atualizadaEm);
+    var g=$("btnGuardar"); if(g && !state.dirty && !g.disabled) g.textContent="💾 Guardar ata";
     fazerBackupDriveAuto();
   }).catch(function(e){ var s=$("saveState"); if(s) s.textContent="⚠ não guardada: "+(e&&e.message||"erro"); state.dirty=true; });
 }
