@@ -2464,12 +2464,22 @@ function supaFetch(path, method, body){
   return supaRenovar().then(pedir);
 }
 
+/* a coluna "valor" pode vir como objeto (jsonb normal) ou, nesta tabela
+   partilhada com as outras aplicações da ARCA, como texto com JSON lá
+   dentro — aceita as duas formas para nunca ficar sem configuração. */
+function valorComoObjeto(v){
+  if(v && typeof v === "object") return v;
+  if(typeof v === "string" && v){
+    try{ var p = JSON.parse(v); if(p && typeof p === "object") return p; }catch(e){}
+  }
+  return {};
+}
 function supaLer(){
   return supaFetch("config_app?chave=eq." + encodeURIComponent(CHAVE_DADOS) + "&select=valor")
     .then(function(rows){
       if(rows && rows.length){
         supaExisteNaCloud = true;
-        return rows[0].valor || {};
+        return valorComoObjeto(rows[0].valor);
       }
       supaExisteNaCloud = false;
       return {};
