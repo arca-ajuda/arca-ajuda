@@ -129,6 +129,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!import
 #login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#12314F,#1B4570);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px}
 #login-overlay .box{background:#fff;border-radius:16px;padding:28px 26px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
 </style>
+<script src="https://accounts.google.com/gsi/client" async="" defer=""></script>
 </head>
 <body>
 
@@ -309,6 +310,24 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!import
           <button class="btn-secondary" onclick="document.getElementById(&#39;cfg-logo-file&#39;).click()">📤 Carregar logótipo</button>
         </div>
       </div>
+    </div>
+    <div class="card">
+      <div class="card-title">☁️ Cópia digital no Google Drive (assinaturas)</div>
+      <p style="font-size:12px;color:var(--text-2);margin-bottom:12px;line-height:1.6">
+        Cada ofício e protocolo é também guardado em <strong>PDF</strong> na tua Google Drive (pasta "ARCA d'Ajuda/Ofícios" e "ARCA d'Ajuda/Protocolos"), automaticamente e em silêncio, sempre que é criado, editado, enviado ou anulado — para que fique sempre uma cópia pronta a assinar digitalmente, sem precisar de imprimir em papel.
+      </p>
+      <label style="display:block;font-size:12.5px;font-weight:600;color:var(--text-2);margin:6px 0 4px">Conta Google onde a Drive deve ficar ligada</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <input type="email" id="cfg-drive-email" placeholder="ex: gestaoarcadajuda@gmail.com" style="flex:1;min-width:220px;padding:10px 12px;border:1.5px solid #E2D5BC;border-radius:8px;font-size:14px;background:#FBF8F0">
+        <button class="btn-secondary" onclick="guardarConfigDrive()">💾 Guardar</button>
+      </div>
+      <div style="font-size:11.5px;color:var(--text-2);margin-bottom:12px;line-height:1.5">É a mesma conta e a mesma pasta "ARCA d'Ajuda" já usada na app de Sócios — se já a ligaste lá, esta app liga-se sozinha, sem pedir nada. Se quiseres trocar de conta, escreve o novo email, guarda e carrega em <b>Mudar de conta</b>.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <button class="btn-secondary" onclick="gdriveConnectInteractive()">🔗 Ligar Google Drive</button>
+        <button class="btn-secondary" onclick="gdriveMudarConta()">🔁 Mudar de conta</button>
+        <button class="btn-primary" onclick="sincronizarTudoComDrive()">☁️ Sincronizar tudo agora</button>
+      </div>
+      <div id="drive-status" style="font-size:12px;color:var(--text-2);line-height:1.6">⚪ Google Drive não ligado</div>
     </div>
     <div class="card">
       <div class="card-title">🔢 Numeração</div>
@@ -520,6 +539,353 @@ async function supaFetch(path, method='GET', body=null, extraHeaders=null, _tent
   if(!res.ok) throw new Error(text || ('Erro '+res.status));
   return text ? JSON.parse(text) : null;
 }
+
+// ============================================================
+// GOOGLE DRIVE — cópia em PDF de cada ofício/protocolo, em silêncio
+// (mesmo padrão/conta/pasta "ARCA d'Ajuda" já usado na app de Sócios)
+// Serve para haver sempre um PDF pronto para assinatura digital.
+// ============================================================
+const GDRIVE_CLIENT_ID = '853058400861-ih32rr8mhqah7b59tgv3tfjkme1s6plg.apps.googleusercontent.com';
+const GDRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+let gdriveToken = null;
+let gdriveTokenExpiry = 0;
+let gdriveClient = null;
+let gdrivePending = [];
+let driveEmailPreferido = '';   // conta Google desejada (config_app: drive_email — partilhada com a app de Sócios)
+let gdriveContaLigada = '';     // conta Google realmente ligada (lida do Drive)
+
+function gdriveValid(){ return gdriveToken && Date.now()<gdriveTokenExpiry; }
+
+async function gdriveLerContaLigada(){
+  if(!gdriveValid()) { gdriveContaLigada=''; return ''; }
+  try{
+    const r = await fetch('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)', {headers:{Authorization:'Bearer '+gdriveToken}});
+    if(r.ok){ const j = await r.json(); gdriveContaLigada = (j.user && j.user.emailAddress || '').toLowerCase(); }
+  }catch(e){ console.warn('Não foi possível ler a conta da Drive:', e); }
+  try{ localStorage.setItem('arca_gdrive_conta', gdriveContaLigada); }catch(e){}
+  atualizarEstadoDrive();
+  return gdriveContaLigada;
+}
+
+async function carregarConfigDrive(){
+  try{
+    const rows = await supaFetch('config_app?chave=eq.drive_email&select=valor');
+    driveEmailPreferido = (rows && rows.length ? rows[0].valor : '' ) || '';
+    driveEmailPreferido = driveEmailPreferido.trim().toLowerCase();
+  }catch(e){ console.warn('Falha a ler drive_email:', e); }
+  const inp = document.getElementById('cfg-drive-email');
+  if(inp) inp.value = driveEmailPreferido;
+  atualizarEstadoDrive();
+}
+async function guardarConfigDrive(){
+  const v = (document.getElementById('cfg-drive-email')?.value||'').trim().toLowerCase();
+  if(v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){ toast('Email inválido', false); return; }
+  try{
+    await guardarChaveConfig('drive_email', v);
+    driveEmailPreferido = v;
+    toast('Conta Google da Drive guardada');
+    atualizarEstadoDrive();
+  }catch(e){ console.error(e); toast('Erro ao guardar', false); }
+}
+
+function gdriveMudarConta(){
+  const tokenAntigo = gdriveToken;
+  const continuar = ()=>{
+    gdriveToken = null; gdriveTokenExpiry = 0; gdriveContaLigada = '';
+    try{ localStorage.removeItem('arca_gdrive_tok'); localStorage.removeItem('arca_gdrive_conta'); }catch(e){}
+    atualizarEstadoDrive();
+    gdriveInit();
+    if(!gdriveClient){ toast('Google ainda não carregou. Tenta de novo daqui a instantes.', false); return; }
+    gdrivePending.push({
+      ok:()=>{ toast('Google Drive ligado noutra conta ✓'); gdriveLerContaLigada().then(()=>sincronizarTudoComDrive()); },
+      err:()=>toast('Não foi possível ligar ao Google Drive.', false)
+    });
+    const opts = {prompt:'select_account'};
+    if(driveEmailPreferido) opts.hint = driveEmailPreferido;
+    try{ gdriveClient.requestAccessToken(opts); }catch(e){ toast('Não foi possível ligar ao Google Drive.', false); }
+  };
+  if(tokenAntigo && window.google && google.accounts && google.accounts.oauth2 && google.accounts.oauth2.revoke){
+    try{ google.accounts.oauth2.revoke(tokenAntigo, continuar); setTimeout(()=>{ if(gdriveToken===tokenAntigo) continuar(); }, 1500); }
+    catch(e){ continuar(); }
+  } else continuar();
+}
+
+function gdriveInit(){
+  if(gdriveClient) return gdriveClient;
+  if(!(window.google && google.accounts && google.accounts.oauth2)) return null;
+  try{
+    gdriveClient=google.accounts.oauth2.initTokenClient({
+      client_id:GDRIVE_CLIENT_ID,
+      scope:GDRIVE_SCOPE,
+      callback:(resp)=>{
+        const fila=gdrivePending; gdrivePending=[];
+        if(resp && resp.access_token){
+          gdriveToken=resp.access_token;
+          gdriveTokenExpiry=Date.now()+((resp.expires_in?resp.expires_in*1000:3600000))-60000;
+          try{localStorage.setItem('arca_gdrive_tok',JSON.stringify({t:gdriveToken,e:gdriveTokenExpiry}));}catch(e){}
+          gdriveLerContaLigada();
+          fila.forEach(p=>{try{p.ok&&p.ok();}catch(e){console.error(e);}});
+        }else{
+          fila.forEach(p=>{try{p.err&&p.err(resp);}catch(e){console.error(e);}});
+        }
+      }
+    });
+  }catch(e){ console.error('Drive init falhou:',e); gdriveClient=null; }
+  return gdriveClient;
+}
+
+function gdriveAuth(callback, onFail, silent){
+  if(gdriveValid()){ callback&&callback(); return; }
+  gdriveInit();
+  if(!gdriveClient){ onFail&&onFail(); return; }
+  gdrivePending.push({ok:callback, err:onFail});
+  try{
+    const opts = silent ? {prompt:''} : {};
+    if(driveEmailPreferido) opts.hint = driveEmailPreferido;
+    gdriveClient.requestAccessToken(opts);
+  }catch(e){ onFail&&onFail(e); }
+}
+
+function gdriveConnectInteractive(){
+  gdriveAuth(
+    ()=>{ toast('Google Drive ligado! ✓'); atualizarEstadoDrive(); sincronizarTudoComDrive(); },
+    ()=>toast('Não foi possível ligar ao Google Drive.', false)
+  );
+}
+
+function gdriveAutoConnect(){
+  try{
+    const raw=localStorage.getItem('arca_gdrive_tok');
+    if(raw){ const o=JSON.parse(raw); if(o&&o.t&&o.e&&Date.now()<o.e){ gdriveToken=o.t; gdriveTokenExpiry=o.e; } }
+    gdriveContaLigada = localStorage.getItem('arca_gdrive_conta')||'';
+  }catch(e){}
+  if(gdriveValid()){ atualizarEstadoDrive(); if(!gdriveContaLigada) gdriveLerContaLigada(); return; }
+  let tries=0;
+  const tryConnect=()=>{
+    if(gdriveInit()){ gdriveAuth(()=>atualizarEstadoDrive(), ()=>{}, true); return; }
+    if(tries++<10) setTimeout(tryConnect,500);
+  };
+  tryConnect();
+}
+
+const _gdriveFolderCache = {};
+function gdriveFindOrCreateFolder(name,parentId){
+  const cacheKey = (parentId||'root')+'/'+name;
+  if(_gdriveFolderCache[cacheKey]) return _gdriveFolderCache[cacheKey];
+  const promise = (async()=>{
+    const nomeEscapado = name.replace(/'/g, "\\'");
+    const parentClause=parentId?` and '${parentId}' in parents`:" and 'root' in parents";
+    const rawQuery=`name='${nomeEscapado}' and mimeType='application/vnd.google-apps.folder' and trashed=false`+parentClause;
+    const q=encodeURIComponent(rawQuery);
+    const res=await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}`,{
+      headers:{'Authorization':'Bearer '+gdriveToken}
+    });
+    const data=await res.json();
+    if(data.files&&data.files.length>0)return data.files[0].id;
+    const body={name,mimeType:'application/vnd.google-apps.folder'};
+    if(parentId)body.parents=[parentId];
+    const createRes=await fetch('https://www.googleapis.com/drive/v3/files',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+gdriveToken,'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    const created=await createRes.json();
+    return created.id;
+  })();
+  _gdriveFolderCache[cacheKey] = promise;
+  promise.catch(()=>{ delete _gdriveFolderCache[cacheKey]; });
+  return promise;
+}
+async function gdriveGetSubfolder(subfolderName){
+  const rootId=await gdriveFindOrCreateFolder("ARCA d'Ajuda");
+  return gdriveFindOrCreateFolder(subfolderName,rootId);
+}
+
+async function uploadToGDriveReplace(fileData, fileName, mimeType, subfolder){
+  return new Promise((resolve,reject)=>{
+    gdriveAuth(async()=>{
+      try{
+        const folderId=await gdriveGetSubfolder(subfolder);
+        const fileNameEscapado = fileName.replace(/'/g, "\\'");
+        const q=encodeURIComponent(`name='${fileNameEscapado}' and '${folderId}' in parents and trashed=false`);
+        const existingRes=await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}`,{
+          headers:{'Authorization':'Bearer '+gdriveToken}
+        });
+        const existing=await existingRes.json();
+        if(existing.files&&existing.files.length){
+          for(const f of existing.files){
+            await fetch(`https://www.googleapis.com/drive/v3/files/${f.id}`,{
+              method:'DELETE', headers:{'Authorization':'Bearer '+gdriveToken}
+            });
+          }
+        }
+        const base64Data=fileData.split(',')[1];
+        const byteChars=atob(base64Data);
+        const byteArr=new Uint8Array(byteChars.length);
+        for(let i=0;i<byteChars.length;i++)byteArr[i]=byteChars.charCodeAt(i);
+        const blob=new Blob([byteArr],{type:mimeType});
+        const meta={name:fileName,parents:[folderId]};
+        const form=new FormData();
+        form.append('metadata',new Blob([JSON.stringify(meta)],{type:'application/json'}));
+        form.append('file',blob);
+        const uploadRes=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{
+          method:'POST', headers:{'Authorization':'Bearer '+gdriveToken}, body:form
+        });
+        const uploaded=await uploadRes.json();
+        resolve(uploaded.id);
+      }catch(e){reject(e);}
+    });
+  });
+}
+
+function atualizarEstadoDrive(){
+  const el = document.getElementById('drive-status');
+  if(!el) return;
+  const ultimo = LS.get('arca_ultimo_sync_drive');
+  if(gdriveValid()){
+    el.innerHTML = `🟢 Ligado ao Google Drive` + (gdriveContaLigada?` (<b>${gdriveContaLigada}</b>)`:'') + (ultimo?` — última sincronização: ${new Date(ultimo).toLocaleString('pt-PT')}`:' — ainda sem sincronização feita');
+    if(driveEmailPreferido && gdriveContaLigada && gdriveContaLigada!==driveEmailPreferido){
+      el.innerHTML += `<br><span style="color:#B9770E">⚠️ A conta ligada é diferente da configurada (<b>${driveEmailPreferido}</b>). Usa <b>🔁 Mudar de conta</b> para trocar.</span>`;
+    }
+  } else {
+    el.textContent = '⚪ Google Drive não ligado' + (driveEmailPreferido?` — conta configurada: ${driveEmailPreferido}`:'');
+  }
+}
+
+function avisarDriveDesligada(){
+  if(gdriveValid()) return;
+  if(document.getElementById('aviso-drive-off')) return;
+  const div = document.createElement('div');
+  div.id = 'aviso-drive-off';
+  div.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9998;background:#fff;border:1.5px solid #FAC775;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.18);padding:16px 18px;max-width:420px;width:calc(100% - 40px)';
+  div.innerHTML = `
+    <div style="display:flex;align-items:flex-start;gap:12px">
+      <div style="font-size:22px;line-height:1">☁️</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:14px;color:#B9770E;margin-bottom:4px">Google Drive desligada</div>
+        <div style="font-size:12.5px;color:#555;line-height:1.5">Os ofícios estão seguros na cloud, mas a <b>cópia em PDF na Drive</b> (para assinatura digital) não está a ser guardada. Liga a Drive para não perderes nada.</div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button onclick="document.getElementById('aviso-drive-off').remove();gdriveConnectInteractive()" style="background:#37A7C8;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer">🔗 Ligar Drive agora</button>
+          <button onclick="document.getElementById('aviso-drive-off').remove()" style="background:none;border:none;color:#888;font-size:13px;cursor:pointer">Agora não</button>
+        </div>
+      </div>
+      <button onclick="document.getElementById('aviso-drive-off').remove()" style="background:none;border:none;font-size:18px;color:#bbb;cursor:pointer;line-height:1">×</button>
+    </div>`;
+  document.body.appendChild(div);
+}
+
+// ---- Geração de PDF (para a Drive) a partir do HTML do papel timbrado ----
+function loadHtml2CanvasJsPDF(){
+  return new Promise((resolve,reject)=>{
+    let pending=0, launched=false;
+    const tryDone=()=>{ if(launched && pending<=0) resolve(); };
+    if(!window.html2canvas){
+      pending++;
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload=()=>{ pending--; tryDone(); };
+      s.onerror=reject;
+      document.head.appendChild(s);
+    }
+    if(!window.jspdf){
+      pending++;
+      const s2=document.createElement('script');
+      s2.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s2.onload=()=>{ pending--; tryDone(); };
+      s2.onerror=reject;
+      document.head.appendChild(s2);
+    }
+    launched=true;
+    tryDone();
+  });
+}
+
+async function gerarPdfDataUrlFromHtml(html){
+  await loadHtml2CanvasJsPDF();
+  const iframe=document.createElement('iframe');
+  iframe.style.cssText='position:fixed;left:-99999px;top:0;width:900px;height:1200px;border:0';
+  document.body.appendChild(iframe);
+  try{
+    await new Promise(resolve=>{ iframe.onload=resolve; iframe.srcdoc=html; });
+    const idoc=iframe.contentDocument;
+    const imgs=Array.from(idoc.images||[]);
+    await Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(r=>{img.onload=img.onerror=r;})));
+    await new Promise(r=>setTimeout(r,150));
+    const pagina = idoc.querySelector('.pagina');
+    if(!pagina) throw new Error('Modelo sem .pagina');
+    const canvas = await window.html2canvas(pagina,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({unit:'mm',format:'a4',orientation:'portrait'});
+    const pageWmm=210, pageHmm=297;
+    const pxPerMm = canvas.width/pageWmm;
+    const pageHpx = Math.floor(pageHmm*pxPerMm);
+    let renderedH=0, first=true;
+    while(renderedH < canvas.height){
+      const sliceH = Math.min(pageHpx, canvas.height-renderedH);
+      const sliceCanvas=document.createElement('canvas');
+      sliceCanvas.width=canvas.width; sliceCanvas.height=sliceH;
+      sliceCanvas.getContext('2d').drawImage(canvas,0,renderedH,canvas.width,sliceH,0,0,canvas.width,sliceH);
+      const imgData=sliceCanvas.toDataURL('image/jpeg',0.92);
+      if(!first) pdf.addPage();
+      pdf.addImage(imgData,'JPEG',0,0,pageWmm, sliceH/pxPerMm);
+      renderedH+=sliceH; first=false;
+    }
+    return pdf.output('datauristring');
+  } finally {
+    document.body.removeChild(iframe);
+  }
+}
+
+function nomeFicheiroSeguro(txt){
+  return String(txt||'').replace(/[\/\\:*?"<>|]/g,'-').replace(/\s+/g,' ').trim().slice(0,120);
+}
+
+let _syncEmCurso = {};
+async function sincronizarComDrive(o, manual){
+  if(!o) return;
+  if(!gdriveValid()){
+    if(manual){ toast('Liga primeiro o Google Drive (Configurações).', false); }
+    return;
+  }
+  if(_syncEmCurso[o.id]){ if(manual) toast('Já há uma sincronização em curso para este documento...', false); return; }
+  _syncEmCurso[o.id]=true;
+  try{
+    const isProtocolo = o.categoria==='protocolo';
+    const numero = fmtNum(o);
+    const alvo = Object.assign({numeroTxt:numero}, o);
+    const html = isProtocolo ? construirHtmlProtocolo(alvo) : construirHtmlOficio(alvo);
+    const dataUrl = await gerarPdfDataUrlFromHtml(html);
+    const rotulo = isProtocolo ? (o.dest||'') : (String(o.dest||'').split('\n')[0]||'');
+    const fileName = nomeFicheiroSeguro(numero.replace(/\//g,'-')+(rotulo?' - '+rotulo:''))+'.pdf';
+    await uploadToGDriveReplace(dataUrl, fileName, 'application/pdf', isProtocolo?'Protocolos':'Ofícios');
+    LS.set('arca_ultimo_sync_drive', new Date().toISOString());
+    atualizarEstadoDrive();
+    if(manual) toast('✓ PDF guardado na Google Drive!');
+  }catch(e){
+    console.error(e);
+    if(manual) toast('Não foi possível guardar na Drive: '+String(e.message||e).slice(0,100), false);
+  }finally{
+    delete _syncEmCurso[o.id];
+  }
+}
+// Sincronização silenciosa "de fundo" — nunca mostra erros nem bloqueia a ação principal
+function sincronizarSilencioso(o){
+  if(!gdriveValid()) return;
+  sincronizarComDrive(o,false).catch(e=>console.warn('sync Drive:',e));
+}
+async function sincronizarOficioDrive(id, manual){ const o=oficios.find(x=>x.id===id); if(o) await sincronizarComDrive(o, manual!==false); }
+async function sincronizarTudoComDrive(){
+  if(!gdriveValid()){ toast('Liga primeiro o Google Drive.', false); gdriveConnectInteractive(); return; }
+  if(!oficios.length){ toast('Não há ofícios/protocolos para sincronizar.', false); return; }
+  toast(`A sincronizar ${oficios.length} documento(s) com a Drive — isto pode demorar um pouco…`);
+  let ok=0, falhou=0;
+  for(const o of oficios){
+    try{ await sincronizarComDrive(o, false); ok++; }
+    catch(e){ falhou++; }
+  }
+  toast(`Sincronização concluída: ${ok} guardado(s)${falhou?`, ${falhou} com erro`:''} ✓`);
+}
+
 async function fazerLogin(){
   const email=document.getElementById('login-email').value.trim(), pass=document.getElementById('login-pass').value;
   const erro=document.getElementById('login-erro'); erro.style.display='none';
@@ -781,6 +1147,10 @@ async function iniciar(){
   preencherSelectsTipo();
   await carregarOficios();
   renderConfig();
+  try{ gdriveAutoConnect(); }catch(e){ console.warn('init:',e); }
+  carregarConfigDrive().catch(e=>console.warn('init:',e));
+  // Aviso se a Drive não estiver ligada (cópias em PDF para assinatura não estão a ser guardadas)
+  setTimeout(()=>{ try{ avisarDriveDesligada(); }catch(e){ console.warn(e); } }, 3500);
 }
 async function carregarAssociacao(){
   assoc = await lerConfig(['assoc_nome','assoc_nif','assoc_email','assoc_tel','assoc_morada','assoc_site','assoc_facebook','assoc_instagram']);
@@ -912,18 +1282,22 @@ function badgeEstadoOficio(o){
   return `<span class="badge ${cls}" ${tip?`title="${esc(tip)}"`:''}>${label}</span>`;
 }
 function acoesOficio(o){
+  const btnDrive = `<button class="btn-edit" onclick="sincronizarOficioDrive(${o.id})" title="Guardar/atualizar PDF na Google Drive">☁️</button>`;
   if(o.estado==='anulado'){
     return `<button class="btn-edit" onclick="imprimirOficioById(${o.id})" title="Imprimir / PDF">🖨</button>
+      ${btnDrive}
       <button class="btn-edit" onclick="duplicarOficio(${o.id})" title="Duplicar">⧉</button>`;
   }
   if(o.estado==='anulacao_pedida'){
     return `<button class="btn-edit" onclick="imprimirOficioById(${o.id})" title="Imprimir / PDF">🖨</button>
+      ${btnDrive}
       <button class="btn-edit" onclick="duplicarOficio(${o.id})" title="Duplicar">⧉</button>
       <button class="btn-edit" onclick="cancelarPedidoAnulacao(${o.id})" title="Cancelar pedido de anulação">↩</button>
       <button class="btn-edit" style="color:var(--coral-d)" onclick="abrirConfirmarAnulacao(${o.id})" title="Confirmar anulação (só Presidente)">✅ Anular</button>`;
   }
   return `<button class="btn-edit" onclick="openModalOficio(${o.id})" title="Editar">✏</button>
     <button class="btn-edit" onclick="imprimirOficioById(${o.id})" title="Imprimir / PDF">🖨</button>
+    ${btnDrive}
     ${o.estado==='enviado'?'':`<button class="btn-edit" onclick="marcarEnviado(${o.id})" title="Marcar como enviado">✅</button>`}
     <button class="btn-edit" onclick="duplicarOficio(${o.id})" title="Duplicar">⧉</button>
     <button class="btn-edit" style="color:var(--amber-d)" onclick="abrirPedirAnulacao(${o.id})" title="Pedir anulação">🚫</button>
@@ -987,18 +1361,21 @@ async function saveOficio(){
   if(!f.assunto||!f.corpo){ toast('Assunto e corpo são obrigatórios.',false); return; }
   const btn=document.getElementById('of-guardar-btn'); btn.disabled=true; btn.textContent='A guardar…';
   try{
+    let gravado=null;
     if(editingId){
       const rows=await supaFetch('oficios?id=eq.'+editingId,'PATCH',Object.assign({},f,{atualizado_em:new Date().toISOString()}));
       const i=oficios.findIndex(o=>o.id===editingId); if(i>=0&&rows&&rows[0]) oficios[i]=rows[0];
+      if(rows&&rows[0]) gravado=rows[0];
       toast('Ofício atualizado ✓');
     } else {
       const ano=new Date(f.data+'T12:00:00').getFullYear();
       const seq=await proximoSeqDia('oficio',f.data);
       const rows=await supaFetch('oficios','POST',Object.assign({},f,{ano,seq,categoria:'oficio'}));
-      if(rows&&rows[0]) oficios.unshift(rows[0]);
+      if(rows&&rows[0]) { oficios.unshift(rows[0]); gravado=rows[0]; }
       toast(`Ofício ${diaChave(f.data)}/${String(seq).padStart(2,'0')} guardado ✓`);
     }
     editingId=null; closeModal('modal-oficio'); await carregarOficios();
+    if(gravado) sincronizarSilencioso(gravado);
   }catch(e){ console.error(e); toast('Erro ao guardar: '+e.message.slice(0,120),false); }
   finally{ btn.disabled=false; btn.textContent='Guardar'; }
 }
@@ -1011,7 +1388,7 @@ async function proximoSeqDia(categoria, data){
   return (ult&&ult.length?ult[0].seq:0)+1;
 }
 async function marcarEnviado(id){
-  try{ await supaFetch('oficios?id=eq.'+id,'PATCH',{estado:'enviado',atualizado_em:new Date().toISOString()}); const o=oficios.find(x=>x.id===id); if(o) o.estado='enviado'; renderOficios(); toast('Marcado como enviado ✓'); }
+  try{ await supaFetch('oficios?id=eq.'+id,'PATCH',{estado:'enviado',atualizado_em:new Date().toISOString()}); const o=oficios.find(x=>x.id===id); if(o){ o.estado='enviado'; sincronizarSilencioso(o); } renderOficios(); toast('Marcado como enviado ✓'); }
   catch(e){ toast('Erro: '+e.message.slice(0,100),false); }
 }
 
@@ -1081,6 +1458,7 @@ async function confirmarAnulacaoFinal(){
     const rows=await supaFetch('oficios?id=eq.'+o.id,'PATCH',{estado:'anulado', extra, atualizado_em:new Date().toISOString()});
     const i=oficios.findIndex(x=>x.id===o.id); if(i>=0&&rows&&rows[0]) oficios[i]=rows[0];
     closeModal('modal-confirmar-anulacao'); renderOficios(); toast('Ofício anulado ✓');
+    if(rows&&rows[0]) sincronizarSilencioso(rows[0]);
   }catch(e){ toast('Erro: '+e.message.slice(0,120),false); }
   finally{ btn.disabled=false; btn.textContent='Confirmar anulação'; }
 }
@@ -1105,6 +1483,12 @@ async function deleteOficio(id){
 function previewOficio(){ const f=lerFormulario(); const of=editingId?oficios.find(o=>o.id===editingId):null; imprimirOficio(Object.assign({numeroTxt: of?fmtNum(of):'(sem número — rascunho)'}, f)); }
 function imprimirOficioById(id){ const o=oficios.find(x=>x.id===id); if(!o) return; if(o.categoria==='protocolo') imprimirProtocolo(Object.assign({numeroTxt:fmtNum(o)},o)); else imprimirOficio(Object.assign({numeroTxt:fmtNum(o)},o)); }
 function imprimirOficio(of){
+  const html = construirHtmlOficio(of);
+  const w=window.open('','_blank','width=900,height=1100');
+  if(w){ w.document.write(html); w.document.close(); } else toast('O browser bloqueou a janela. Permite pop-ups para este site.',false);
+}
+// Constrói o HTML do papel timbrado do ofício — usado tanto para imprimir (janela nova) como para gerar o PDF da Drive
+function construirHtmlOficio(of){
   const nome = assoc.assoc_nome || "ARCA d'Ajuda";
   const sub = /ARCA d'Ajuda/i.test(nome) && nome.length<20 ? 'Associação Recreativa e Cultural da Ajuda' : (nome.length>40 ? '' : 'Associação Recreativa e Cultural da Ajuda');
   const logoHtml = logoData ? `<img src="${logoData}" style="height:70px;width:70px;object-fit:cover;border-radius:50%">` : '<div style="font-size:22px;font-weight:700;color:#1a3a6b">ARCA</div>';
@@ -1191,8 +1575,7 @@ function imprimirOficio(of){
       <div class="rodape-num">Ofício ${esc(of.numeroTxt||'—')}</div>
     </div>
   </div></body></html>`;
-  const w=window.open('','_blank','width=900,height=1100');
-  if(w){ w.document.write(html); w.document.close(); } else toast('O browser bloqueou a janela. Permite pop-ups para este site.',false);
+  return html;
 }
 
 // ============================================================
@@ -1229,6 +1612,7 @@ function renderProtocolos(){
     <td><div class="td-actions">
       <button class="btn-edit" onclick="openModalProtocolo(${o.id})" title="Editar">✏</button>
       <button class="btn-edit" onclick="imprimirOficioById(${o.id})" title="Imprimir / PDF">🖨</button>
+      <button class="btn-edit" onclick="sincronizarOficioDrive(${o.id})" title="Guardar/atualizar PDF na Google Drive">☁️</button>
       <button class="btn-edit" onclick="duplicarProtocolo(${o.id})" title="Duplicar">⧉</button>
       <button class="btn-edit" style="color:var(--coral-d)" onclick="deleteOficio(${o.id})" title="Eliminar">🗑</button>
     </div></td>
@@ -1290,18 +1674,21 @@ async function saveProtocolo(){
   if(!f.dest||!f.assunto||!f.corpo){ toast('Entidade, objeto e cláusulas são obrigatórios.',false); return; }
   const btn=document.getElementById('pr-guardar-btn'); btn.disabled=true; btn.textContent='A guardar…';
   try{
+    let gravado=null;
     if(editingProtId){
       const rows=await supaFetch('oficios?id=eq.'+editingProtId,'PATCH',Object.assign({},f,{atualizado_em:new Date().toISOString()}));
       const i=oficios.findIndex(o=>o.id===editingProtId); if(i>=0&&rows&&rows[0]) oficios[i]=rows[0];
+      if(rows&&rows[0]) gravado=rows[0];
       toast('Protocolo atualizado ✓');
     } else {
       const ano=new Date(f.data+'T12:00:00').getFullYear();
       const seq=await proximoSeq('protocolo',ano);
       const rows=await supaFetch('oficios','POST',Object.assign({},f,{ano,seq}));
-      if(rows&&rows[0]) oficios.unshift(rows[0]);
+      if(rows&&rows[0]) { oficios.unshift(rows[0]); gravado=rows[0]; }
       toast(`Protocolo P-${String(seq).padStart(3,'0')}/${ano} guardado ✓`);
     }
     editingProtId=null; closeModal('modal-protocolo'); await carregarOficios();
+    if(gravado) sincronizarSilencioso(gravado);
   }catch(e){ console.error(e); toast('Erro ao guardar: '+e.message.slice(0,120),false); }
   finally{ btn.disabled=false; btn.textContent='Guardar'; }
 }
@@ -1316,6 +1703,12 @@ function duplicarProtocolo(id){
 }
 function previewProtocolo(){ const f=lerFormularioProtocolo(); const o=editingProtId?oficios.find(x=>x.id===editingProtId):null; imprimirProtocolo(Object.assign({numeroTxt:o?fmtNum(o):'(sem número — rascunho)'},f)); }
 function imprimirProtocolo(o){
+  const html = construirHtmlProtocolo(o);
+  const w=window.open('','_blank','width=900,height=1100');
+  if(w){ w.document.write(html); w.document.close(); } else toast('O browser bloqueou a janela. Permite pop-ups para este site.',false);
+}
+// Constrói o HTML do papel timbrado do protocolo — usado tanto para imprimir (janela nova) como para gerar o PDF da Drive
+function construirHtmlProtocolo(o){
   const x=o.extra||{};
   const nome = assoc.assoc_nome || "ARCA d'Ajuda";
   const logoHtml = logoData ? `<img src="${logoData}" style="height:64px;width:64px;object-fit:cover;border-radius:50%">` : '';
@@ -1391,8 +1784,7 @@ function imprimirProtocolo(o){
     </div>
     <div class="rodape"><div></div><div class="rodape-texto">${esc(nome)} — Associação Recreativa e Cultural da Ajuda<br>${esc(contactos.join(' · ')||'Funchal, Madeira')}</div><div class="rodape-num">Protocolo ${esc(o.numeroTxt||'—')}</div></div>
   </div></body></html>`;
-  const w=window.open('','_blank','width=900,height=1100');
-  if(w){ w.document.write(html); w.document.close(); } else toast('O browser bloqueou a janela. Permite pop-ups para este site.',false);
+  return html;
 }
 
 // ============================================================
