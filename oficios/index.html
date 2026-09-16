@@ -90,6 +90,8 @@ tbody tr:hover td{background:#F5F9FF}
 .badge-tipo{background:var(--amber-l);color:var(--amber-d)}
 .badge-rascunho{background:var(--bg3);color:var(--text-2)}
 .badge-enviado{background:var(--teal-l);color:var(--teal-d)}
+.badge-anulacao-pedida{background:var(--amber-l);color:var(--amber-d)}
+.badge-anulado{background:var(--coral-l);color:var(--coral-d)}
 .empty-state{text-align:center;padding:40px 20px;color:var(--text-3);font-size:13px}
 mark{background:var(--amber-l);color:var(--amber-d);border-radius:3px;padding:0 2px;font-weight:700}
 .snippet{font-size:11.5px;color:var(--text-2);margin-top:3px;line-height:1.4;white-space:normal}
@@ -209,6 +211,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!import
         <option value="">Todos os estados</option>
         <option value="rascunho">Rascunho</option>
         <option value="enviado">Enviado</option>
+        <option value="anulacao_pedida">Anulação pedida</option>
+        <option value="anulado">Anulado</option>
       </select>
       <input type="date" class="filter-input" id="f-data-de" onchange="renderOficios()" style="min-width:0" title="De (data do ofício)">
       <span style="color:var(--text-3);font-size:12px">até</span>
@@ -345,6 +349,45 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!import
       <button class="btn-secondary" onclick="closeModal(&#39;modal-oficio&#39;)">Cancelar</button>
       <button class="btn-secondary" onclick="previewOficio()">👁 Pré-visualizar</button>
       <button class="btn-primary" id="of-guardar-btn" onclick="saveOficio()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PEDIR ANULAÇÃO -->
+<div class="modal-overlay" id="modal-pedir-anulacao">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title">🚫 Pedir anulação do ofício</div>
+      <button class="modal-close" onclick="closeModal('modal-pedir-anulacao')">×</button>
+    </div>
+    <div style="background:var(--amber-l);color:var(--amber-d);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-bottom:14px">O ofício <b id="pa-numero"></b> fica marcado como <b>"Anulação pedida"</b> — continua visível na lista. Só é anulado em definitivo depois de o Presidente confirmar.</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Quem está a pedir a anulação</label><select id="pa-quem"></select></div>
+      <div class="form-group"><label>Motivo (opcional)</label><input type="text" id="pa-motivo" placeholder="Ex: dados incorretos, pedido cancelado…"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-pedir-anulacao')">Cancelar</button>
+      <button class="btn-primary" id="pa-confirmar-btn" style="background:var(--amber);border-color:var(--amber)" onclick="confirmarPedidoAnulacao()">Pedir anulação</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR ANULAÇÃO -->
+<div class="modal-overlay" id="modal-confirmar-anulacao">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title">✅ Confirmar anulação do ofício</div>
+      <button class="modal-close" onclick="closeModal('modal-confirmar-anulacao')">×</button>
+    </div>
+    <div style="background:var(--coral-l);color:var(--coral-d);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-bottom:14px">O ofício <b id="ca-numero"></b> passa a <b>"Anulado"</b> em definitivo. Não é apagado — continua sempre visível na lista, só passa a aparecer como anulado. Esta ação só pode ser feita por quem tem o cargo de <b>Presidente</b>.</div>
+    <div id="ca-pedido-info" style="font-size:12px;color:var(--text-2);margin-bottom:10px"></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Quem confirma (tem de ser o Presidente)</label><select id="ca-quem"></select></div>
+      <div class="form-group"><label>Motivo da anulação</label><input type="text" id="ca-motivo" placeholder="Ex: substituído pelo ofício 17092026/01"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-confirmar-anulacao')">Cancelar</button>
+      <button class="btn-primary" id="ca-confirmar-btn" style="background:var(--coral);border-color:var(--coral)" onclick="confirmarAnulacaoFinal()">Confirmar anulação</button>
     </div>
   </div>
 </div>
@@ -849,16 +892,42 @@ function renderOficios(){
     <td><span class="badge badge-tipo">${esc(modelos[o.tipo]?.label||o.tipo||'—')}</span></td>
     <td style="font-size:12.5px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(o.dest)}">${highlight(destPrimeira,fB)}</td>
     <td style="font-size:12.5px;color:var(--text-2);max-width:260px" title="${esc(o.assunto)}"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${highlight(o.assunto||'—',fB)}</div>${trechoCorpo}</td>
-    <td><span class="badge ${o.estado==='enviado'?'badge-enviado':'badge-rascunho'}">${o.estado==='enviado'?'Enviado':'Rascunho'}</span></td>
-    <td><div class="td-actions">
-      <button class="btn-edit" onclick="openModalOficio(${o.id})" title="Editar">✏</button>
-      <button class="btn-edit" onclick="imprimirOficioById(${o.id})" title="Imprimir / PDF">🖨</button>
-      ${o.estado==='enviado'?'':`<button class="btn-edit" onclick="marcarEnviado(${o.id})" title="Marcar como enviado">✅</button>`}
-      <button class="btn-edit" onclick="duplicarOficio(${o.id})" title="Duplicar">⧉</button>
-      <button class="btn-edit" style="color:var(--coral-d)" onclick="deleteOficio(${o.id})" title="Eliminar">🗑</button>
-    </div></td>
+    <td>${badgeEstadoOficio(o)}</td>
+    <td><div class="td-actions">${acoesOficio(o)}</div></td>
   </tr>`;
   }).join('')}</tbody></table>`;
+}
+function badgeEstadoOficio(o){
+  const map={
+    rascunho:['badge-rascunho','Rascunho'],
+    enviado:['badge-enviado','Enviado'],
+    anulacao_pedida:['badge-anulacao-pedida','Anulação pedida'],
+    anulado:['badge-anulado','Anulado']
+  };
+  const [cls,label]=map[o.estado]||map.rascunho;
+  const ped=o.extra&&o.extra.anulacao;
+  let tip='';
+  if(o.estado==='anulacao_pedida'&&ped) tip=`Pedido por ${ped.pedidaPor} (${ped.pedidaCargo})${ped.pedidaMotivo?' — '+ped.pedidaMotivo:''}`;
+  if(o.estado==='anulado'&&ped) tip=`Confirmado por ${ped.confirmadaPor} (${ped.confirmadaCargo}) — ${ped.confirmadaMotivo||''}`;
+  return `<span class="badge ${cls}" ${tip?`title="${esc(tip)}"`:''}>${label}</span>`;
+}
+function acoesOficio(o){
+  if(o.estado==='anulado'){
+    return `<button class="btn-edit" onclick="imprimirOficioById(${o.id})" title="Imprimir / PDF">🖨</button>
+      <button class="btn-edit" onclick="duplicarOficio(${o.id})" title="Duplicar">⧉</button>`;
+  }
+  if(o.estado==='anulacao_pedida'){
+    return `<button class="btn-edit" onclick="imprimirOficioById(${o.id})" title="Imprimir / PDF">🖨</button>
+      <button class="btn-edit" onclick="duplicarOficio(${o.id})" title="Duplicar">⧉</button>
+      <button class="btn-edit" onclick="cancelarPedidoAnulacao(${o.id})" title="Cancelar pedido de anulação">↩</button>
+      <button class="btn-edit" style="color:var(--coral-d)" onclick="abrirConfirmarAnulacao(${o.id})" title="Confirmar anulação (só Presidente)">✅ Anular</button>`;
+  }
+  return `<button class="btn-edit" onclick="openModalOficio(${o.id})" title="Editar">✏</button>
+    <button class="btn-edit" onclick="imprimirOficioById(${o.id})" title="Imprimir / PDF">🖨</button>
+    ${o.estado==='enviado'?'':`<button class="btn-edit" onclick="marcarEnviado(${o.id})" title="Marcar como enviado">✅</button>`}
+    <button class="btn-edit" onclick="duplicarOficio(${o.id})" title="Duplicar">⧉</button>
+    <button class="btn-edit" style="color:var(--amber-d)" onclick="abrirPedirAnulacao(${o.id})" title="Pedir anulação">🚫</button>
+    <button class="btn-edit" style="color:var(--coral-d)" onclick="deleteOficio(${o.id})" title="Eliminar">🗑</button>`;
 }
 function exportarCSV(cat){
   const prot = cat==='protocolo';
@@ -945,6 +1014,76 @@ async function marcarEnviado(id){
   try{ await supaFetch('oficios?id=eq.'+id,'PATCH',{estado:'enviado',atualizado_em:new Date().toISOString()}); const o=oficios.find(x=>x.id===id); if(o) o.estado='enviado'; renderOficios(); toast('Marcado como enviado ✓'); }
   catch(e){ toast('Erro: '+e.message.slice(0,100),false); }
 }
+
+// ============================================================
+// ANULAÇÃO DE OFÍCIOS — pedido por qualquer membro, confirmação só pelo Presidente
+// (o ofício nunca é apagado; fica sempre visível, só muda de estado)
+// ============================================================
+function ehPresidente(cargo){ return /presidente/i.test(cargo||'') && !/vice[\s-]?presidente/i.test(cargo||''); }
+function opcoesDirecao(selecionado){
+  if(!direcao.length) return '<option value="">Sem membros da direção configurados (Sócios → Configurações)</option>';
+  return '<option value="">— Escolher —</option>'+direcao.map((d,i)=>`<option value="${i}"${String(i)===selecionado?' selected':''}>${esc(d.nome)} — ${esc(d.cargo)}</option>`).join('');
+}
+let pedirAnulacaoId=null, confirmarAnulacaoId=null;
+function abrirPedirAnulacao(id){
+  const o=oficios.find(x=>x.id===id); if(!o) return;
+  pedirAnulacaoId=id;
+  document.getElementById('pa-numero').textContent=fmtNum(o);
+  document.getElementById('pa-quem').innerHTML=opcoesDirecao();
+  document.getElementById('pa-motivo').value='';
+  openModal('modal-pedir-anulacao');
+}
+async function confirmarPedidoAnulacao(){
+  const o=oficios.find(x=>x.id===pedirAnulacaoId); if(!o) return;
+  const iSel=document.getElementById('pa-quem').value;
+  if(iSel===''){ toast('Escolhe quem está a pedir a anulação.',false); return; }
+  const quem=direcao[Number(iSel)];
+  const motivo=document.getElementById('pa-motivo').value.trim();
+  const btn=document.getElementById('pa-confirmar-btn'); btn.disabled=true; btn.textContent='A guardar…';
+  try{
+    const extra=Object.assign({}, o.extra||{}, {anulacao:{estadoAnterior:o.estado, pedidaPor:quem.nome, pedidaCargo:quem.cargo, pedidaMotivo:motivo||null, pedidaEm:new Date().toISOString()}});
+    const rows=await supaFetch('oficios?id=eq.'+o.id,'PATCH',{estado:'anulacao_pedida', extra, atualizado_em:new Date().toISOString()});
+    const i=oficios.findIndex(x=>x.id===o.id); if(i>=0&&rows&&rows[0]) oficios[i]=rows[0];
+    closeModal('modal-pedir-anulacao'); renderOficios(); toast('Anulação pedida ✓ — falta a confirmação do Presidente');
+  }catch(e){ toast('Erro: '+e.message.slice(0,120),false); }
+  finally{ btn.disabled=false; btn.textContent='Pedir anulação'; }
+}
+function cancelarPedidoAnulacao(id){
+  const o=oficios.find(x=>x.id===id); if(!o) return;
+  if(!confirm(`Cancelar o pedido de anulação do ofício ${fmtNum(o)}?\n\nVolta ao estado anterior.`)) return;
+  const anterior=(o.extra&&o.extra.anulacao&&o.extra.anulacao.estadoAnterior)||'rascunho';
+  const extra=Object.assign({}, o.extra||{}, {anulacao:null});
+  supaFetch('oficios?id=eq.'+id,'PATCH',{estado:anterior, extra, atualizado_em:new Date().toISOString()})
+    .then(rows=>{ const i=oficios.findIndex(x=>x.id===id); if(i>=0&&rows&&rows[0]) oficios[i]=rows[0]; renderOficios(); toast('Pedido de anulação cancelado'); })
+    .catch(e=>toast('Erro: '+e.message.slice(0,120),false));
+}
+function abrirConfirmarAnulacao(id){
+  const o=oficios.find(x=>x.id===id); if(!o) return;
+  confirmarAnulacaoId=id;
+  document.getElementById('ca-numero').textContent=fmtNum(o);
+  document.getElementById('ca-quem').innerHTML=opcoesDirecao();
+  document.getElementById('ca-motivo').value=(o.extra&&o.extra.anulacao&&o.extra.anulacao.pedidaMotivo)||'';
+  const ped=o.extra&&o.extra.anulacao;
+  document.getElementById('ca-pedido-info').textContent = ped ? `Pedido por ${ped.pedidaPor} (${ped.pedidaCargo}) em ${fmtData(ped.pedidaEm.slice(0,10))}${ped.pedidaMotivo?' — motivo: '+ped.pedidaMotivo:''}` : '';
+  openModal('modal-confirmar-anulacao');
+}
+async function confirmarAnulacaoFinal(){
+  const o=oficios.find(x=>x.id===confirmarAnulacaoId); if(!o) return;
+  const iSel=document.getElementById('ca-quem').value;
+  if(iSel===''){ toast('Escolhe quem está a confirmar a anulação.',false); return; }
+  const quem=direcao[Number(iSel)];
+  if(!ehPresidente(quem.cargo)){ toast(`Só quem tem o cargo de Presidente pode confirmar. ${quem.nome} tem o cargo de "${quem.cargo}".`,false); return; }
+  const motivo=document.getElementById('ca-motivo').value.trim();
+  if(!motivo){ toast('Indica o motivo da anulação.',false); return; }
+  const btn=document.getElementById('ca-confirmar-btn'); btn.disabled=true; btn.textContent='A confirmar…';
+  try{
+    const extra=Object.assign({}, o.extra||{}, {anulacao:Object.assign({}, (o.extra&&o.extra.anulacao)||{}, {confirmadaPor:quem.nome, confirmadaCargo:quem.cargo, confirmadaMotivo:motivo, confirmadaEm:new Date().toISOString()})});
+    const rows=await supaFetch('oficios?id=eq.'+o.id,'PATCH',{estado:'anulado', extra, atualizado_em:new Date().toISOString()});
+    const i=oficios.findIndex(x=>x.id===o.id); if(i>=0&&rows&&rows[0]) oficios[i]=rows[0];
+    closeModal('modal-confirmar-anulacao'); renderOficios(); toast('Ofício anulado ✓');
+  }catch(e){ toast('Erro: '+e.message.slice(0,120),false); }
+  finally{ btn.disabled=false; btn.textContent='Confirmar anulação'; }
+}
 function duplicarOficio(id){
   const o=oficios.find(x=>x.id===id); if(!o) return;
   openModalOficio();
@@ -1022,9 +1161,11 @@ function imprimirOficio(of){
     .rodape-timbrado{border-top:1.5px solid #1a3a6b;padding:5mm 18mm;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto}
     .rodape-texto{font-size:7.5pt;color:#666;text-align:center;line-height:1.6;flex:1}
     .rodape-num{font-size:8pt;color:#999;text-align:right;white-space:nowrap}
+    .selo-anulado{position:absolute;top:6mm;left:18mm;transform:rotate(-8deg);border:3px solid #B5432A;color:#B5432A;font-family:Arial,Helvetica,sans-serif;font-weight:800;font-size:19pt;letter-spacing:3px;padding:4px 16px;border-radius:8px;opacity:.85;z-index:5;background:rgba(255,255,255,.35)}
   </style></head><body>
   <div class="noprint"><button class="p" onclick="window.print()">🖨 Imprimir / PDF</button><button class="s" onclick="window.close()">✕ Fechar</button></div>
   <div class="pagina">
+    ${of.estado==='anulado'?'<div class="selo-anulado">ANULADO</div>':''}
     <div class="timbrado">
       <div class="timbrado-esq">${logoHtml}<div><div class="org-nome">${esc(nome)}</div>${sub?`<div class="org-sub">${esc(sub)}</div>`:''}${nifTxt?`<div class="org-sub">${esc(nifTxt)}</div>`:''}</div></div>
       <div class="timbrado-dir">${contactos.map(c=>`<div>${esc(c)}</div>`).join('')||'<div>Funchal, Madeira</div>'}</div>
