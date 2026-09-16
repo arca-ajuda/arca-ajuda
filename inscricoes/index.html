@@ -802,7 +802,13 @@ function renderHome(){
       + '<button class="btn btn-primary" data-nav="form" data-key="'+key+'" style="flex:1;">Preencher online</button>'
       + '<button class="btn btn-ghost" data-nav="list" data-key="'+key+'">Registos</button>'
       + '</div>'
-      + '<button class="btn btn-ghost btn-sm" data-blank="'+key+'">🖶 Imprimir ficha em branco (papel)</button>'
+      + '<div style="display:flex;gap:8px;">'
+      + '<button class="btn btn-ghost btn-sm" data-blank="'+key+'" style="flex:1;">🖶 Imprimir ficha em branco (papel)</button>'
+      + (state.storeMode==="supa"
+          ? '<input type="text" readonly style="position:absolute;left:-9999px;" data-link-publico="home-'+key+'" value="'+esc(linkPublicoBase()+"?tipo="+key)+'">'
+            + '<button type="button" class="btn btn-ghost btn-sm" data-copiar-link="home-'+key+'" title="Copiar link público de inscrição ('+esc(ft.label)+')">🔗</button>'
+          : '')
+      + '</div>'
       + '</div></div>';
   });
   html += '</div>';
