@@ -602,7 +602,11 @@ function iniciar(){
   var tipo = params.get("tipo");
 
   supaFetch("config_app?chave=eq.config_publica_fichas&select=valor&limit=1").then(function(rows){
-    configPublica = (rows && rows[0] && rows[0].valor) || {};
+    var v = rows && rows[0] && rows[0].valor;
+    if(v && typeof v === "string"){
+      try{ v = JSON.parse(v); }catch(e){ v = {}; }
+    }
+    configPublica = v || {};
   }).catch(function(){
     configPublica = {};
   }).then(function(){
