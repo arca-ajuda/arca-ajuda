@@ -130,6 +130,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!import
 #login-overlay .box{background:#fff;border-radius:16px;padding:28px 26px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
 </style>
 <script src="https://accounts.google.com/gsi/client" async="" defer=""></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -330,6 +331,22 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!import
       <div id="drive-status" style="font-size:12px;color:var(--text-2);line-height:1.6">⚪ Google Drive não ligado</div>
     </div>
     <div class="card">
+      <div class="card-title">🔒 Proteção da eliminação (código por email ao Presidente)</div>
+      <p style="font-size:12px;color:var(--text-2);margin-bottom:12px;line-height:1.6">
+        Eliminar um ofício ou protocolo apaga-o mesmo, sem deixar rasto (ao contrário de "Anular", que mantém sempre o registo). Para evitar enganos, ao carregar em 🗑 é enviado por email um código de 6 dígitos diretamente para o <b>Presidente</b> — só com esse código é que a eliminação avança.
+      </p>
+      <div class="ajuda" style="margin-bottom:10px">Para o envio automático funcionar é preciso uma conta gratuita em <b>emailjs.com</b> (não precisa de programação): cria uma conta, liga o teu Gmail como "Email Service", cria um "Email Template" com os campos <code>{{to_email}}</code>, <code>{{to_name}}</code>, <code>{{codigo}}</code>, <code>{{numero}}</code>, <code>{{resumo}}</code> e <code>{{pedido_por}}</code>, e cola aqui os 3 códigos que a EmailJS te dá.</div>
+      <div class="form-row">
+        <div class="form-group"><label>Service ID</label><input type="text" id="cfg-ej-service" placeholder="ex: service_abc1234"></div>
+        <div class="form-group"><label>Template ID</label><input type="text" id="cfg-ej-template" placeholder="ex: template_xyz789"></div>
+      </div>
+      <div class="form-group"><label>Public Key</label><input type="text" id="cfg-ej-key" placeholder="ex: aBcDeFgHiJkLmNoPq"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn-primary" onclick="guardarConfigEmailJS()">💾 Guardar</button>
+      </div>
+      <div id="ej-status" style="font-size:12px;color:var(--text-2);margin-top:10px;line-height:1.6">O Presidente configurado na Direção (app de Sócios) tem de ter <b>email preenchido</b> na ficha de sócio, senão o código não pode ser enviado.</div>
+    </div>
+    <div class="card">
       <div class="card-title">🔢 Numeração</div>
       <div style="font-size:13px;line-height:1.7">Os ofícios são numerados automaticamente por dia (dia+mês+ano da data do ofício), no formato <b>16092026/01</b>, <b>16092026/02</b>…, reiniciando a sequência sempre que a data muda; os protocolos mantêm numeração própria por ano civil, <b>P-001/2026</b>, <b>P-002/2026</b>… Nenhum dos dois reutiliza números de documentos apagados.</div>
     </div>
@@ -407,6 +424,29 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!import
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('modal-confirmar-anulacao')">Cancelar</button>
       <button class="btn-primary" id="ca-confirmar-btn" style="background:var(--coral);border-color:var(--coral)" onclick="confirmarAnulacaoFinal()">Confirmar anulação</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ELIMINAR (protegido por código enviado ao Presidente) -->
+<div class="modal-overlay" id="modal-eliminar">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title">🔒 Eliminar em definitivo</div>
+      <button class="modal-close" onclick="closeModal('modal-eliminar')">×</button>
+    </div>
+    <div style="background:var(--coral-l);color:var(--coral-d);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-bottom:14px">
+      Isto <b>apaga mesmo</b> o documento — ao contrário da anulação, não fica nenhum registo. Só deve ser usado para corrigir enganos (ex: duplicados). Por segurança, é enviado um código de 6 dígitos por email para o Presidente, que só ele recebe — sem esse código, o botão não elimina nada.
+    </div>
+    <div style="font-size:13px;margin-bottom:10px"><b id="el-numero"></b><br><span id="el-resumo" style="color:var(--text-2);font-size:12px"></span></div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+      <button class="btn-secondary" id="el-enviar-btn" onclick="enviarCodigoEliminar()">📧 Enviar código para o Presidente</button>
+    </div>
+    <div id="el-estado" style="font-size:12px;color:var(--text-2);margin-bottom:12px;line-height:1.6"></div>
+    <div class="form-group"><label>Código recebido pelo Presidente</label><input type="text" id="el-codigo" maxlength="6" placeholder="000000" style="letter-spacing:4px;font-size:18px;text-align:center;font-family:'IBM Plex Mono',monospace"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-eliminar')">Cancelar</button>
+      <button class="btn-primary" id="el-confirmar-btn" style="background:var(--coral);border-color:var(--coral)" onclick="confirmarEliminar()">🗑 Eliminar definitivamente</button>
     </div>
   </div>
 </div>
@@ -886,6 +926,106 @@ async function sincronizarTudoComDrive(){
   toast(`Sincronização concluída: ${ok} guardado(s)${falhou?`, ${falhou} com erro`:''} ✓`);
 }
 
+// ============================================================
+// ELIMINAÇÃO PROTEGIDA — código de 6 dígitos enviado por email ao Presidente
+// (só o Presidente recebe o código; sem ele, o botão Eliminar não faz nada)
+// ============================================================
+let emailjsCfg = {service:'', template:'', key:''};
+async function carregarConfigEmailJS(){
+  try{
+    const c = await lerConfig(['emailjs_service_id','emailjs_template_id','emailjs_public_key']);
+    emailjsCfg = {service:c.emailjs_service_id||'', template:c.emailjs_template_id||'', key:c.emailjs_public_key||''};
+  }catch(e){ console.warn('emailjs config:',e); }
+  const si=document.getElementById('cfg-ej-service'), ti=document.getElementById('cfg-ej-template'), ki=document.getElementById('cfg-ej-key');
+  if(si) si.value=emailjsCfg.service;
+  if(ti) ti.value=emailjsCfg.template;
+  if(ki) ki.value=emailjsCfg.key;
+  if(emailjsCfg.key && window.emailjs){ try{ window.emailjs.init({publicKey:emailjsCfg.key}); }catch(e){ console.warn(e); } }
+}
+async function guardarConfigEmailJS(){
+  const service=(document.getElementById('cfg-ej-service').value||'').trim();
+  const template=(document.getElementById('cfg-ej-template').value||'').trim();
+  const key=(document.getElementById('cfg-ej-key').value||'').trim();
+  try{
+    await guardarChaveConfig('emailjs_service_id', service);
+    await guardarChaveConfig('emailjs_template_id', template);
+    await guardarChaveConfig('emailjs_public_key', key);
+    emailjsCfg={service,template,key};
+    if(key && window.emailjs){ try{ window.emailjs.init({publicKey:key}); }catch(e){ console.warn(e); } }
+    toast('Configuração de email guardada ✓');
+  }catch(e){ console.error(e); toast('Erro ao guardar', false); }
+}
+function emailjsPronto(){ return !!(emailjsCfg.service && emailjsCfg.template && emailjsCfg.key && window.emailjs); }
+function presidenteAtual(){ return direcao.find(d=>ehPresidente(d.cargo)) || null; }
+function gerarCodigo6(){ return String(Math.floor(100000+Math.random()*900000)); }
+
+let eliminarAlvoId=null, eliminarCodigo=null, eliminarCodigoExpira=0;
+function abrirEliminar(id){
+  const o=oficios.find(x=>x.id===id); if(!o) return;
+  eliminarAlvoId=id; eliminarCodigo=null; eliminarCodigoExpira=0;
+  document.getElementById('el-numero').textContent = fmtNum(o);
+  document.getElementById('el-resumo').textContent = `${o.dest||''} — ${o.assunto||''}`;
+  document.getElementById('el-codigo').value='';
+  const pres = presidenteAtual();
+  const estadoEl = document.getElementById('el-estado');
+  const btnEnviar = document.getElementById('el-enviar-btn');
+  if(!pres || !pres.email){
+    estadoEl.innerHTML = '⚠️ Não há Presidente configurado com email preenchido (Sócios → Direção). Não é possível enviar o código.';
+    btnEnviar.disabled = true;
+  } else if(!emailjsPronto()){
+    estadoEl.innerHTML = '⚠️ O envio automático de email ainda não está configurado — vai a Configurações → "Proteção da eliminação".';
+    btnEnviar.disabled = true;
+  } else {
+    estadoEl.textContent = `O código vai ser enviado para ${pres.nome} (${pres.email}).`;
+    btnEnviar.disabled = false;
+  }
+  openModal('modal-eliminar');
+}
+async function enviarCodigoEliminar(){
+  const o=oficios.find(x=>x.id===eliminarAlvoId); if(!o) return;
+  const pres = presidenteAtual();
+  if(!pres || !pres.email){ toast('Presidente sem email configurado.', false); return; }
+  if(!emailjsPronto()){ toast('Configura primeiro o envio de email em Configurações.', false); return; }
+  eliminarCodigo = gerarCodigo6();
+  eliminarCodigoExpira = Date.now() + 10*60*1000; // válido 10 minutos
+  const btn=document.getElementById('el-enviar-btn'); btn.disabled=true; btn.textContent='A enviar…';
+  try{
+    await window.emailjs.send(emailjsCfg.service, emailjsCfg.template, {
+      to_email: pres.email,
+      to_name: pres.nome,
+      codigo: eliminarCodigo,
+      numero: fmtNum(o),
+      resumo: `${o.dest||''} — ${o.assunto||''}`,
+      pedido_por: (supaSession && supaSession.user && supaSession.user.email) || ''
+    });
+    document.getElementById('el-estado').innerHTML = `✅ Código enviado para <b>${esc(pres.nome)}</b> (${esc(pres.email)}). Válido durante 10 minutos.`;
+    toast('Código enviado ✓');
+  }catch(e){
+    console.error(e);
+    document.getElementById('el-estado').innerHTML = '❌ Não foi possível enviar o email. Confirma a configuração em Configurações → "Proteção da eliminação".';
+    toast('Erro ao enviar código', false);
+  }finally{ btn.disabled=false; btn.textContent='📧 Enviar código para o Presidente'; }
+}
+async function confirmarEliminar(){
+  const o=oficios.find(x=>x.id===eliminarAlvoId); if(!o) return;
+  const digitado=(document.getElementById('el-codigo').value||'').trim();
+  if(!eliminarCodigo){ toast('Pede primeiro o código ao Presidente.', false); return; }
+  if(Date.now()>eliminarCodigoExpira){ toast('O código expirou. Pede um novo.', false); return; }
+  if(!digitado || digitado!==eliminarCodigo){ toast('Código incorreto.', false); return; }
+  if(!confirm(`Eliminar definitivamente o documento ${fmtNum(o)}?\n\nEsta ação não pode ser desfeita.`)) return;
+  const btn=document.getElementById('el-confirmar-btn'); btn.disabled=true; btn.textContent='A eliminar…';
+  try{
+    await supaFetch('oficios?id=eq.'+o.id,'DELETE');
+    oficios=oficios.filter(x=>x.id!==o.id);
+    renderOficios();
+    try{ renderProtocolos(); }catch(e){}
+    closeModal('modal-eliminar');
+    eliminarAlvoId=null; eliminarCodigo=null; eliminarCodigoExpira=0;
+    toast('Documento eliminado');
+  }catch(e){ toast('Erro: '+e.message.slice(0,100), false); }
+  finally{ btn.disabled=false; btn.textContent='🗑 Eliminar definitivamente'; }
+}
+
 async function fazerLogin(){
   const email=document.getElementById('login-email').value.trim(), pass=document.getElementById('login-pass').value;
   const erro=document.getElementById('login-erro'); erro.style.display='none';
@@ -1149,6 +1289,7 @@ async function iniciar(){
   renderConfig();
   try{ gdriveAutoConnect(); }catch(e){ console.warn('init:',e); }
   carregarConfigDrive().catch(e=>console.warn('init:',e));
+  carregarConfigEmailJS().catch(e=>console.warn('init:',e));
   // Aviso se a Drive não estiver ligada (cópias em PDF para assinatura não estão a ser guardadas)
   setTimeout(()=>{ try{ avisarDriveDesligada(); }catch(e){ console.warn(e); } }, 3500);
 }
@@ -1170,9 +1311,9 @@ async function carregarDirecao(){
   try{
     const rows = await supaFetch('direcao_membros?order=ordem.asc,id.asc');
     const nums = (rows||[]).map(r=>r.socio_num).filter(n=>n!=null);
-    let nomes={};
-    if(nums.length){ const s=await supaFetch('socios?num=in.('+nums.join(',')+')&select=num,nome'); (s||[]).forEach(x=>{nomes[x.num]=x.nome;}); }
-    direcao = (rows||[]).filter(r=>r.socio_num!=null && nomes[r.socio_num]).map(r=>({nome:nomes[r.socio_num], cargo:r.cargo}));
+    let nomes={}, emails={};
+    if(nums.length){ const s=await supaFetch('socios?num=in.('+nums.join(',')+')&select=num,nome,email'); (s||[]).forEach(x=>{nomes[x.num]=x.nome; emails[x.num]=x.email||'';}); }
+    direcao = (rows||[]).filter(r=>r.socio_num!=null && nomes[r.socio_num]).map(r=>({nome:nomes[r.socio_num], cargo:r.cargo, email:emails[r.socio_num]||''}));
   }catch(e){ console.warn('direção:',e); }
   const opts = '<option value="">—</option>'+direcao.map(d=>`<option value="${esc(d.nome+' — '+d.cargo)}">${esc(d.nome)} — ${esc(d.cargo)}</option>`).join('');
   document.getElementById('of-dir-sel').innerHTML = opts;
@@ -1301,7 +1442,7 @@ function acoesOficio(o){
     ${o.estado==='enviado'?'':`<button class="btn-edit" onclick="marcarEnviado(${o.id})" title="Marcar como enviado">✅</button>`}
     <button class="btn-edit" onclick="duplicarOficio(${o.id})" title="Duplicar">⧉</button>
     <button class="btn-edit" style="color:var(--amber-d)" onclick="abrirPedirAnulacao(${o.id})" title="Pedir anulação">🚫</button>
-    <button class="btn-edit" style="color:var(--coral-d)" onclick="deleteOficio(${o.id})" title="Eliminar">🗑</button>`;
+    <button class="btn-edit" style="color:var(--coral-d)" onclick="abrirEliminar(${o.id})" title="Eliminar">🗑</button>`;
 }
 function exportarCSV(cat){
   const prot = cat==='protocolo';
@@ -1470,12 +1611,7 @@ function duplicarOficio(id){
   document.getElementById('of-assinante').value=o.assinante||assinantePadraoTexto();
   document.getElementById('oficio-modal-title').textContent=`Novo Ofício (cópia de ${fmtNum(o)})`;
 }
-async function deleteOficio(id){
-  const o=oficios.find(x=>x.id===id); if(!o) return;
-  if(!confirm(`Eliminar o ofício ${fmtNum(o)}?\n${o.dest||''}\n${o.assunto||''}\n\nO número não será reutilizado.`)) return;
-  try{ await supaFetch('oficios?id=eq.'+id,'DELETE'); oficios=oficios.filter(x=>x.id!==id); renderOficios(); toast('Ofício eliminado'); }
-  catch(e){ toast('Erro: '+e.message.slice(0,100),false); }
-}
+// (a eliminação passou a ser feita por abrirEliminar()/confirmarEliminar(), protegida por código enviado ao Presidente)
 
 // ============================================================
 // IMPRESSÃO — papel timbrado
@@ -1529,7 +1665,7 @@ function construirHtmlOficio(of){
     .conteudo{padding:10mm 18mm;flex:1}
     /* Zona de correio — posicionada para ficar visível na janela do envelope ao dobrar a folha em três */
     .zona-envelope{position:absolute;top:50mm;right:18mm;width:85mm}
-    .ref-box{display:flex;justify-content:space-between;gap:10px;font-size:8pt;border-top:1px solid #1a3a6b;border-bottom:1px solid #1a3a6b;padding:4px 1px;margin-bottom:10mm;color:#333}
+    .ref-box{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:8pt;line-height:2.1;border-top:1px solid #1a3a6b;border-bottom:1px solid #1a3a6b;padding:2px 1px;margin-bottom:10mm;color:#333}
     .ref-box span{color:#777}
     .dest{font-size:11pt;line-height:1.75}
     .dest .dest-linha{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1614,7 +1750,7 @@ function renderProtocolos(){
       <button class="btn-edit" onclick="imprimirOficioById(${o.id})" title="Imprimir / PDF">🖨</button>
       <button class="btn-edit" onclick="sincronizarOficioDrive(${o.id})" title="Guardar/atualizar PDF na Google Drive">☁️</button>
       <button class="btn-edit" onclick="duplicarProtocolo(${o.id})" title="Duplicar">⧉</button>
-      <button class="btn-edit" style="color:var(--coral-d)" onclick="deleteOficio(${o.id})" title="Eliminar">🗑</button>
+      <button class="btn-edit" style="color:var(--coral-d)" onclick="abrirEliminar(${o.id})" title="Eliminar">🗑</button>
     </div></td>
   </tr>`;}).join('')}</tbody></table>`;
 }
