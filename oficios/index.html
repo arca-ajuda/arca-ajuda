@@ -1688,8 +1688,7 @@ function construirHtmlOficio(of){
   <div class="pagina">
     ${of.estado==='anulado'?'<div class="selo-anulado">ANULADO</div>':''}
     <div class="timbrado">
-      <div class="timbrado-esq">${logoHtml}<div><div class="org-nome">${esc(nome)}</div>${sub?`<div class="org-sub">${esc(sub)}</div>`:''}${nifTxt?`<div class="org-sub">${esc(nifTxt)}</div>`:''}</div></div>
-      <div class="timbrado-dir">${contactos.map(c=>`<div>${esc(c)}</div>`).join('')||'<div>Funchal, Madeira</div>'}</div>
+      <div class="timbrado-esq">${logoHtml}<div class="org-nome">${esc(nome)}</div></div>
     </div>
     <div class="conteudo">
       <div class="zona-envelope">
@@ -1708,7 +1707,7 @@ function construirHtmlOficio(of){
     </div>
     <div class="rodape-timbrado">
       <div>${logoSmall}</div>
-      <div class="rodape-texto">${esc(nome)}${sub?' — '+esc(sub):''}<br>${esc(contactos.join(' · ')||'Funchal, Madeira')}</div>
+      <div class="rodape-texto">${esc(nome)}${sub?' — '+esc(sub):''}${nifTxt?' · '+esc(nifTxt):''}<br>${esc(contactos.join(' · ')||'Funchal, Madeira')}</div>
       <div class="rodape-num">Ofício ${esc(of.numeroTxt||'—')}</div>
     </div>
   </div></body></html>`;
@@ -1898,8 +1897,7 @@ function construirHtmlProtocolo(o){
   <div class="noprint"><button class="p" onclick="window.print()">🖨 Imprimir / PDF</button><button class="s" onclick="window.close()">✕ Fechar</button></div>
   <div class="pagina">
     <div class="timbrado">
-      <div style="display:flex;align-items:center;gap:12px">${logoHtml}<div><div class="org-nome">${esc(nome)}</div><div class="org-sub">Associação Recreativa e Cultural da Ajuda${assoc.assoc_nif?' · NIF '+esc(assoc.assoc_nif):''}</div></div></div>
-      <div class="timbrado-dir">${contactos.map(c=>`<div>${esc(c)}</div>`).join('')||'<div>Funchal, Madeira</div>'}</div>
+      <div style="display:flex;align-items:center;gap:12px">${logoHtml}<div class="org-nome">${esc(nome)}</div></div>
     </div>
     <div class="conteudo">
       <div class="titulo">${esc(tipoLabel)}</div>
@@ -1919,7 +1917,7 @@ function construirHtmlProtocolo(o){
         <div><small>Pela Segunda Outorgante</small><div class="l"></div><b>${esc(x.entidade_rep||'________________')}</b><small>${esc(o.dest||'')}</small></div>
       </div>
     </div>
-    <div class="rodape"><div></div><div class="rodape-texto">${esc(nome)} — Associação Recreativa e Cultural da Ajuda<br>${esc(contactos.join(' · ')||'Funchal, Madeira')}</div><div class="rodape-num">Protocolo ${esc(o.numeroTxt||'—')}</div></div>
+    <div class="rodape"><div></div><div class="rodape-texto">${esc(nome)} — Associação Recreativa e Cultural da Ajuda${assoc.assoc_nif?' · NIF '+esc(assoc.assoc_nif):''}<br>${esc(contactos.join(' · ')||'Funchal, Madeira')}</div><div class="rodape-num">Protocolo ${esc(o.numeroTxt||'—')}</div></div>
   </div></body></html>`;
   return html;
 }
