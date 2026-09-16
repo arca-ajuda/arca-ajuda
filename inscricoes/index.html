@@ -1980,6 +1980,8 @@ function renderSettings(){
         : '')
     + '</div>';
 
+  if(state.storeMode==="supa") html += renderLinksPublicosHtml();
+
   html += renderConfigFichasHtml();
 
   html += '<div class="section"><h3>Cópia de segurança</h3>'
@@ -2053,6 +2055,36 @@ function renderSettings(){
       alertBanner("Não foi possível guardar: " + (err.message||"erro"));
     });
   });
+}
+
+/* ============================================================
+   DEFINIÇÕES → LINKS PÚBLICOS (sem login, para partilhar com os pais)
+   ============================================================ */
+function linkPublicoBase(){
+  // funciona quer a app esteja em .../inscricoes/ quer em .../inscricoes/index.html
+  try{ return new URL("publico/", window.location.href).href; }
+  catch(e){ return "publico/"; }
+}
+function renderLinksPublicosHtml(){
+  var base = linkPublicoBase();
+  var itens = [
+    {label:"Menu (as três fichas)", url: base},
+    {label:"Crianças", url: base + "?tipo=criancas"},
+    {label:"Adultos", url: base + "?tipo=adultos"},
+    {label:"Sócio Atleta", url: base + "?tipo=socios"}
+  ];
+  var html = '<div class="section"><h3>Link de inscrição pública</h3>'
+    + '<p style="margin:0 0 14px;color:var(--ink-muted);font-size:12.5px;max-width:64ch;">Partilha estes links com quem se quer inscrever — não precisam de conta nem de password. As fichas enviadas por aqui ficam marcadas como "por confirmar" na lista de registos.</p>'
+    + '<div style="display:flex;flex-direction:column;gap:8px;">'
+    + itens.map(function(it, i){
+        return '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'
+          + '<span style="font-size:12px;font-weight:600;min-width:150px;">'+esc(it.label)+'</span>'
+          + '<input type="text" readonly class="mono" data-link-publico="'+i+'" value="'+esc(it.url)+'" style="flex:1;min-width:200px;border:1px solid var(--border-strong);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--ink);font-size:12px;">'
+          + '<button type="button" class="btn btn-ghost btn-sm" data-copiar-link="'+i+'">⧉ Copiar</button>'
+          + '</div>';
+      }).join("")
+    + '</div></div>';
+  return html;
 }
 
 /* ============================================================
@@ -2328,6 +2360,25 @@ document.addEventListener("click", function(e){
       socioRetryBtn.disabled = false; socioRetryBtn.textContent = "Tentar criar sócio novamente";
       alertBanner("Continua a não ser possível: " + (err && err.message ? err.message : "erro desconhecido"));
     });
+    return;
+  }
+  var copiarLinkBtn = e.target.closest("[data-copiar-link]");
+  if(copiarLinkBtn){
+    var idx = copiarLinkBtn.getAttribute("data-copiar-link");
+    var inp = document.querySelector('[data-link-publico="'+idx+'"]');
+    if(!inp) return;
+    var textoOriginal = copiarLinkBtn.textContent;
+    var marcarCopiado = function(){
+      copiarLinkBtn.textContent = "✓ Copiado";
+      setTimeout(function(){ if(copiarLinkBtn.isConnected) copiarLinkBtn.textContent = textoOriginal; }, 1800);
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(inp.value).then(marcarCopiado).catch(function(){
+        inp.select(); document.execCommand("copy"); marcarCopiado();
+      });
+    } else {
+      inp.select(); document.execCommand("copy"); marcarCopiado();
+    }
     return;
   }
   var confirmarSocioBtn = e.target.closest("[data-confirmar-socio]");
