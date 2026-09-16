@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ficha de Inscrição — ARCA d'Ajuda</title>
+<style>body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;font-size:14px;color-scheme:light dark}[hidden]{display:none!important}img{max-width:100%}</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f2f4ec; --surface:#ffffff; --surface-2:#e8ede1; --ink:#16241c; --ink-muted:#54634f;
+  --border:#d6ddc9; --border-strong:#c1cab0; --primary:#1f6b48; --primary-dark:#123c29; --primary-contrast:#f2fbf4;
+  --accent:#c8871f; --accent-dark:#9c6a17; --danger:#a8442d; --danger-bg:#f7e6e0; --focus:#2f8f63;
+  --c-criancas:#b8781f; --c-criancas-bg:#f6ecd9; --c-adultos:#1f6b48; --c-adultos-bg:#e2eee3;
+  --c-socios:#2b6e8a; --c-socios-bg:#e2eef3;
+  --shadow: 0 1px 2px rgba(20,30,20,.06), 0 8px 24px -12px rgba(20,30,20,.18);
+  --font-display:'Big Shoulders Display','Arial Narrow',sans-serif;
+  --font-body:'Archivo','Segoe UI',Helvetica,Arial,sans-serif;
+  --font-mono:'IBM Plex Mono','SFMono-Regular',Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10201a; --surface:#16281f; --surface-2:#1c3226; --ink:#eef1ea; --ink-muted:#a9baa6;
+    --border:#2c4536; --border-strong:#3a5943; --primary:#4bab7c; --primary-dark:#2f7a56; --primary-contrast:#0d1e15;
+    --accent:#e3ad4c; --accent-dark:#c08a2e; --danger:#e2836a; --danger-bg:#3a241d; --focus:#5fc496;
+    --c-criancas:#e3ad4c; --c-criancas-bg:#3a2f18; --c-adultos:#4bab7c; --c-adultos-bg:#1b3327;
+    --c-socios:#5fb0d1; --c-socios-bg:#17303b; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+}
+*{box-sizing:border-box;}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:14.5px;line-height:1.5;}
+h1,h2,h3{font-family:var(--font-display);font-weight:800;letter-spacing:.01em;text-wrap:balance;margin:0;}
+a{color:var(--primary);}
+button{font-family:inherit;}
+.tabular{font-variant-numeric:tabular-nums;}
+.mono{font-family:var(--font-mono);}
+#appRoot{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{display:flex;align-items:center;gap:14px;padding:14px 22px;background:var(--primary-dark);color:var(--primary-contrast);border-bottom:3px solid var(--accent);}
+.topbar .crest{width:38px;height:38px;border-radius:50%;background:var(--accent);color:#241a08;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:16px;flex:none;overflow:hidden;}
+.topbar .titles{display:flex;flex-direction:column;gap:1px;min-width:0;}
+.topbar h1{font-size:20px;color:#fff;line-height:1.1;}
+.topbar .sub{font-size:11.5px;color:#cfe4d6;letter-spacing:.02em;}
+.main{flex:1;min-width:0;padding:26px 20px 60px;}
+.main-inner{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:22px;}
+.status-banner{border:1px solid var(--border-strong);background:var(--surface-2);border-radius:10px;padding:10px 14px;font-size:12.5px;color:var(--ink-muted);display:flex;gap:8px;align-items:center;}
+.status-banner.warn{border-color:var(--danger);background:var(--danger-bg);color:var(--danger);}
+.status-banner .pulse{width:8px;height:8px;border-radius:50%;background:var(--focus);flex:none;}
+.status-banner.warn .pulse{background:var(--danger);}
+.hero-row h2{font-size:26px;color:var(--ink);}
+.hero-row p{margin:4px 0 0;color:var(--ink-muted);font-size:13.5px;max-width:60ch;}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+.type-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;text-decoration:none;color:inherit;}
+.type-card .bar{height:6px;}
+.type-card .body{padding:16px 16px 14px;display:flex;flex-direction:column;gap:9px;flex:1;}
+.type-card h3{font-size:19px;}
+.type-card p{margin:0;color:var(--ink-muted);font-size:12.5px;line-height:1.5;}
+.btn{appearance:none;border:1px solid transparent;border-radius:9px;padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+.btn-primary{background:var(--primary);color:var(--primary-contrast);}
+.btn-primary:hover{background:var(--primary-dark);}
+.btn-ghost{background:none;border-color:var(--border-strong);color:var(--ink);}
+.btn-ghost:hover{background:var(--surface-2);}
+.btn-sm{padding:6px 10px;font-size:12px;border-radius:7px;}
+.btn[disabled]{opacity:.5;cursor:not-allowed;}
+.form-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;padding-bottom:14px;border-bottom:3px solid var(--type-color, var(--primary));}
+.form-header h2{font-size:24px;}
+.form-header .badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:4px 10px;border-radius:20px;background:var(--type-bg);color:var(--type-color);margin-bottom:6px;}
+.form-header .fees{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-muted);}
+.section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);}
+.section h3{font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--type-color,var(--primary));margin-bottom:14px;padding-bottom:8px;border-bottom:1px dashed var(--border-strong);}
+.field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px 16px;}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0;}
+.field.span2{grid-column:span 2;}
+.field label{font-size:11.5px;font-weight:600;color:var(--ink-muted);}
+.field label .req{color:var(--danger);margin-left:2px;}
+.field input[type=text],.field input[type=tel],.field input[type=email],.field input[type=date]{border:1px solid var(--border-strong);border-radius:8px;padding:8px 10px;background:var(--bg);color:var(--ink);font-size:13.5px;font-family:var(--font-body);width:100%;}
+.field input:focus{outline:2px solid var(--focus);outline-offset:1px;border-color:var(--focus);}
+.field.invalid input{border-color:var(--danger);}
+.field .err{font-size:11px;color:var(--danger);display:none;}
+.field.invalid .err{display:block;}
+.check-grid.invalid,.radio-row.invalid,.consent-item.invalid{border-left:3px solid var(--danger);padding-left:10px;border-radius:3px;background:var(--danger-bg);}
+.note-block{grid-column:1/-1;font-size:12px;color:var(--ink-muted);background:var(--surface-2);border-radius:8px;padding:9px 12px;line-height:1.5;white-space:pre-line;}
+.check-grid{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px 18px;}
+.check-item{display:flex;align-items:center;gap:7px;font-size:13px;}
+.check-item input{width:16px;height:16px;accent-color:var(--type-color,var(--primary));flex:none;}
+.check-item input.outra-input{width:auto;height:auto;margin-left:4px;min-width:150px;max-width:220px;border:1px solid var(--border-strong);border-radius:7px;padding:5px 8px;background:var(--bg);color:var(--ink);font-size:13px;font-family:var(--font-body);}
+.check-item input.outra-input:disabled{opacity:.5;}
+.radio-row{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:16px;}
+.radio-item{display:flex;align-items:center;gap:7px;font-size:13px;}
+.radio-item input{width:16px;height:16px;accent-color:var(--type-color,var(--primary));}
+.consent-item{grid-column:1/-1;display:flex;flex-direction:column;gap:8px;}
+.consent-item>.check-item{font-weight:600;}
+.channels{display:flex;flex-wrap:wrap;gap:14px;margin-left:24px;}
+.form-actions{display:flex;justify-content:flex-end;gap:10px;padding-top:4px;}
+.desconto-box{grid-column:1/-1;border:1px dashed var(--border-strong);border-radius:10px;padding:12px 14px;background:var(--surface-2);display:flex;flex-direction:column;gap:10px;}
+.desconto-head{display:flex;flex-direction:column;gap:3px;}
+.desconto-head .lead{font-size:12.5px;font-weight:700;color:var(--type-color,var(--primary));}
+.desconto-head .hint{font-size:11.5px;color:var(--ink-muted);line-height:1.45;max-width:70ch;}
+.desconto-linhas{display:flex;flex-direction:column;gap:8px;}
+.desc-linha{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;}
+.desc-linha .check-item{font-weight:600;}
+.desc-linha input[type=text]{flex:1;min-width:200px;max-width:360px;border:1px solid var(--border-strong);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--ink);font-size:13px;font-family:var(--font-body);}
+.desc-linha input[type=text]:disabled{opacity:.5;}
+.desconto-total{font-size:13px;padding-top:6px;border-top:1px solid var(--border);}
+.desconto-total .muted{color:var(--ink-muted);font-size:12px;}
+.desconto-total s{color:var(--ink-muted);}
+@media screen and (max-width:560px){
+  .field.span2{grid-column:span 1;}
+  .hero-row h2{font-size:22px;}
+}
+</style>
+</head>
+<body>
+<div id="appRoot">
+  <div class="topbar">
+    <div class="crest" id="crest">A</div>
+    <div class="titles"><h1>ARCA d'Ajuda</h1><div class="sub">Ficha de inscrição — link público</div></div>
+  </div>
+  <main class="main"><div class="main-inner" id="app"><div class="status-banner"><span class="pulse"></span> A carregar…</div></div></main>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   Supabase (só leitura da configuração pública + inserção da
+   própria ficha nova). A chave usada aqui é a "anon" — nunca
+   permite ler ou alterar fichas de outras pessoas.
+   ============================================================ */
+var SUPA_URL = "https://yfsyifypsrqnwkqkfrnm.supabase.co";
+var SUPA_KEY = "sb_publishable_AkzlMeHlYHDyl0HzeC7_qg__j_Y6C9W";
+
+function supaFetch(path, method, body, prefer){
+  method = method || "GET";
+  var headers = {"apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY};
+  var opts = {method: method, headers: headers};
+  if(method !== "GET"){
+    headers["Content-Type"] = "application/json";
+    headers["Prefer"] = prefer || "return=minimal";
+    opts.body = JSON.stringify(body);
+  }
+  return fetch(SUPA_URL + "/rest/v1/" + path, opts).then(function(res){
+    if(!res.ok) return res.text().then(function(t){ throw new Error(t || ("erro " + res.status)); });
+    return res.status === 204 ? null : res.json();
+  });
+}
+
+function esc(s){
+  if(s===undefined||s===null) return "";
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function numOr(v, d){ var n = parseFloat(String(v===undefined||v===null? "" : v).replace(",", ".")); return isNaN(n) ? d : n; }
+function fmtEuro(n){
+  n = numOr(n, 0);
+  var s = (Math.round(n*100)/100).toFixed(2).replace(".", ",");
+  if(s.slice(-3)===",00") s = s.slice(0,-3);
+  return s + "€";
+}
+
+var CONFIG_PREDEFINIDA = {
+  epoca: "2026/2027", precoNova: 22, precoRenov: 15, desconto: 2.5,
+  textoDesconto: "Desconto na inscrição para quem tem irmão/irmã inscrito(a) na ARCA ou frequenta mais do que uma atividade. Aplica-se uma vez por ficha (não é acumulável).",
+  notaAulas: "Nota: aulas de 45 minutos.", atividades: []
+};
+var configPublica = null; // vem do servidor
+
+function getConfig(){
+  var c = configPublica || {};
+  var out = {
+    epoca: (c.epoca || CONFIG_PREDEFINIDA.epoca),
+    precoNova: numOr(c.precoNova, CONFIG_PREDEFINIDA.precoNova),
+    precoRenov: numOr(c.precoRenov, CONFIG_PREDEFINIDA.precoRenov),
+    desconto: numOr(c.desconto, CONFIG_PREDEFINIDA.desconto),
+    textoDesconto: (c.textoDesconto!==undefined ? c.textoDesconto : CONFIG_PREDEFINIDA.textoDesconto),
+    notaAulas: (c.notaAulas!==undefined ? c.notaAulas : CONFIG_PREDEFINIDA.notaAulas),
+    atividades: Array.isArray(c.atividades) ? c.atividades : CONFIG_PREDEFINIDA.atividades,
+    logo: c.logo || null
+  };
+  out.atividades = out.atividades.map(function(a){
+    return {nome:String(a.nome||"").trim(), criancas:!!a.criancas, adultos:!!a.adultos, socios:!!a.socios};
+  }).filter(function(a){ return a.nome; });
+  return out;
+}
+function atividadesPara(formKey){
+  return getConfig().atividades.filter(function(a){ return a[formKey]; }).map(function(a){ return a.nome; });
+}
+function opcoesTipoInscricao(){
+  var c = getConfig();
+  return ["Renovação ("+fmtEuro(c.precoRenov)+")", "Nova inscrição ("+fmtEuro(c.precoNova)+")"];
+}
+function precoBaseDe(tipoInscricao){
+  var c = getConfig();
+  var t = String(tipoInscricao||"").toLowerCase();
+  if(!t) return null;
+  var m = t.match(/\(([\d.,]+)\s*€\)/);
+  if(m) return numOr(m[1], null);
+  if(t.indexOf("renov")===0) return c.precoRenov;
+  if(t.indexOf("nova")===0) return c.precoNova;
+  return null;
+}
+function temDesconto(rec){ return !!(rec && (rec.descIrmao || rec.descOutra)); }
+function calcularValores(rec){
+  var c = getConfig();
+  var base = precoBaseDe(rec.tipoInscricao);
+  var desc = temDesconto(rec) ? c.desconto : 0;
+  if(base===null) return {base:null, desconto:desc, pagar:null};
+  return {base:base, desconto:desc, pagar:Math.max(0, Math.round((base-desc)*100)/100)};
+}
+
+/* ---------- esquemas das fichas (mesma estrutura da aplicação principal) ---------- */
+var DECL_ALUNO = "Declaro como responsável legal supra identificado, que me inscrevo na modalidade acima escolhida e tenho conhecimento das regras, como também das regras gerais de inscrição em particular:\n1. Prazo de liquidação de mensalidade (até 8 de cada mês), quando se aplique.\nE que conforme minha obrigação, asseguro que não apresento quaisquer contraindicações para a prática da modalidade. Assim sendo as mesmas poderão ser utilizadas por esta Coletividade para transmissão, reprodução, promoção, adaptação, nos meios que esta achar por bem.\nEm conformidade com o Regulamento Geral de Proteção de Dados (UE) 2016/679, a ARCA d'Ajuda informa que:\n2. Apenas recolhe os dados indispensáveis para a inscrição como atleta da coletividade.\n3. Os seus dados só serão tratados de acordo com as finalidades para que foram recolhidos e conservados apenas pelo período necessário ao cumprimento destas finalidades, sempre obedecendo aos prazos fixados na lei e/ou pareceres da autoridade de controlo nacional.\n4. O titular de dados pessoais pode, a qualquer momento, revogar o consentimento prestado, bastando o contacto através do e-mail arcadajuda@gmail.com, dizendo que não quer ser contactado para receber as nossas informações e eventos.";
+var NOTA_SOCIO = "Nota: Todos os associados terão direito aos descontos e regalias especiais das empresas que têm protocolo com a Associação Recreativa e Cultural da Ajuda, exceto o Sócio Efetivo que poderá fazer uma atualização para sócio extra assumindo a diferença do valor de uma cota para a outra.";
+function autorizaImagemTexto(quem){
+  return "Autorizo ainda a captação de imagens e som, qualquer que seja o seu suporte, do " + quem + " supra indicado no decorrer de todas as suas atividades.";
+}
+var CONSENTE_CONTACTO_TXT = "Consinto receber informação dos serviços prestados pela ARCA d'Ajuda.";
+
+var IDENTITY_FIELDS_WITH_ENC = [
+  {id:"nomeAtleta", label:"Nome do atleta", type:"text", required:true, span:2},
+  {id:"dataNascAtleta", label:"Data de nascimento", type:"date"},
+  {id:"nifAtleta", label:"NIF", type:"text"},
+  {id:"biAtleta", label:"BI / Cartão de Cidadão", type:"text"},
+  {id:"valBiAtleta", label:"Validade BI/CC", type:"date"},
+  {id:"moradaAtleta", label:"Morada", type:"text", span:2},
+  {id:"codPostalAtleta", label:"Código postal", type:"text", placeholder:"0000-000"},
+  {id:"localidadeAtleta", label:"Localidade", type:"text"},
+  {id:"escola", label:"Escola", type:"text"},
+  {id:"anoEscolar", label:"Ano", type:"text"},
+  {id:"turma", label:"Turma", type:"text"},
+  {id:"numeroAluno", label:"Nº aluno", type:"text"}
+];
+function identityFields(prefix, opts){
+  opts = opts || {};
+  var f = [
+    {id:prefix+"Nome", label: opts.nomeLabel || "Nome", type:"text", required:true, span:2},
+    {id:prefix+"DataNasc", label:"Data de nascimento", type:"date"},
+    {id:prefix+"Nif", label:"NIF", type:"text"},
+    {id:prefix+"Bi", label:"BI / Cartão de Cidadão", type:"text"},
+    {id:prefix+"ValBi", label:"Validade BI/CC", type:"date"},
+    {id:prefix+"Morada", label:"Morada", type:"text", span:2},
+    {id:prefix+"CodPostal", label:"Código postal", type:"text", placeholder:"0000-000"},
+    {id:prefix+"Localidade", label:"Localidade", type:"text"}
+  ];
+  if(opts.profissao) f.push({id:prefix+"Profissao", label:"Profissão", type:"text"});
+  f.push({id:prefix+"Telemovel", label:"Telemóvel", type:"tel", required:opts.telReq});
+  if(opts.telefoneFixo) f.push({id:prefix+"TelefoneFixo", label:"Telefone fixo", type:"tel"});
+  if(opts.telemovelSos) f.push({id:prefix+"TelemovelSos", label:"Telemóvel SOS", type:"tel"});
+  f.push({id:prefix+"Email", label:"E-mail", type:"email", required:opts.emailReq});
+  f.push({id:prefix+"OutroContacto", label:"Outro contacto", type:"text"});
+  return f;
+}
+function autorizacoesSection(quemImagem){
+  return {
+    title:"Declaração e autorizações",
+    fields:[
+      {id:"_decl", type:"static", text:DECL_ALUNO},
+      {id:"declaracaoAceite", label:'Declaro que li e aceito as condições gerais de inscrição acima.', type:"checkbox", required:true},
+      {id:"autorizaImagem", label:autorizaImagemTexto(quemImagem), type:"checkbox"},
+      {id:"consenteContacto", label:CONSENTE_CONTACTO_TXT, type:"checkbox",
+        channels:{id:"canaisContacto", options:["E-mail","SMS / MMS","Messenger","WhatsApp"]}}
+    ]
+  };
+}
+
+var FORM_TYPES = {};
+function rebuildFormTypes(){
+  var c = getConfig();
+  var listaTxt = function(key){ var l = atividadesPara(key); return l.length ? l.join(", ") + "." : "Sem atividades configuradas."; };
+  var secInscricao = function(key, comTaxas){
+    var f = [];
+    if(comTaxas) f.push({id:"tipoInscricao", label:"Tipo de inscrição", type:"radio", required:true, options:opcoesTipoInscricao()});
+    f.push({id:"epocaAno", label:"Época / ano letivo", type:"text", placeholder:c.epoca, defaultValue:c.epoca, required:true});
+    f.push({id:"modalidade", label:"Modalidade (uma ficha por modalidade)", type:"modalidades", single:true, required:true, options:atividadesPara(key)});
+    if(comTaxas) f.push({id:"desconto", label:"Desconto", type:"desconto"});
+    return {title:"Inscrição", fields:f};
+  };
+  FORM_TYPES = {
+    criancas: {
+      key:"criancas", label:"Crianças", singular:"Ficha de Inscrição — Crianças",
+      collection:"registos_criancas", colorVar:"--c-criancas", bgVar:"--c-criancas-bg",
+      subtitle: listaTxt("criancas"), fees:true,
+      sections:[
+        secInscricao("criancas", true),
+        {title:"Dados do atleta", fields: IDENTITY_FIELDS_WITH_ENC},
+        {title:"Dados do encarregado de educação", fields: identityFields("enc", {nomeLabel:"Nome do encarregado de educação", profissao:true, telefoneFixo:true, telReq:true, emailReq:true})},
+        autorizacoesSection("aluno"),
+        {title:"Assinatura", fields:[
+          {id:"quemAssina", label:"Assina como", type:"radio", required:true, options:["Pai","Mãe","Tutor"]},
+          {id:"nomeAssinatura", label:"Nome (assinatura)", type:"text", required:true, span:2},
+          {id:"dataAssinatura", label:"Data", type:"date", required:true, today:true}
+        ]}
+      ]
+    },
+    adultos: {
+      key:"adultos", label:"Adultos", singular:"Ficha de Inscrição — Adultos",
+      collection:"registos_adultos", colorVar:"--c-adultos", bgVar:"--c-adultos-bg",
+      subtitle: listaTxt("adultos"), fees:true,
+      sections:[
+        secInscricao("adultos", true),
+        {title:"Dados do atleta", fields: identityFields("atl", {profissao:true, telefoneFixo:true, telReq:true, emailReq:true})},
+        autorizacoesSection("aluno"),
+        {title:"Assinatura", fields:[
+          {id:"nomeAssinatura", label:"Nome (assinatura)", type:"text", required:true, span:2},
+          {id:"dataAssinatura", label:"Data", type:"date", required:true, today:true}
+        ]}
+      ]
+    },
+    socios: {
+      key:"socios", label:"Sócio Atleta", singular:"Ficha de Inscrição — Sócio Atleta",
+      collection:"registos_socios_atletas", colorVar:"--c-socios", bgVar:"--c-socios-bg",
+      subtitle: listaTxt("socios"), fees:false,
+      sections:[
+        secInscricao("socios", false),
+        {title:"Dados do atleta", fields: identityFields("atl", {profissao:true, telemovelSos:true, telReq:true, emailReq:true})},
+        {title:"Regalias de sócio", fields:[ {id:"_nota", type:"static", text:NOTA_SOCIO} ]},
+        autorizacoesSection("atleta"),
+        {title:"Assinatura", fields:[
+          {id:"nomeAssinatura", label:"Nome (assinatura)", type:"text", required:true, span:2},
+          {id:"dataAssinatura", label:"Data", type:"date", required:true, today:true}
+        ]}
+      ]
+    }
+  };
+  return FORM_TYPES;
+}
+var FORM_ORDER = ["criancas","adultos","socios"];
+
+function allFields(formType){
+  var out = [];
+  formType.sections.forEach(function(s){ s.fields.forEach(function(f){ out.push(f); }); });
+  return out;
+}
+
+/* ---------- campos ---------- */
+function fieldHtml(field, values){
+  values = values || {};
+  if(field.type==="static") return '<div class="note-block">'+esc(field.text)+'</div>';
+  var reqMark = field.required? ' <span class="req">*</span>' : "";
+  var span = field.span===2 ? " span2":"";
+
+  if(field.type==="checkbox"){
+    var checked = values[field.id]? "checked":"";
+    var out = '<div class="consent-item" data-field="'+field.id+'">'
+      + '<label class="check-item"><input type="checkbox" name="'+field.id+'" '+checked+'> '+esc(field.label)+reqMark+'</label>';
+    if(field.channels){
+      out += '<div class="channels">' + field.channels.options.map(function(o){
+        return '<label class="check-item"><input type="checkbox" name="'+field.channels.id+'" value="'+esc(o)+'"> '+esc(o)+'</label>';
+      }).join("") + '</div>';
+    }
+    out += '</div>';
+    return out;
+  }
+  if(field.type==="radio"){
+    return '<div class="radio-row" data-field="'+field.id+'"><span style="font-size:11.5px;font-weight:600;color:var(--ink-muted);margin-right:6px;">'+esc(field.label)+reqMark+'</span>'
+      + field.options.map(function(o){
+          var c = values[field.id]===o ? "checked":"";
+          return '<label class="radio-item"><input type="radio" name="'+field.id+'" value="'+esc(o)+'" '+c+'> '+esc(o)+'</label>';
+        }).join("") + '</div>';
+  }
+  if(field.type==="modalidades"){
+    var opcoes = field.options.slice();
+    var tipoInput = field.single ? "radio" : "checkbox";
+    var out2 = '<div class="check-grid" data-field="'+field.id+'">'
+      + '<div style="flex-basis:100%;font-size:11.5px;font-weight:600;color:var(--ink-muted);">'+esc(field.label)+reqMark+'</div>'
+      + (opcoes.length ? "" : '<div style="flex-basis:100%;font-size:12px;color:var(--danger);">De momento não há atividades configuradas para esta ficha. Contacta a associação.</div>')
+      + opcoes.map(function(o){
+          return '<label class="check-item"><input type="'+tipoInput+'" name="'+field.id+'__opt" value="'+esc(o)+'"> '+esc(o)+'</label>';
+        }).join("")
+      + '<label class="check-item"><input type="'+tipoInput+'" name="'+(field.single? field.id+'__opt' : field.id+'__hasOutra')+'" value="__outra__" data-outra-toggle="'+field.id+'"> Outra'
+      + '<input type="text" class="outra-input" name="'+field.id+'__outraText" placeholder="qual?" disabled>'
+      + '</label>'
+      + '</div>';
+    return out2;
+  }
+  if(field.type==="desconto"){
+    var cfg = getConfig();
+    return '<div class="desconto-box" data-field="desconto" id="descontoBox">'
+      + '<div class="desconto-head"><span class="lead">Desconto de '+esc(fmtEuro(cfg.desconto))+' na inscrição</span>'
+      + (cfg.textoDesconto ? '<span class="hint">'+esc(cfg.textoDesconto)+'</span>' : '')
+      + '</div>'
+      + '<div class="desconto-linhas">'
+      + '<div class="desc-linha"><label class="check-item"><input type="checkbox" name="descIrmao"> Tem irmão/irmã inscrito(a) na ARCA</label>'
+      + '<input type="text" name="descIrmaoNome" placeholder="nome do irmão/irmã" disabled></div>'
+      + '<div class="desc-linha"><label class="check-item"><input type="checkbox" name="descOutra"> Já está inscrito(a) noutra atividade da ARCA</label>'
+      + '<input type="text" name="descOutraQual" placeholder="qual atividade" disabled></div>'
+      + '</div>'
+      + '<div class="desconto-total" id="descontoTotal"><span class="muted">Escolhe o tipo de inscrição para ver o valor a pagar.</span></div>'
+      + '</div>';
+  }
+  var val = esc(values[field.id]);
+  var ph = field.placeholder? ' placeholder="'+esc(field.placeholder)+'"':"";
+  return '<div class="field'+span+'" data-field="'+field.id+'">'
+    + '<label>'+esc(field.label)+reqMark+'</label>'
+    + '<input type="'+field.type+'" name="'+field.id+'" value="'+val+'"'+ph+'>'
+    + '<span class="err">Campo obrigatório</span>'
+    + '</div>';
+}
+
+function collectFormData(formType, formEl){
+  var data = {}; var missing = [];
+  allFields(formType).forEach(function(f){
+    if(f.type==="static") return;
+    if(f.type==="checkbox"){
+      var el = formEl.querySelector('input[name="'+f.id+'"]');
+      data[f.id] = !!(el && el.checked);
+      if(f.required && !data[f.id]) missing.push(f.id);
+      if(f.channels){
+        var chosen = [];
+        formEl.querySelectorAll('input[name="'+f.channels.id+'"]:checked').forEach(function(c){ chosen.push(c.value); });
+        data[f.channels.id] = chosen;
+      }
+      return;
+    }
+    if(f.type==="radio"){
+      var r = formEl.querySelector('input[name="'+f.id+'"]:checked');
+      data[f.id] = r ? r.value : "";
+      if(f.required && !data[f.id]) missing.push(f.id);
+      return;
+    }
+    if(f.type==="modalidades"){
+      var sel = [];
+      formEl.querySelectorAll('input[name="'+f.id+'__opt"]:checked').forEach(function(c){ if(c.value!=="__outra__") sel.push(c.value); });
+      var outraChecked = formEl.querySelector('input[name="'+f.id+'__opt"][value="__outra__"]:checked')
+        || formEl.querySelector('input[name="'+f.id+'__hasOutra"]:checked');
+      var outraTxt = formEl.querySelector('input[name="'+f.id+'__outraText"]');
+      var outraVal = (outraChecked && outraTxt) ? outraTxt.value.trim() : "";
+      data[f.id+"__opts"] = sel;
+      data[f.id+"__outra"] = outraVal;
+      if(f.required && !sel.length && !outraVal) missing.push(f.id);
+      return;
+    }
+    if(f.type==="desconto"){
+      var ci = formEl.querySelector('input[name="descIrmao"]'), co = formEl.querySelector('input[name="descOutra"]');
+      data.descIrmao = !!(ci && ci.checked);
+      data.descOutra = !!(co && co.checked);
+      data.descIrmaoNome = data.descIrmao ? (formEl.querySelector('input[name="descIrmaoNome"]').value.trim()) : "";
+      data.descOutraQual = data.descOutra ? (formEl.querySelector('input[name="descOutraQual"]').value.trim()) : "";
+      var tipoEl = formEl.querySelector('input[name="tipoInscricao"]:checked');
+      var vals = calcularValores({tipoInscricao: tipoEl? tipoEl.value:"", descIrmao:data.descIrmao, descOutra:data.descOutra});
+      data.valorBase = vals.base; data.valorDesconto = vals.desconto; data.valorPagar = vals.pagar;
+      return;
+    }
+    var el2 = formEl.querySelector('input[name="'+f.id+'"]');
+    data[f.id] = el2 ? el2.value.trim() : "";
+    if(f.required && !data[f.id]) missing.push(f.id);
+  });
+  return {data:data, missing:missing};
+}
+function markInvalid(formEl, missingIds){
+  formEl.querySelectorAll(".invalid").forEach(function(el){ el.classList.remove("invalid"); });
+  var first = null;
+  missingIds.forEach(function(id){
+    var el = formEl.querySelector('[data-field="'+id+'"]');
+    if(el){ el.classList.add("invalid"); if(!first) first = el; }
+  });
+  if(first) first.scrollIntoView({behavior:"smooth", block:"center"});
+}
+
+function feesTexto(){
+  var c = getConfig();
+  return "Renovação " + fmtEuro(c.precoRenov) + " · Nova inscrição " + fmtEuro(c.precoNova)
+    + " · Desconto irmão / 2ª atividade " + fmtEuro(c.desconto);
+}
+
+function ligarDesconto(formEl){
+  var cbIrmao = formEl.querySelector('input[name="descIrmao"]');
+  var cbOutra = formEl.querySelector('input[name="descOutra"]');
+  var txtIrmao = formEl.querySelector('input[name="descIrmaoNome"]');
+  var txtOutra = formEl.querySelector('input[name="descOutraQual"]');
+  var totalEl = document.getElementById("descontoTotal");
+  if(!cbIrmao || !cbOutra) return;
+  function atualizarTotal(){
+    var tipo = formEl.querySelector('input[name="tipoInscricao"]:checked');
+    var rec = {tipoInscricao: tipo? tipo.value : "", descIrmao: cbIrmao.checked, descOutra: cbOutra.checked};
+    var v = calcularValores(rec);
+    txtIrmao.disabled = !cbIrmao.checked; if(!cbIrmao.checked) txtIrmao.value = "";
+    txtOutra.disabled = !cbOutra.checked; if(!cbOutra.checked) txtOutra.value = "";
+    if(v.base===null){ totalEl.innerHTML = '<span class="muted">Escolhe o tipo de inscrição para ver o valor a pagar.</span>'; return; }
+    if(v.desconto>0){
+      totalEl.innerHTML = 'Valor a pagar: <s>'+esc(fmtEuro(v.base))+'</s> − '+esc(fmtEuro(v.desconto))+' de desconto = <b>'+esc(fmtEuro(v.pagar))+'</b>';
+    } else {
+      totalEl.innerHTML = 'Valor a pagar: <b>'+esc(fmtEuro(v.base))+'</b>';
+    }
+  }
+  formEl.addEventListener("change", function(e){
+    if(e.target.name==="tipoInscricao" || e.target.name==="descIrmao" || e.target.name==="descOutra") atualizarTotal();
+  });
+  atualizarTotal();
+}
+
+/* ---------- ecrãs ---------- */
+function renderErro(msg){
+  document.getElementById("app").innerHTML = '<div class="status-banner warn"><span class="pulse"></span> '+esc(msg)+'</div>';
+}
+
+function renderMenu(){
+  document.title = "Fichas de Inscrição — ARCA d'Ajuda";
+  var cards = FORM_ORDER.map(function(k){
+    var ft = FORM_TYPES[k];
+    return '<a class="type-card" href="?tipo='+k+'"><div class="bar" style="background:var('+ft.colorVar+');"></div>'
+      + '<div class="body"><h3 style="color:var('+ft.colorVar+');">'+esc(ft.label)+'</h3><p>'+esc(ft.subtitle)+'</p>'
+      + '<span class="btn btn-primary btn-sm" style="align-self:flex-start;">Preencher ficha</span></div></a>';
+  }).join("");
+  document.getElementById("app").innerHTML =
+    '<div class="hero-row"><div><h2>Fichas de inscrição</h2><p>Escolhe a ficha correspondente à tua situação. Depois de enviada, a associação confirma a inscrição.</p></div></div>'
+    + '<div class="card-grid">' + cards + '</div>';
+}
+
+function renderSucesso(formKey){
+  var ft = FORM_TYPES[formKey];
+  var msg = formKey==="socios"
+    ? "A ficha foi enviada com sucesso. Como é uma inscrição de Sócio Atleta, o número de sócio só é atribuído depois de a administrativa confirmar os dados — vais ser contactado(a) para essa confirmação."
+    : "A ficha foi enviada com sucesso. A associação vai rever os dados e atribuir o número de inscrição.";
+  document.getElementById("app").innerHTML =
+    '<div class="section" style="--type-color:var('+ft.colorVar+');text-align:center;padding:34px 20px;">'
+    + '<h2 style="color:var('+ft.colorVar+');font-size:22px;">Ficha enviada ✓</h2>'
+    + '<p style="color:var(--ink-muted);margin:10px auto 18px;max-width:56ch;">'+esc(msg)+'</p>'
+    + '<a class="btn btn-ghost" href="?tipo='+formKey+'">Preencher outra ficha ('+esc(ft.label)+')</a>'
+    + ' <a class="btn btn-ghost" href="?">Voltar ao início</a>'
+    + '</div>';
+}
+
+function renderForm(formKey){
+  var ft = FORM_TYPES[formKey];
+  document.title = ft.singular + " — ARCA d'Ajuda";
+  var html = '<div class="form-header" style="--type-color:var('+ft.colorVar+');--type-bg:var('+ft.bgVar+');">'
+    + '<div><span class="badge">Nova inscrição</span><h2>'+esc(ft.singular)+'</h2>'
+    + (getConfig().notaAulas ? '<p style="margin:2px 0 0;font-size:11.5px;color:var(--ink-muted);">'+esc(getConfig().notaAulas)+'</p>' : '')
+    + (formKey==="socios" ? '<p style="margin:2px 0 0;font-size:11.5px;color:var(--ink-muted);">O número de sócio só é atribuído depois de a administrativa confirmar esta ficha.</p>' : '')
+    + '</div>'
+    + (ft.fees? '<div class="fees">'+esc(feesTexto())+'</div>' : '')
+    + '</div>';
+
+  html += '<form id="regForm">';
+  ft.sections.forEach(function(sec){
+    html += '<div class="section" style="--type-color:var('+ft.colorVar+')"><h3>'+esc(sec.title)+'</h3><div class="field-grid">';
+    sec.fields.forEach(function(f){
+      var v = {};
+      if(f.today) v[f.id] = todayISO();
+      if(f.defaultValue) v[f.id] = f.defaultValue;
+      html += fieldHtml(f, v);
+    });
+    html += '</div></div>';
+  });
+  html += '<div class="status-banner" id="formMsg" style="display:none;"></div>';
+  html += '<div class="form-actions"><button type="submit" class="btn btn-primary">Enviar ficha</button></div>';
+  html += '</form>';
+
+  document.getElementById("app").innerHTML = html;
+  var formEl = document.getElementById("regForm");
+
+  formEl.querySelectorAll('input[name="modalidade__opt"], [data-outra-toggle]').forEach(function(inp){
+    inp.addEventListener("change", function(){
+      var grid = inp.closest(".check-grid"); if(!grid) return;
+      var toggle = grid.querySelector('[data-outra-toggle]');
+      var txt = grid.querySelector('input[type=text]');
+      if(!toggle || !txt) return;
+      txt.disabled = !toggle.checked;
+      if(!toggle.checked) txt.value=""; else if(inp===toggle) txt.focus();
+    });
+  });
+
+  if(ft.fees) ligarDesconto(formEl);
+
+  formEl.addEventListener("submit", function(e){
+    e.preventDefault();
+    var res = collectFormData(ft, formEl);
+    if(res.missing.length){ markInvalid(formEl, res.missing); return; }
+    var payload = res.data;
+    payload.createdAt = new Date().toISOString();
+    payload.origem = "publico";
+    payload.status = "novo";
+    var btn = formEl.querySelector('button[type=submit]');
+    btn.disabled = true; btn.textContent = "A enviar…";
+    var row = {
+      epoca_ano: payload.epocaAno || null, numero_inscricao: null,
+      status: "novo", origem: "publico", dados: payload
+    };
+    supaFetch(ft.collection, "POST", row).then(function(){
+      renderSucesso(formKey);
+    }).catch(function(err){
+      btn.disabled = false; btn.textContent = "Enviar ficha";
+      var m = document.getElementById("formMsg");
+      m.style.display = "flex"; m.className = "status-banner warn";
+      m.innerHTML = '<span class="pulse"></span> Não foi possível enviar: ' + esc(err && err.message ? err.message : "erro desconhecido") + '. Tenta novamente.';
+      m.scrollIntoView({behavior:"smooth", block:"center"});
+    });
+  });
+}
+
+function aplicarLogo(){
+  var c = getConfig();
+  var crest = document.getElementById("crest");
+  if(c.logo){ crest.innerHTML = '<img src="'+esc(c.logo)+'" alt="" style="max-width:100%;max-height:100%;object-fit:contain;">'; crest.style.background="#fff"; crest.style.borderRadius="8px"; }
+}
+
+function iniciar(){
+  var params = new URLSearchParams(window.location.search);
+  var tipo = params.get("tipo");
+
+  supaFetch("config_app?chave=eq.config_publica_fichas&select=valor&limit=1").then(function(rows){
+    configPublica = (rows && rows[0] && rows[0].valor) || {};
+  }).catch(function(){
+    configPublica = {};
+  }).then(function(){
+    rebuildFormTypes();
+    aplicarLogo();
+    if(tipo && FORM_TYPES[tipo]) renderForm(tipo);
+    else renderMenu();
+  });
+}
+
+iniciar();
+})();
+</script>
+</body>
+</html>
