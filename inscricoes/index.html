@@ -420,11 +420,13 @@ tbody tr:hover{background:var(--surface-2);}
 
 <div id="appRoot">
   <div class="topbar">
+    <button type="button" data-nav="home" style="all:unset;cursor:pointer;display:contents;" title="Voltar ao início">
     <div class="crest">A</div>
     <div class="titles">
       <h1>ARCA d'Ajuda</h1>
       <div class="sub">Fichas de inscrição digitais</div>
     </div>
+    </button>
     <div class="meta"><span id="estadoLigacao" style="color:#bcd9c7;"></span><br>NIPC 510 144 012 · IBAN PT50 0036 0319 9910 0012 552 74</div>
   </div>
   <div class="shell">
@@ -738,6 +740,7 @@ function renderSidebar(){
     return v.name===name && (key===undefined || v.formKey===key);
   }
   var html = "";
+  html += '<div class="nav-list" style="margin-bottom:4px;"><button class="nav-btn '+(v.name==="home"?"active":"")+'" data-nav="home" style="font-weight:700;">🏠 Início</button></div>';
   html += '<div><div class="nav-group-label">Nova ficha</div><div class="nav-list">';
   FORM_ORDER.forEach(function(key){
     var ft = FORM_TYPES[key];
@@ -754,7 +757,6 @@ function renderSidebar(){
       + '<span class="dot" style="background:var('+ft.colorVar+')"></span>' + esc(ft.label)
       + '<span class="nav-count">'+ (state.loaded[key] ? n : (state.storeMode==="loading" ? "…" : "0")) +'</span></button>';
   });
-  html += '<button class="nav-btn '+(v.name==="home"?"active":"")+'" data-nav="home" style="margin-top:6px;">↺ Início</button>';
   html += '</div></div>';
 
   html += '<div><div class="nav-group-label">Fichas em branco (papel)</div><div class="nav-list">';
@@ -1181,11 +1183,13 @@ function handleSubmitForm(formKey, formEl){
     // o sócio diretamente na plataforma de sócios, na mesma base de dados.
     btn.textContent = "A criar sócio na plataforma de sócios…";
     payload.createdAt = new Date().toISOString();
+    payload.origem = "app";
     promise = sincronizarSocioAtleta(payload).then(function(info){
       payload.numeroInscricao = String(info.num);
       payload.socioNum = info.num;
       payload.socioReaproveitado = !!info.reaproveitado;
       payload.socioSyncFalhou = false;
+      payload.status = "confirmado";
       btn.textContent = "A guardar…";
       return Store.add(formKey, payload);
     }).catch(function(err){
@@ -1194,6 +1198,7 @@ function handleSubmitForm(formKey, formEl){
       console.warn("sync sócio falhou", err);
       payload.socioSyncFalhou = true;
       payload.socioSyncErro = (err && err.message) ? err.message : "erro desconhecido";
+      payload.status = "novo"; // fica na lista de "por confirmar"
       btn.textContent = "A atribuir número provisório…";
       return assignNumero(payload.epocaAno).then(function(numero){
         payload.numeroInscricao = numero;
@@ -1203,6 +1208,8 @@ function handleSubmitForm(formKey, formEl){
     });
   } else {
     payload.createdAt = new Date().toISOString();
+    payload.origem = "app";
+    payload.status = "confirmado";
     btn.textContent = "A atribuir número…";
     promise = assignNumero(payload.epocaAno).then(function(numero){
       payload.numeroInscricao = numero;
@@ -1393,10 +1400,15 @@ function tableColumnsFor(formKey){
     {h:"Atleta", f:"atlNome"},
     {h:"Nasc.", f:"atlDataNasc", date:true},
     {h:"Modalidade", f:"modalidade"},
+    {h:"Estado", f:"estadoSocio"},
     {h:"Telemóvel", f:"atlTelemovel"},
     {h:"E-mail", f:"atlEmail"},
     {h:"Registado", f:"createdAt", dt:true}
   ];
+}
+function estadoSocioTexto(rec){
+  if(rec.status==="confirmado") return "Sócio confirmado" + (rec.origem==="publico" ? " · via link público" : "");
+  return "Por confirmar" + (rec.origem==="publico" ? " · link público" : "");
 }
 function valorTexto(rec){
   if(rec.valorPagar===undefined || rec.valorPagar===null){
@@ -1410,6 +1422,7 @@ function valorTexto(rec){
 }
 function cellValue(rec, col){
   if(col.f==="valor") return valorTexto(rec);
+  if(col.f==="estadoSocio") return estadoSocioTexto(rec);
   if(col.f==="modalidade"){
     var sel = (rec.modalidade__opts||[]).slice();
     if(rec.modalidade__outra) sel.push(rec.modalidade__outra);
@@ -1467,6 +1480,9 @@ function renderList(formKey){
         }
       });
       html += '<td class="row-actions">'
+        + (formKey==="socios" && r.status!=="confirmado"
+            ? '<button type="button" class="btn btn-primary btn-sm" data-confirmar-socio="'+formKey+'" data-id="'+esc(r.id)+'" title="Cria/atualiza o sócio na plataforma de sócios">Confirmar sócio</button>'
+            : '')
         + (r.driveUrl
             ? '<a class="drive-pill" href="'+esc(r.driveUrl)+'" target="_blank" rel="noopener" title="Abrir na Google Drive">Drive ↗</a>'
             : (state.mcp ? '<button class="btn btn-ghost btn-sm" data-drive="'+formKey+'" data-id="'+esc(r.id)+'" title="Guardar esta ficha na Google Drive">→ Drive</button>' : ''))
@@ -1973,6 +1989,14 @@ function renderSettings(){
     + '<label class="btn btn-ghost file-btn">⭱ Repor a partir de ficheiro<input type="file" id="importFile" accept="application/json,.json"></label>'
     + '</div></div>';
 
+  if(state.storeMode==="supa"){
+    html += '<div class="section"><h3>Fichas antigas</h3>'
+      + '<p style="margin:0 0 14px;color:var(--ink-muted);font-size:12.5px;max-width:60ch;">Se houver fichas guardadas de antes desta atualização (num único bloco de configuração), este botão passa-as para as novas tabelas, sem apagar nada. Podes carregar mais do que uma vez sem risco de duplicar.</p>'
+      + '<button class="btn btn-ghost" id="migrarBtn" type="button">Migrar fichas antigas</button>'
+      + '<span id="migrarMsg" style="margin-left:10px;font-size:12.5px;color:var(--ink-muted);"></span>'
+      + '</div>';
+  }
+
   document.getElementById("app").innerHTML = html;
 
   var logoInput = document.getElementById("logoFile");
@@ -1999,6 +2023,20 @@ function renderSettings(){
 
   var bk = document.getElementById("backupBtn");
   if(bk) bk.addEventListener("click", function(){ Store.exportBackup(); });
+
+  var mg = document.getElementById("migrarBtn");
+  if(mg) mg.addEventListener("click", function(){
+    var msg = document.getElementById("migrarMsg");
+    mg.disabled = true; mg.textContent = "A migrar…";
+    Store.migrarFichasAntigas().then(function(total){
+      mg.disabled = false; mg.textContent = "Migrar fichas antigas";
+      msg.textContent = total>0 ? (total+" ficha(s) migrada(s) com sucesso.") : "Não havia fichas antigas por migrar.";
+    }).catch(function(err){
+      mg.disabled = false; mg.textContent = "Migrar fichas antigas";
+      msg.style.color = "var(--danger)";
+      msg.textContent = "Erro: " + (err && err.message ? err.message : "desconhecido");
+    });
+  });
 
   ligarConfigFichas();
 
@@ -2292,6 +2330,27 @@ document.addEventListener("click", function(e){
     });
     return;
   }
+  var confirmarSocioBtn = e.target.closest("[data-confirmar-socio]");
+  if(confirmarSocioBtn){
+    var csk = confirmarSocioBtn.getAttribute("data-confirmar-socio"), csid = confirmarSocioBtn.getAttribute("data-id");
+    var csrec = state.records[csk].filter(function(r){ return r.id===csid; })[0];
+    if(!csrec) return;
+    confirmarSocioBtn.disabled = true; var csOldTxt = confirmarSocioBtn.textContent; confirmarSocioBtn.textContent = "A confirmar…";
+    sincronizarSocioAtleta(csrec).then(function(info){
+      return Store.update(csk, csid, {
+        status: "confirmado",
+        numeroInscricao: String(info.num), socioNum: info.num,
+        socioReaproveitado: !!info.reaproveitado, socioSyncFalhou: false, socioSyncErro: null
+      });
+    }).then(function(){
+      if(state.view.name==="list") renderList(csk);
+      else if(state.view.name==="saved") renderSaved(csk, csid);
+    }).catch(function(err){
+      confirmarSocioBtn.disabled = false; confirmarSocioBtn.textContent = csOldTxt;
+      alertBanner("Não foi possível confirmar o sócio: " + (err && err.message ? err.message : "erro desconhecido"));
+    });
+    return;
+  }
   var acertoBtn = e.target.closest("[data-acerto]");
   if(acertoBtn){
     if(acertoBtn.getAttribute("data-armed")==="1"){
@@ -2417,11 +2476,11 @@ function supaLer(){
     });
 }
 
+/* As fichas em si (criancas/adultos/socios) vivem nas tabelas registos_*
+   desde que passámos a suportar o link público; este bloco em config_app
+   guarda só as Definições (época, preços, atividades, logótipo, Drive). */
 function supaGravar(){
   var valor = {
-    criancas: state.records.criancas,
-    adultos: state.records.adultos,
-    socios: state.records.socios,
     definicoes: state.settings,
     gravadoEm: new Date().toISOString()
   };
@@ -2430,12 +2489,32 @@ function supaGravar(){
     : supaFetch("config_app", "POST", {chave: CHAVE_DADOS, valor: valor});
   return p.then(function(){
     supaExisteNaCloud = true;
+    return supaGravarConfigPublica();
+  }).then(function(){
     state.sync = "ok";
     atualizarEstadoLigacao();
   }).catch(function(err){
     state.sync = "erro";
     atualizarEstadoLigacao();
     throw err;
+  });
+}
+
+/* Cópia SÓ dos dados não sensíveis (época, preços, atividades, desconto,
+   logótipo) que o link público consegue ler sem login, para mostrar os
+   valores certos. Nunca inclui fichas nem dados pessoais. */
+var CHAVE_CONFIG_PUBLICA = "config_publica_fichas";
+function supaGravarConfigPublica(){
+  var c = getConfig();
+  var valor = {
+    epoca: c.epoca, precoNova: c.precoNova, precoRenov: c.precoRenov, desconto: c.desconto,
+    textoDesconto: c.textoDesconto, notaAulas: c.notaAulas, atividades: c.atividades,
+    logo: state.settings.logo || null
+  };
+  return supaFetch("config_app?chave=eq." + CHAVE_CONFIG_PUBLICA, "PATCH", {valor: valor}).then(function(rows){
+    if(!rows || !rows.length){
+      return supaFetch("config_app", "POST", {chave: CHAVE_CONFIG_PUBLICA, valor: valor});
+    }
   });
 }
 
@@ -2520,6 +2599,21 @@ var Store = {
     if(state.storeMode==="cloud"){
       return state.db.collection(ft.collection).add(payload).then(function(ref){ return ref.id; });
     }
+    if(state.storeMode==="supa"){
+      var row = {
+        epoca_ano: payload.epocaAno || null, numero_inscricao: payload.numeroInscricao || null,
+        status: payload.status || "novo", origem: payload.origem || "app", dados: payload
+      };
+      return supaFetch(ft.collection, "POST", row).then(function(res){
+        var novaLinha = res && res[0];
+        var id = novaLinha ? novaLinha.id : Store.newId();
+        var rec = Object.assign({id:id}, payload);
+        state.records[formKey] = [rec].concat(state.records[formKey]);
+        Store.localWrite();
+        Store.refresh(formKey);
+        return id;
+      });
+    }
     var id = Store.newId();
     var rec = Object.assign({id:id}, payload);
     state.records[formKey] = [rec].concat(state.records[formKey]);
@@ -2530,6 +2624,20 @@ var Store = {
     var ft = FORM_TYPES[formKey];
     if(state.storeMode==="cloud"){
       return state.db.collection(ft.collection).doc(id).update(patch);
+    }
+    if(state.storeMode==="supa"){
+      var existente = state.records[formKey].filter(function(r){ return r.id===id; })[0] || {};
+      var mesclado = Object.assign({}, existente, patch);
+      var row = {
+        epoca_ano: mesclado.epocaAno || null, numero_inscricao: mesclado.numeroInscricao || null,
+        status: mesclado.status || "novo", origem: mesclado.origem || existente.origem || "app",
+        updated_at: new Date().toISOString(), dados: mesclado
+      };
+      return supaFetch(ft.collection + "?id=eq." + encodeURIComponent(id), "PATCH", row).then(function(){
+        state.records[formKey] = state.records[formKey].map(function(r){ return r.id===id ? mesclado : r; });
+        Store.localWrite();
+        Store.refresh(formKey);
+      });
     }
     state.records[formKey] = state.records[formKey].map(function(r){
       return r.id===id ? Object.assign({}, r, patch) : r;
@@ -2542,9 +2650,71 @@ var Store = {
     if(state.storeMode==="cloud"){
       return state.db.collection(ft.collection).doc(id).delete();
     }
+    if(state.storeMode==="supa"){
+      return supaFetch(ft.collection + "?id=eq." + encodeURIComponent(id), "DELETE").then(function(){
+        state.records[formKey] = state.records[formKey].filter(function(r){ return r.id!==id; });
+        Store.localWrite();
+        Store.refresh(formKey);
+      });
+    }
     state.records[formKey] = state.records[formKey].filter(function(r){ return r.id!==id; });
     Store.guardarDepoisDeMudar(formKey);
     return Promise.resolve();
+  },
+  /* linha da tabela -> objeto "achatado" como o resto do código espera */
+  linhaParaRegisto: function(row){
+    var rec = Object.assign({}, row.dados || {});
+    rec.id = row.id;
+    rec.numeroInscricao = row.numero_inscricao || rec.numeroInscricao;
+    rec.epocaAno = row.epoca_ano || rec.epocaAno;
+    rec.createdAt = row.created_at || rec.createdAt;
+    rec.updatedAt = row.updated_at || rec.updatedAt;
+    rec.status = row.status || rec.status || "confirmado";
+    rec.origem = row.origem || rec.origem || "app";
+    return rec;
+  },
+  carregarRegistosSupa: function(formKey){
+    var ft = FORM_TYPES[formKey];
+    return supaFetch(ft.collection + "?order=created_at.desc&limit=1000").then(function(rows){
+      state.records[formKey] = (rows || []).map(Store.linhaParaRegisto);
+      state.loaded[formKey] = true;
+    });
+  },
+  /* Fichas guardadas antes de existirem as tabelas próprias (viviam num
+     único bloco em config_app) — passa-as para lá uma única vez. Não
+     apaga o bloco antigo, só deixa de ser a fonte usada pela aplicação. */
+  migrarFichasAntigas: function(){
+    return supaLer().then(function(valor){
+      var tarefas = FORM_ORDER.map(function(k){
+        var antigos = (valor && valor[k]) || [];
+        if(!antigos.length) return Promise.resolve(0);
+        var jaTem = {};
+        state.records[k].forEach(function(r){ jaTem[(r.epocaAno||"")+"|"+(r.numeroInscricao||"")+"|"+(r.nomeAtleta||r.atlNome||"")] = true; });
+        var porMigrar = antigos.filter(function(r){
+          return !jaTem[(r.epocaAno||"")+"|"+(r.numeroInscricao||"")+"|"+(r.nomeAtleta||r.atlNome||"")];
+        });
+        var ft = FORM_TYPES[k];
+        return porMigrar.reduce(function(p, rec){
+          return p.then(function(){
+            var row = {
+              epoca_ano: rec.epocaAno || null, numero_inscricao: rec.numeroInscricao || null,
+              status: rec.status || "confirmado", origem: "app", dados: rec
+            };
+            if(rec.createdAt) row.created_at = rec.createdAt;
+            return supaFetch(ft.collection, "POST", row);
+          });
+        }, Promise.resolve()).then(function(){ return porMigrar.length; });
+      });
+      return Promise.all(tarefas);
+    }).then(function(counts){
+      var total = counts.reduce(function(a,b){ return a+b; }, 0);
+      return Promise.all(FORM_ORDER.map(Store.carregarRegistosSupa)).then(function(){
+        renderSidebar();
+        if(state.view.name==="list") renderList(state.view.formKey);
+        if(state.view.name==="home") renderHome();
+        return total;
+      });
+    });
   },
 
   /* ---------- Supabase ---------- */
@@ -2557,14 +2727,15 @@ var Store = {
     try{ var rawDef = window.localStorage.getItem(LS_SETTINGS); if(rawDef) state.settings = JSON.parse(rawDef); }catch(e){}
     applyBranding(); rebuildFormTypes();
 
-    return supaLer().then(function(valor){
-      FORM_ORDER.forEach(function(k){
-        state.records[k] = valor[k] || state.records[k] || [];
-        state.loaded[k] = true;
-      });
-      if(valor.definicoes) state.settings = valor.definicoes;
+    var carregarDefinicoes = supaLer().then(function(valor){
+      if(valor && valor.definicoes) state.settings = valor.definicoes;
       applyBranding();
       rebuildFormTypes();
+      return supaGravarConfigPublica().catch(function(){});
+    });
+    var carregarRegistos = Promise.all(FORM_ORDER.map(Store.carregarRegistosSupa));
+
+    return Promise.all([carregarDefinicoes, carregarRegistos]).then(function(){
       Store.localWrite();
       renderSidebar();
       navTo(state.view.name==="login" ? {name:"home"} : state.view);
