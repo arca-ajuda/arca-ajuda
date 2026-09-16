@@ -270,7 +270,8 @@ button{font-family:inherit;}
 .check-grid{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px 18px;}
 .check-item{display:flex;align-items:center;gap:7px;font-size:13px;}
 .check-item input{width:16px;height:16px;accent-color:var(--type-color,var(--primary));flex:none;}
-.outra-input{margin-left:4px;max-width:220px;}
+.check-item input.outra-input{width:auto;height:auto;margin-left:4px;min-width:150px;max-width:220px;border:1px solid var(--border-strong);border-radius:7px;padding:5px 8px;background:var(--bg);color:var(--ink);font-size:13px;font-family:var(--font-body);}
+.check-item input.outra-input:disabled{opacity:.5;}
 .radio-row{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:16px;}
 .radio-item{display:flex;align-items:center;gap:7px;font-size:13px;}
 .radio-item input{width:16px;height:16px;accent-color:var(--type-color,var(--primary));}
@@ -283,6 +284,46 @@ button{font-family:inherit;}
 .channels{display:flex;flex-wrap:wrap;gap:14px;margin-left:24px;}
 
 .form-actions{display:flex;justify-content:flex-end;gap:10px;padding-top:4px;}
+
+/* ---------- desconto ---------- */
+.field input[type=number]{
+  border:1px solid var(--border-strong);border-radius:8px;padding:8px 10px;background:var(--bg);
+  color:var(--ink);font-size:13.5px;font-family:var(--font-mono);width:100%;
+}
+.desconto-box{
+  grid-column:1/-1;border:1px dashed var(--border-strong);border-radius:10px;padding:12px 14px;
+  background:var(--surface-2);display:flex;flex-direction:column;gap:10px;
+}
+.desconto-head{display:flex;flex-direction:column;gap:3px;}
+.desconto-head .lead{font-size:12.5px;font-weight:700;color:var(--type-color,var(--primary));}
+.desconto-head .hint{font-size:11.5px;color:var(--ink-muted);line-height:1.45;max-width:70ch;}
+.desconto-linhas{display:flex;flex-direction:column;gap:8px;}
+.desc-linha{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;}
+.desc-linha .check-item{font-weight:600;}
+.desc-linha input[type=text]{
+  flex:1;min-width:200px;max-width:360px;border:1px solid var(--border-strong);border-radius:8px;padding:7px 10px;
+  background:var(--bg);color:var(--ink);font-size:13px;font-family:var(--font-body);
+}
+.desc-linha input[type=text]:disabled{opacity:.5;}
+.desconto-total{font-size:13px;padding-top:6px;border-top:1px solid var(--border);}
+.desconto-total .muted{color:var(--ink-muted);font-size:12px;}
+.desconto-total s{color:var(--ink-muted);}
+.desc-sugestoes{display:none;flex-direction:column;gap:6px;}
+.sug{
+  display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:space-between;
+  font-size:12.5px;background:var(--c-socios-bg);color:var(--ink);border-radius:8px;padding:8px 10px;
+}
+.acerto-pill{
+  display:inline-block;margin-left:6px;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;
+  border:1px solid var(--danger);color:var(--danger);background:var(--danger-bg);cursor:pointer;font-family:var(--font-body);
+}
+.cfg-table td{padding:6px 10px;}
+.cfg-table input[type=text]{
+  width:100%;border:1px solid var(--border-strong);border-radius:7px;padding:6px 9px;background:var(--bg);
+  color:var(--ink);font-size:13px;font-family:var(--font-body);
+}
+.cfg-table input[type=checkbox]{width:17px;height:17px;accent-color:var(--primary);}
+.cfg-usada{display:block;font-size:10.5px;color:var(--ink-muted);margin-top:2px;}
 
 /* ---------- list ---------- */
 .list-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
@@ -470,79 +511,159 @@ function autorizacoesSection(quemImagem){
   };
 }
 
-var FORM_TYPES = {
-  criancas: {
-    key:"criancas", label:"Crianças", singular:"Ficha de Inscrição — Crianças",
-    collection:"registos_criancas", colorVar:"--c-criancas", bgVar:"--c-criancas-bg",
-    subtitle:"Atletismo, Ballet, Capoeira, Judo, Teatro, Contemporâneo e outras modalidades.",
-    fees:true,
-    sections:[
-      {title:"Inscrição", fields:[
-        {id:"tipoInscricao", label:"Tipo de inscrição", type:"radio", required:true,
-          options:["Renovação (15€)","Nova inscrição (22€)"]},
-        {id:"epocaAno", label:"Época / ano letivo", type:"text", placeholder:"2026/2027", required:true},
-        {id:"numeroInscricao", label:"Nº inscrição", type:"text", placeholder:"atribuído automaticamente", readonly:true},
-        {id:"modalidade", label:"Modalidade", type:"modalidades", required:true,
-          options:["Atletismo (crianças)","Ballet (crianças)","Capoeira (crianças)","Contemporâneo","Judo (crianças)","Orientação (crianças)","Teatro (criança)"]},
-        {id:"_n1", type:"static", text:"Nota: aulas de 45 minutos.", full:true}
-      ]},
-      {title:"Dados do atleta", fields: IDENTITY_FIELDS_WITH_ENC},
-      {title:"Dados do encarregado de educação", fields: identityFields("enc", {nomeLabel:"Nome do encarregado de educação", profissao:true, telefoneFixo:true, telReq:true, emailReq:true})},
-      autorizacoesSection("aluno"),
-      {title:"Assinatura", fields:[
-        {id:"quemAssina", label:"Assina como", type:"radio", required:true, options:["Pai","Mãe","Tutor"]},
-        {id:"nomeAssinatura", label:"Nome (assinatura)", type:"text", required:true, span:2},
-        {id:"dataAssinatura", label:"Data", type:"date", required:true, today:true}
-      ]}
-    ]
-  },
-  adultos: {
-    key:"adultos", label:"Adultos", singular:"Ficha de Inscrição — Adultos",
-    collection:"registos_adultos", colorVar:"--c-adultos", bgVar:"--c-adultos-bg",
-    subtitle:"Capoeira, Dança, Krav Maga, Qi Gong, Salsation, workshops e formações.",
-    fees:true,
-    sections:[
-      {title:"Inscrição", fields:[
-        {id:"tipoInscricao", label:"Tipo de inscrição", type:"radio", required:true,
-          options:["Renovação (15€)","Nova inscrição (22€)"]},
-        {id:"epocaAno", label:"Época / ano letivo", type:"text", placeholder:"2026/2027", required:true},
-        {id:"numeroInscricao", label:"Nº inscrição", type:"text", placeholder:"atribuído automaticamente", readonly:true},
-        {id:"modalidade", label:"Modalidade", type:"modalidades", required:true,
-          options:["Capoeira (Adulto)","Dança (Adulto)","Krav Maga (Adultos)","Qi Gong (Adulto)","Salsation (Adulto)","Workshop / Formação","Formação"]},
-        {id:"_n1", type:"static", text:"Nota: aulas de 45 minutos.", full:true}
-      ]},
-      {title:"Dados do atleta", fields: identityFields("atl", {profissao:true, telefoneFixo:true, telReq:true, emailReq:true})},
-      autorizacoesSection("aluno"),
-      {title:"Assinatura", fields:[
-        {id:"nomeAssinatura", label:"Nome (assinatura)", type:"text", required:true, span:2},
-        {id:"dataAssinatura", label:"Data", type:"date", required:true, today:true}
-      ]}
-    ]
-  },
-  socios: {
-    key:"socios", label:"Sócio Atleta", singular:"Ficha de Inscrição — Sócio Atleta (Atletismo / Voleibol / Futebol)",
-    collection:"registos_socios_atletas", colorVar:"--c-socios", bgVar:"--c-socios-bg",
-    subtitle:"Atletismo, Voleibol, Motocross, Orientação e Futebol.",
-    fees:false,
-    sections:[
-      {title:"Inscrição", fields:[
-        {id:"epocaAno", label:"Época / ano letivo", type:"text", placeholder:"2026/2027", required:true},
-        {id:"numeroInscricao", label:"Nº inscrição / sócio", type:"text", placeholder:"atribuído automaticamente", readonly:true},
-        {id:"modalidade", label:"Modalidade", type:"modalidades", required:true,
-          options:["Atletismo","Voleibol","Motocross","Orientação","Futebol"]}
-      ]},
-      {title:"Dados do atleta", fields: identityFields("atl", {profissao:true, telemovelSos:true, telReq:true, emailReq:true})},
-      {title:"Regalias de sócio", fields:[
-        {id:"_nota", type:"static", text:NOTA_SOCIO, full:true}
-      ]},
-      autorizacoesSection("atleta"),
-      {title:"Assinatura", fields:[
-        {id:"nomeAssinatura", label:"Nome (assinatura)", type:"text", required:true, span:2},
-        {id:"dataAssinatura", label:"Data", type:"date", required:true, today:true}
-      ]}
-    ]
-  }
+/* ============================================================
+   CONFIGURAÇÃO EDITÁVEL (Definições → Fichas de inscrição)
+   Tudo o que aqui está pode ser alterado na aplicação; estes são
+   apenas os valores iniciais.
+   ============================================================ */
+var CONFIG_PREDEFINIDA = {
+  epoca: "2026/2027",
+  precoNova: 22,
+  precoRenov: 15,
+  desconto: 2.5,
+  textoDesconto: "Desconto na inscrição para quem tem irmão/irmã inscrito(a) na ARCA ou frequenta mais do que uma atividade. Aplica-se uma vez por ficha (não é acumulável).",
+  notaAulas: "Nota: aulas de 45 minutos.",
+  atividades: [
+    {nome:"Atletismo",           criancas:true,  adultos:false, socios:true},
+    {nome:"Ballet",              criancas:true,  adultos:false, socios:false},
+    {nome:"Capoeira",            criancas:true,  adultos:true,  socios:false},
+    {nome:"Contemporâneo",       criancas:true,  adultos:false, socios:false},
+    {nome:"Judo",                criancas:true,  adultos:false, socios:false},
+    {nome:"Orientação",          criancas:true,  adultos:false, socios:true},
+    {nome:"Teatro",              criancas:true,  adultos:false, socios:false},
+    {nome:"Dança",               criancas:false, adultos:true,  socios:false},
+    {nome:"Krav Maga",           criancas:false, adultos:true,  socios:false},
+    {nome:"Qi Gong",             criancas:false, adultos:true,  socios:false},
+    {nome:"Salsation",           criancas:false, adultos:true,  socios:false},
+    {nome:"Workshop / Formação", criancas:false, adultos:true,  socios:false},
+    {nome:"Voleibol",            criancas:false, adultos:false, socios:true},
+    {nome:"Motocross",           criancas:false, adultos:false, socios:true},
+    {nome:"Futebol",             criancas:false, adultos:false, socios:true}
+  ]
 };
+
+function numOr(v, d){ var n = parseFloat(String(v===undefined||v===null? "" : v).replace(",", ".")); return isNaN(n) ? d : n; }
+function fmtEuro(n){
+  n = numOr(n, 0);
+  var s = (Math.round(n*100)/100).toFixed(2).replace(".", ",");
+  if(s.slice(-3)===",00") s = s.slice(0,-3);
+  return s + "€";
+}
+
+/* Configuração em vigor: predefinida + o que estiver guardado nas definições */
+function getConfig(){
+  var c = (state && state.settings && state.settings.config) || {};
+  var out = {
+    epoca: (c.epoca || CONFIG_PREDEFINIDA.epoca),
+    precoNova: numOr(c.precoNova, CONFIG_PREDEFINIDA.precoNova),
+    precoRenov: numOr(c.precoRenov, CONFIG_PREDEFINIDA.precoRenov),
+    desconto: numOr(c.desconto, CONFIG_PREDEFINIDA.desconto),
+    textoDesconto: (c.textoDesconto!==undefined ? c.textoDesconto : CONFIG_PREDEFINIDA.textoDesconto),
+    notaAulas: (c.notaAulas!==undefined ? c.notaAulas : CONFIG_PREDEFINIDA.notaAulas),
+    atividades: Array.isArray(c.atividades) ? c.atividades : CONFIG_PREDEFINIDA.atividades
+  };
+  out.atividades = out.atividades.map(function(a){
+    return {nome:String(a.nome||"").trim(), criancas:!!a.criancas, adultos:!!a.adultos, socios:!!a.socios};
+  }).filter(function(a){ return a.nome; });
+  return out;
+}
+function atividadesPara(formKey){
+  return getConfig().atividades.filter(function(a){ return a[formKey]; }).map(function(a){ return a.nome; });
+}
+function opcoesTipoInscricao(){
+  var c = getConfig();
+  return ["Renovação ("+fmtEuro(c.precoRenov)+")", "Nova inscrição ("+fmtEuro(c.precoNova)+")"];
+}
+/* Preço base a partir do texto guardado na ficha (funciona também com fichas antigas) */
+function precoBaseDe(tipoInscricao){
+  var c = getConfig();
+  var t = String(tipoInscricao||"").toLowerCase();
+  if(!t) return null;
+  var m = t.match(/\(([\d.,]+)\s*€\)/);
+  if(m) return numOr(m[1], null);
+  if(t.indexOf("renov")===0) return c.precoRenov;
+  if(t.indexOf("nova")===0) return c.precoNova;
+  return null;
+}
+function temDesconto(rec){ return !!(rec && (rec.descIrmao || rec.descOutra)); }
+function calcularValores(rec){
+  var c = getConfig();
+  var base = precoBaseDe(rec.tipoInscricao);
+  var desc = temDesconto(rec) ? c.desconto : 0;
+  if(base===null) return {base:null, desconto:desc, pagar:null};
+  return {base:base, desconto:desc, pagar:Math.max(0, Math.round((base-desc)*100)/100)};
+}
+
+var FORM_TYPES = {};
+function rebuildFormTypes(){
+  var c = getConfig();
+  var listaTxt = function(key){ var l = atividadesPara(key); return l.length ? l.join(", ") + "." : "Sem atividades configuradas."; };
+  var secInscricao = function(key, comTaxas){
+    var f = [];
+    if(comTaxas) f.push({id:"tipoInscricao", label:"Tipo de inscrição", type:"radio", required:true, options:opcoesTipoInscricao()});
+    f.push({id:"epocaAno", label:"Época / ano letivo", type:"text", placeholder:c.epoca, defaultValue:c.epoca, required:true});
+    f.push({id:"numeroInscricao", label: key==="socios" ? "Nº inscrição / sócio" : "Nº inscrição", type:"text", placeholder:"atribuído automaticamente", readonly:true});
+    f.push({id:"modalidade", label:"Modalidade (uma ficha por modalidade)", type:"modalidades", single:true, required:true, options:atividadesPara(key)});
+    if(comTaxas){
+      f.push({id:"desconto", label:"Desconto", type:"desconto"});
+      if(c.notaAulas) f.push({id:"_n1", type:"static", text:c.notaAulas, full:true});
+    }
+    return {title:"Inscrição", fields:f};
+  };
+  FORM_TYPES = {
+    criancas: {
+      key:"criancas", label:"Crianças", singular:"Ficha de Inscrição — Crianças",
+      collection:"registos_criancas", colorVar:"--c-criancas", bgVar:"--c-criancas-bg",
+      subtitle: listaTxt("criancas"),
+      fees:true,
+      sections:[
+        secInscricao("criancas", true),
+        {title:"Dados do atleta", fields: IDENTITY_FIELDS_WITH_ENC},
+        {title:"Dados do encarregado de educação", fields: identityFields("enc", {nomeLabel:"Nome do encarregado de educação", profissao:true, telefoneFixo:true, telReq:true, emailReq:true})},
+        autorizacoesSection("aluno"),
+        {title:"Assinatura", fields:[
+          {id:"quemAssina", label:"Assina como", type:"radio", required:true, options:["Pai","Mãe","Tutor"]},
+          {id:"nomeAssinatura", label:"Nome (assinatura)", type:"text", required:true, span:2},
+          {id:"dataAssinatura", label:"Data", type:"date", required:true, today:true}
+        ]}
+      ]
+    },
+    adultos: {
+      key:"adultos", label:"Adultos", singular:"Ficha de Inscrição — Adultos",
+      collection:"registos_adultos", colorVar:"--c-adultos", bgVar:"--c-adultos-bg",
+      subtitle: listaTxt("adultos"),
+      fees:true,
+      sections:[
+        secInscricao("adultos", true),
+        {title:"Dados do atleta", fields: identityFields("atl", {profissao:true, telefoneFixo:true, telReq:true, emailReq:true})},
+        autorizacoesSection("aluno"),
+        {title:"Assinatura", fields:[
+          {id:"nomeAssinatura", label:"Nome (assinatura)", type:"text", required:true, span:2},
+          {id:"dataAssinatura", label:"Data", type:"date", required:true, today:true}
+        ]}
+      ]
+    },
+    socios: {
+      key:"socios", label:"Sócio Atleta", singular:"Ficha de Inscrição — Sócio Atleta",
+      collection:"registos_socios_atletas", colorVar:"--c-socios", bgVar:"--c-socios-bg",
+      subtitle: listaTxt("socios"),
+      fees:false,
+      sections:[
+        secInscricao("socios", false),
+        {title:"Dados do atleta", fields: identityFields("atl", {profissao:true, telemovelSos:true, telReq:true, emailReq:true})},
+        {title:"Regalias de sócio", fields:[
+          {id:"_nota", type:"static", text:NOTA_SOCIO, full:true}
+        ]},
+        autorizacoesSection("atleta"),
+        {title:"Assinatura", fields:[
+          {id:"nomeAssinatura", label:"Nome (assinatura)", type:"text", required:true, span:2},
+          {id:"dataAssinatura", label:"Data", type:"date", required:true, today:true}
+        ]}
+      ]
+    }
+  };
+  return FORM_TYPES;
+}
 var FORM_ORDER = ["criancas","adultos","socios"];
 
 /* ============================================================
@@ -559,6 +680,7 @@ var state = {
   loaded: {criancas:false, adultos:false, socios:false},
   search: {criancas:"", adultos:"", socios:""}
 };
+rebuildFormTypes();
 
 /* ============================================================
    UTIL
@@ -642,7 +764,7 @@ function renderSidebar(){
   html += '</div></div>';
 
   html += '<div><div class="nav-group-label">Aplicação</div><div class="nav-list">'
-    + '<button class="nav-btn '+(v.name==="settings"?"active":"")+'" data-nav="settings">⚙ Definições e logótipo</button>'
+    + '<button class="nav-btn '+(v.name==="settings"?"active":"")+'" data-nav="settings">⚙ Definições</button>'
     + (state.storeMode==="supa" ? '<button class="nav-btn" id="sairBtn">⇥ Sair da conta</button>' : '')
     + '</div></div>';
 
@@ -746,17 +868,40 @@ function fieldHtml(formType, field, values){
   if(field.type==="modalidades"){
     var sel = values[field.id+"__opts"] || [];
     var outraVal = values[field.id+"__outra"] || "";
+    var tipoInput = field.single ? "radio" : "checkbox";
+    // uma ficha antiga pode ter uma modalidade que já não está na lista: mantém-se visível
+    var opcoes = field.options.slice();
+    sel.forEach(function(o){ if(opcoes.indexOf(o)<0) opcoes.push(o); });
     var out2 = '<div class="check-grid" data-field="'+field.id+'">'
       + '<div style="flex-basis:100%;font-size:11.5px;font-weight:600;color:var(--ink-muted);">'+esc(field.label)+reqMark+'</div>'
-      + field.options.map(function(o){
+      + (opcoes.length ? "" : '<div style="flex-basis:100%;font-size:12px;color:var(--danger);">Sem atividades configuradas para esta ficha — adiciona-as em Definições.</div>')
+      + opcoes.map(function(o){
           var c = sel.indexOf(o)>-1 ? "checked":"";
-          return '<label class="check-item"><input type="checkbox" name="'+field.id+'__opt" value="'+esc(o)+'" '+c+'> '+esc(o)+'</label>';
+          return '<label class="check-item"><input type="'+tipoInput+'" name="'+field.id+'__opt" value="'+esc(o)+'" '+c+'> '+esc(o)+'</label>';
         }).join("")
-      + '<label class="check-item"><input type="checkbox" name="'+field.id+'__hasOutra" '+(outraVal? "checked":"")+' data-outra-toggle="'+field.id+'"> Outra'
+      + '<label class="check-item"><input type="'+tipoInput+'" name="'+(field.single? field.id+'__opt' : field.id+'__hasOutra')+'" value="__outra__" '+(outraVal? "checked":"")+' data-outra-toggle="'+field.id+'"> Outra'
       + '<input type="text" class="outra-input" name="'+field.id+'__outraText" placeholder="qual?" value="'+esc(outraVal)+'" '+(outraVal? "":"disabled")+'>'
       + '</label>'
       + '</div>';
     return out2;
+  }
+
+  if(field.type==="desconto"){
+    var cfg = getConfig();
+    var irmao = !!values.descIrmao, outra = !!values.descOutra;
+    return '<div class="desconto-box" data-field="desconto" id="descontoBox">'
+      + '<div class="desconto-head"><span class="lead">Desconto de '+esc(fmtEuro(cfg.desconto))+' na inscrição'+'</span>'
+      + (cfg.textoDesconto ? '<span class="hint">'+esc(cfg.textoDesconto)+'</span>' : '')
+      + '</div>'
+      + '<div id="descSugestoes" class="desc-sugestoes"></div>'
+      + '<div class="desconto-linhas">'
+      + '<div class="desc-linha"><label class="check-item"><input type="checkbox" name="descIrmao" '+(irmao?"checked":"")+'> Tem irmão/irmã inscrito(a) na ARCA</label>'
+      + '<input type="text" name="descIrmaoNome" placeholder="nome ou nº de inscrição do irmão/irmã" value="'+esc(values.descIrmaoNome)+'" '+(irmao?"":"disabled")+'></div>'
+      + '<div class="desc-linha"><label class="check-item"><input type="checkbox" name="descOutra" '+(outra?"checked":"")+'> Já está inscrito(a) noutra atividade da ARCA</label>'
+      + '<input type="text" name="descOutraQual" placeholder="qual atividade / nº de inscrição" value="'+esc(values.descOutraQual)+'" '+(outra?"":"disabled")+'></div>'
+      + '</div>'
+      + '<div class="desconto-total" id="descontoTotal"></div>'
+      + '</div>';
   }
 
   // text / tel / email / date
@@ -779,7 +924,7 @@ function renderForm(formKey, editRecord){
   html += '<div class="form-header" style="--type-color:var('+ft.colorVar+');--type-bg:var('+ft.bgVar+');">'
     + '<div><span class="badge">'+ (isEdit? "A editar":"Nova inscrição") +'</span><h2>'+esc(ft.singular)+'</h2></div>'
     + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">'
-    + (ft.fees? '<div class="fees">Renovação 15€ · Nova inscrição 22€</div>' : '')
+    + (ft.fees? '<div class="fees">'+esc(feesTexto())+'</div>' : '')
     + '<button type="button" class="btn btn-ghost btn-sm" data-blank="'+formKey+'">🖶 Ficha em branco</button>'
     + '</div></div>';
 
@@ -792,6 +937,7 @@ function renderForm(formKey, editRecord){
     sec.fields.forEach(function(f){
       var v = Object.assign({}, values);
       if(f.today && !v[f.id]) v[f.id] = todayISO();
+      if(f.defaultValue && !isEdit && !v[f.id]) v[f.id] = f.defaultValue;
       html += fieldHtml(ft, f, v);
     });
     html += '</div></div>';
@@ -805,19 +951,144 @@ function renderForm(formKey, editRecord){
 
   document.getElementById("app").innerHTML = html;
 
-  document.querySelectorAll('[data-outra-toggle]').forEach(function(cb){
-    cb.addEventListener("change", function(){
-      var wrap = cb.closest(".check-item");
-      var txt = wrap.querySelector('input[type=text]');
-      txt.disabled = !cb.checked;
-      if(!cb.checked) txt.value="";
+  var formEl = document.getElementById("regForm");
+
+  // "Outra" modalidade: com escolha única (radio) o campo de texto liga/desliga
+  // conforme a opção selecionada no grupo
+  formEl.querySelectorAll('input[name="modalidade__opt"], [data-outra-toggle]').forEach(function(inp){
+    inp.addEventListener("change", function(){
+      var grid = inp.closest(".check-grid"); if(!grid) return;
+      var toggle = grid.querySelector('[data-outra-toggle]');
+      var txt = grid.querySelector('input[type=text]');
+      if(!toggle || !txt) return;
+      txt.disabled = !toggle.checked;
+      if(!toggle.checked) txt.value=""; else if(inp===toggle) txt.focus();
     });
   });
 
-  document.getElementById("regForm").addEventListener("submit", function(e){
+  if(ft.fees){
+    ligarDesconto(formKey, formEl, isEdit ? editRecord.id : null);
+  }
+
+  formEl.addEventListener("submit", function(e){
     e.preventDefault();
     handleSubmitForm(formKey, e.target);
   });
+}
+
+function feesTexto(){
+  var c = getConfig();
+  return "Renovação " + fmtEuro(c.precoRenov) + " · Nova inscrição " + fmtEuro(c.precoNova)
+    + " · Desconto irmão / 2ª atividade " + fmtEuro(c.desconto);
+}
+
+/* ---------- Desconto: caixas, total ao vivo e deteção automática ---------- */
+function normTxt(s){
+  return String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g," ").trim();
+}
+function normDigits(s){ return String(s||"").replace(/\D/g,""); }
+function nomeAtletaDe(rec){ return rec.nomeAtleta || rec.atlNome || ""; }
+function modalidadeDe(rec){
+  var sel = (rec.modalidade__opts||[]).slice();
+  if(rec.modalidade__outra) sel.push(rec.modalidade__outra);
+  return sel.join(", ");
+}
+function nifAtletaDe(rec){ return normDigits(rec.nifAtleta || rec.atlNif); }
+
+/* Procura nas fichas guardadas (crianças e adultos) fichas do mesmo atleta
+   e fichas de irmãos (mesmo encarregado de educação). */
+function procurarRelacionadas(formKey, dados, excluirId){
+  var nome = normTxt(dados.nomeAtleta || dados.atlNome);
+  var nif = normDigits(dados.nifAtleta || dados.atlNif);
+  var encNif = normDigits(dados.encNif), encEmail = normTxt(dados.encEmail), encTel = normDigits(dados.encTelemovel);
+  var encNome = normTxt(dados.encNome);
+  var mesmoAtleta = [], irmaos = [];
+  ["criancas","adultos"].forEach(function(k){
+    state.records[k].forEach(function(r){
+      if(excluirId && r.id===excluirId) return;
+      var rNome = normTxt(nomeAtletaDe(r)), rNif = nifAtletaDe(r);
+      var igualAtleta = (nif && rNif && nif===rNif) || (nome && nome.length>5 && rNome===nome);
+      if(igualAtleta){ mesmoAtleta.push({key:k, rec:r}); return; }
+      if(k!=="criancas") return;
+      var rEncNif = normDigits(r.encNif), rEncEmail = normTxt(r.encEmail), rEncTel = normDigits(r.encTelemovel), rEncNome = normTxt(r.encNome);
+      var mesmoEnc = (encNif && rEncNif && encNif===rEncNif)
+        || (encEmail && rEncEmail && encEmail===rEncEmail)
+        || (encTel && rEncTel && encTel.length>=9 && encTel===rEncTel)
+        || (encNome && encNome.length>8 && rEncNome===encNome);
+      if(mesmoEnc && rNome && rNome!==nome) irmaos.push({key:k, rec:r});
+    });
+  });
+  return {mesmoAtleta:mesmoAtleta, irmaos:irmaos};
+}
+
+function ligarDesconto(formKey, formEl, editId){
+  var cfg = getConfig();
+  var cbIrmao = formEl.querySelector('input[name="descIrmao"]');
+  var cbOutra = formEl.querySelector('input[name="descOutra"]');
+  var txtIrmao = formEl.querySelector('input[name="descIrmaoNome"]');
+  var txtOutra = formEl.querySelector('input[name="descOutraQual"]');
+  var totalEl = document.getElementById("descontoTotal");
+  var sugEl = document.getElementById("descSugestoes");
+  if(!cbIrmao || !cbOutra) return;
+
+  function atualizarTotal(){
+    var tipo = formEl.querySelector('input[name="tipoInscricao"]:checked');
+    var rec = {tipoInscricao: tipo? tipo.value : "", descIrmao: cbIrmao.checked, descOutra: cbOutra.checked};
+    var v = calcularValores(rec);
+    txtIrmao.disabled = !cbIrmao.checked; if(!cbIrmao.checked) txtIrmao.value = "";
+    txtOutra.disabled = !cbOutra.checked; if(!cbOutra.checked) txtOutra.value = "";
+    if(v.base===null){
+      totalEl.innerHTML = '<span class="muted">Escolhe o tipo de inscrição para ver o valor a pagar.</span>';
+      return;
+    }
+    if(v.desconto>0){
+      totalEl.innerHTML = 'Valor a pagar: <s>'+esc(fmtEuro(v.base))+'</s> − '+esc(fmtEuro(v.desconto))+' de desconto = <b>'+esc(fmtEuro(v.pagar))+'</b>';
+    } else {
+      totalEl.innerHTML = 'Valor a pagar: <b>'+esc(fmtEuro(v.base))+'</b>';
+    }
+  }
+
+  var sugTimer = null;
+  function atualizarSugestoes(){
+    if(sugTimer) clearTimeout(sugTimer);
+    sugTimer = setTimeout(function(){
+      var dados = {};
+      formEl.querySelectorAll('input[type=text],input[type=tel],input[type=email]').forEach(function(i){ if(i.name) dados[i.name] = i.value; });
+      var rel = procurarRelacionadas(formKey, dados, editId);
+      var html = "";
+      rel.mesmoAtleta.slice(0,3).forEach(function(m){
+        html += '<div class="sug"><span>Já existe uma ficha de <b>'+esc(nomeAtletaDe(m.rec))+'</b> — '+esc(modalidadeDe(m.rec)||"sem modalidade")
+          + (m.rec.numeroInscricao? ' (nº '+esc(m.rec.numeroInscricao)+')':'')+(m.rec.epocaAno? ', época '+esc(m.rec.epocaAno):'')+'.</span>'
+          + (cbOutra.checked ? '' : '<button type="button" class="btn btn-ghost btn-sm" data-sug="outra" data-txt="'+esc((modalidadeDe(m.rec)||"")+(m.rec.numeroInscricao? " (nº "+m.rec.numeroInscricao+")":""))+'">Marcar desconto (outra atividade)</button>')
+          + '</div>';
+      });
+      rel.irmaos.slice(0,3).forEach(function(m){
+        html += '<div class="sug"><span>Mesmo encarregado de educação: <b>'+esc(nomeAtletaDe(m.rec))+'</b> — '+esc(modalidadeDe(m.rec)||"sem modalidade")
+          + (m.rec.numeroInscricao? ' (nº '+esc(m.rec.numeroInscricao)+')':'')+'. Será irmão/irmã?</span>'
+          + (cbIrmao.checked ? '' : '<button type="button" class="btn btn-ghost btn-sm" data-sug="irmao" data-txt="'+esc(nomeAtletaDe(m.rec)+(m.rec.numeroInscricao? " (nº "+m.rec.numeroInscricao+")":""))+'">Marcar desconto (irmão)</button>')
+          + '</div>';
+      });
+      sugEl.innerHTML = html;
+      sugEl.style.display = html ? "flex" : "none";
+    }, 350);
+  }
+
+  formEl.addEventListener("change", function(e){
+    if(e.target.name==="tipoInscricao" || e.target.name==="descIrmao" || e.target.name==="descOutra"){ atualizarTotal(); atualizarSugestoes(); }
+  });
+  formEl.addEventListener("input", function(e){
+    var n = e.target.name || "";
+    if(/^(nomeAtleta|nifAtleta|atlNome|atlNif|encNome|encNif|encEmail|encTelemovel)$/.test(n)) atualizarSugestoes();
+  });
+  sugEl.addEventListener("click", function(e){
+    var b = e.target.closest("[data-sug]"); if(!b) return;
+    if(b.getAttribute("data-sug")==="irmao"){ cbIrmao.checked = true; txtIrmao.disabled = false; txtIrmao.value = b.getAttribute("data-txt")||""; }
+    else { cbOutra.checked = true; txtOutra.disabled = false; txtOutra.value = b.getAttribute("data-txt")||""; }
+    atualizarTotal(); atualizarSugestoes();
+  });
+
+  atualizarTotal();
+  atualizarSugestoes();
 }
 
 function collectFormData(formType, formEl){
@@ -844,12 +1115,25 @@ function collectFormData(formType, formEl){
     }
     if(f.type==="modalidades"){
       var opts = [];
-      formEl.querySelectorAll('input[name="'+f.id+'__opt"]:checked').forEach(function(c){ opts.push(c.value); });
-      var outraChecked = formEl.querySelector('input[name="'+f.id+'__hasOutra"]').checked;
+      formEl.querySelectorAll('input[name="'+f.id+'__opt"]:checked').forEach(function(c){ if(c.value!=="__outra__") opts.push(c.value); });
+      var outraEl = formEl.querySelector('[data-outra-toggle="'+f.id+'"]');
+      var outraChecked = !!(outraEl && outraEl.checked);
       var outraText = formEl.querySelector('input[name="'+f.id+'__outraText"]').value.trim();
       data[f.id+"__opts"] = opts;
       data[f.id+"__outra"] = outraChecked ? outraText : "";
       if(f.required && opts.length===0 && !(outraChecked && outraText)) missing.push(f.id);
+      return;
+    }
+    if(f.type==="desconto"){
+      var ci = formEl.querySelector('input[name="descIrmao"]'), co = formEl.querySelector('input[name="descOutra"]');
+      data.descIrmao = !!(ci && ci.checked);
+      data.descOutra = !!(co && co.checked);
+      data.descIrmaoNome = data.descIrmao ? (formEl.querySelector('input[name="descIrmaoNome"]').value.trim()) : "";
+      data.descOutraQual = data.descOutra ? (formEl.querySelector('input[name="descOutraQual"]').value.trim()) : "";
+      // valores fixados no momento da gravação (se os preços mudarem depois, a ficha mantém o que foi cobrado)
+      var tipoEl = formEl.querySelector('input[name="tipoInscricao"]:checked');
+      var vals = calcularValores({tipoInscricao: tipoEl? tipoEl.value:"", descIrmao:data.descIrmao, descOutra:data.descOutra});
+      data.valorBase = vals.base; data.valorDesconto = vals.desconto; data.valorPagar = vals.pagar;
       return;
     }
     var input = formEl.querySelector('[name="'+f.id+'"]');
@@ -896,11 +1180,30 @@ function handleSubmitForm(formKey, formEl){
     });
   }
   promise.then(function(newId){
-    navTo({name:"saved", formKey:formKey, id: editId || newId, novo: !editId});
+    var acertos = [];
+    if(!editId && payload.descIrmao) acertos = marcarAcertoIrmaos(formKey, payload, newId);
+    navTo({name:"saved", formKey:formKey, id: editId || newId, novo: !editId, acertos: acertos});
   }).catch(function(err){
     btn.disabled = false; btn.textContent = editId? "Guardar alterações":"Guardar inscrição";
     alertBanner("Não foi possível guardar: " + (err && err.message ? err.message : "erro desconhecido") + ". Tenta novamente.");
   });
+}
+
+/* Quando o 2.º irmão se inscreve, a ficha do 1.º (paga sem desconto) fica
+   assinalada com um acerto pendente, para o professor regularizar. */
+function marcarAcertoIrmaos(formKey, payload, novoId){
+  var cfg = getConfig();
+  var rel = procurarRelacionadas(formKey, payload, novoId);
+  var marcados = [];
+  rel.irmaos.forEach(function(m){
+    var r = m.rec;
+    if(temDesconto(r) || r.acertoPendente) return;
+    if((r.epocaAno||"") !== (payload.epocaAno||"")) return; // só na mesma época
+    var acerto = {valor: cfg.desconto, motivo: "irmão inscrito depois: " + nomeAtletaDe(payload), em: new Date().toISOString()};
+    Store.update(m.key, r.id, {acertoPendente: acerto}).catch(function(){});
+    marcados.push({key:m.key, nome:nomeAtletaDe(r), numero:r.numeroInscricao||"", valor:cfg.desconto});
+  });
+  return marcados;
 }
 
 function alertBanner(msg){
@@ -936,7 +1239,18 @@ function renderSaved(formKey, id){
         ? '<p style="margin:10px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-muted);">Nº de inscrição atribuído</p>'
           + '<p class="mono tabular" style="margin:0 0 10px;font-size:34px;font-weight:700;color:var('+ft.colorVar+');">'+esc(rec.numeroInscricao)+'</p>'
         : '')
-    + '<p style="color:var(--ink-muted);margin:8px 0 14px;">Ficha de '+esc(ft.label.toLowerCase())+(rec && rec.epocaAno? ' · época '+esc(rec.epocaAno):'')+'.</p>'
+    + '<p style="color:var(--ink-muted);margin:8px 0 14px;">Ficha de '+esc(ft.label.toLowerCase())+(rec && rec.epocaAno? ' · época '+esc(rec.epocaAno):'')
+    + (rec && rec.modalidade__opts && rec.modalidade__opts.length ? ' · '+esc(modalidadeDe(rec)) : '')+'.</p>'
+    + (rec && ft.fees && rec.valorPagar!==undefined && rec.valorPagar!==null
+        ? '<p style="margin:0 0 14px;font-size:14px;">Valor a pagar: <b>'+esc(fmtEuro(rec.valorPagar))+'</b>'
+          + (rec.valorDesconto>0 ? ' <span style="color:var(--ink-muted);">(inclui desconto de '+esc(fmtEuro(rec.valorDesconto))+(rec.descIrmao? ' — irmão/irmã inscrito(a)' : ' — outra atividade')+')</span>' : '')
+          + '</p>'
+        : '')
+    + ((state.view.acertos||[]).length
+        ? '<div class="status-banner warn" style="text-align:left;margin:0 auto 14px;max-width:560px;"><span class="pulse"></span> <span>'
+          + (state.view.acertos||[]).map(function(a){ return 'A ficha de <b>'+esc(a.nome)+'</b>'+(a.numero? ' (nº '+esc(a.numero)+')':'')+' foi paga sem desconto — acerto de '+esc(fmtEuro(a.valor))+' pendente. Está assinalada na lista de registos.'; }).join("<br>")
+          + '</span></div>'
+        : '')
     + driveLinha
     + '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">'
     + '<button class="btn btn-primary" data-print="'+formKey+'" data-id="'+esc(id||"")+'">Ver / imprimir ficha</button>'
@@ -977,6 +1291,7 @@ function tableColumnsFor(formKey){
     {h:"Atleta", f:"nomeAtleta"},
     {h:"Nasc.", f:"dataNascAtleta", date:true},
     {h:"Modalidade", f:"modalidade"},
+    {h:"Valor", f:"valor"},
     {h:"Enc. educação", f:"encNome"},
     {h:"Telemóvel", f:"encTelemovel"},
     {h:"Registado", f:"createdAt", dt:true}
@@ -986,6 +1301,7 @@ function tableColumnsFor(formKey){
     {h:"Atleta", f:"atlNome"},
     {h:"Nasc.", f:"atlDataNasc", date:true},
     {h:"Modalidade", f:"modalidade"},
+    {h:"Valor", f:"valor"},
     {h:"Telemóvel", f:"atlTelemovel"},
     {h:"E-mail", f:"atlEmail"},
     {h:"Registado", f:"createdAt", dt:true}
@@ -1000,7 +1316,18 @@ function tableColumnsFor(formKey){
     {h:"Registado", f:"createdAt", dt:true}
   ];
 }
+function valorTexto(rec){
+  if(rec.valorPagar===undefined || rec.valorPagar===null){
+    var b = precoBaseDe(rec.tipoInscricao);
+    return b===null ? "—" : fmtEuro(b);
+  }
+  var t = fmtEuro(rec.valorPagar);
+  if(rec.valorDesconto>0) t += " (c/ desc.)";
+  if(rec.acertoPendente) t += " · acerto " + fmtEuro(rec.acertoPendente.valor) + " pendente";
+  return t;
+}
 function cellValue(rec, col){
+  if(col.f==="valor") return valorTexto(rec);
   if(col.f==="modalidade"){
     var sel = (rec.modalidade__opts||[]).slice();
     if(rec.modalidade__outra) sel.push(rec.modalidade__outra);
@@ -1048,6 +1375,11 @@ function renderList(formKey){
       cols.forEach(function(c){
         if(c.editable){
           html += '<td><input class="num-input" data-inline-edit="'+c.f+'" data-id="'+esc(r.id)+'" value="'+esc(r[c.f]||"")+'"></td>';
+        } else if(c.f==="valor"){
+          var vt = (r.valorPagar===undefined||r.valorPagar===null) ? valorTexto(r) : fmtEuro(r.valorPagar) + (r.valorDesconto>0 ? " (c/ desc.)" : "");
+          html += '<td class="mono tabular" style="white-space:nowrap;">'+esc(vt)
+            + (r.acertoPendente ? ' <button type="button" class="acerto-pill" data-acerto="'+formKey+'" data-id="'+esc(r.id)+'" title="'+esc(r.acertoPendente.motivo||"")+' — clica para marcar como regularizado">Acerto '+esc(fmtEuro(r.acertoPendente.valor))+' ✓?</button>' : '')
+            + '</td>';
         } else {
           html += '<td class="'+(c.date||c.dt?"mono tabular":"")+'">'+esc(cellValue(r,c))+'</td>';
         }
@@ -1145,6 +1477,21 @@ function buildPrintSheet(formKey, rec){
         rowsHtml += '<div class="ps-note">'+esc(f.text)+'</div>';
         return;
       }
+      if(f.type==="desconto"){
+        var vv = (rec.valorPagar!==undefined && rec.valorPagar!==null)
+          ? {base:rec.valorBase, desconto:rec.valorDesconto||0, pagar:rec.valorPagar}
+          : calcularValores(rec);
+        rowsHtml += '<div class="ps-item" style="grid-column:1/-1;"><b>Desconto:</b> '
+          + (rec.descIrmao ? '☑ irmão/irmã inscrito(a)'+(rec.descIrmaoNome? ' ('+esc(rec.descIrmaoNome)+')':'') : '☐ irmão/irmã inscrito(a)')
+          + ' &nbsp; ' + (rec.descOutra ? '☑ inscrito(a) noutra atividade'+(rec.descOutraQual? ' ('+esc(rec.descOutraQual)+')':'') : '☐ inscrito(a) noutra atividade')
+          + '</div>';
+        if(vv.pagar!==null && vv.pagar!==undefined){
+          rowsHtml += '<div class="ps-item" style="grid-column:1/-1;font-size:12.5px;"><b>Valor a pagar:</b> '
+            + (vv.desconto>0 ? esc(fmtEuro(vv.base))+' − '+esc(fmtEuro(vv.desconto))+' = <b>'+esc(fmtEuro(vv.pagar))+'</b>' : '<b>'+esc(fmtEuro(vv.pagar))+'</b>')
+            + '</div>';
+        }
+        return;
+      }
       if(f.id==="numeroInscricao" || f.id==="epocaAno") return; // no cabeçalho
       if(f.id==="nomeAssinatura" || f.id==="dataAssinatura") return; // no bloco de assinatura
       if(f.type==="modalidades"){
@@ -1187,7 +1534,9 @@ function buildBlankSheet(formKey){
     + '<div class="ps-row" style="font-size:11px;margin-top:4px;align-items:flex-end;">'
     + '<div>Época / ano letivo: 20____ / 20____</div>'
     + '<div>Nº inscrição atleta/sócio ARCA: __________ <i style="font-size:9px;">(atribuído no secretariado)</i></div>'
-    + '</div></div>';
+    + '</div>'
+    + (ft.fees ? '<div style="font-size:10px;margin-top:3px;color:#444;">'+esc(feesTexto())+'</div>' : '')
+    + '</div>';
 
   ft.sections.forEach(function(sec){
     var rows = "";
@@ -1200,6 +1549,14 @@ function buildBlankSheet(formKey){
         rows += '<div class="ps-boxes"><span class="lead">'+esc(f.label)+':</span>'
           + f.options.map(function(o){ return '<span>☐ '+esc(o)+'</span>'; }).join("")
           + '<span style="flex:1;min-width:150px;">☐ Outra: ______________________</span></div>';
+        return;
+      }
+      if(f.type==="desconto"){
+        var cfgB = getConfig();
+        rows += '<div class="ps-boxes"><span class="lead">Desconto de '+esc(fmtEuro(cfgB.desconto))+' (não acumulável):</span>'
+          + '<span>☐ Tem irmão/irmã inscrito(a) na ARCA — nome/nº: ____________________</span>'
+          + '<span>☐ Já está inscrito(a) noutra atividade — qual: ____________________</span>'
+          + '<span style="flex-basis:100%;">Valor a pagar: __________ €</span></div>';
         return;
       }
       if(f.type==="radio"){
@@ -1415,6 +1772,8 @@ function loadSettings(){
     state.db.doc("definicoes/geral").onSnapshot(function(snap){
       state.settings = snap.exists ? Object.assign({logo:null}, snap.data()) : {logo:null};
       applyBranding();
+      rebuildFormTypes();
+      if(state.view.name==="home") renderHome();
       if(state.view.name==="settings") renderSettings();
     }, function(){});
     return;
@@ -1424,11 +1783,13 @@ function loadSettings(){
     if(raw) state.settings = JSON.parse(raw);
   }catch(e){}
   applyBranding();
+  rebuildFormTypes();
 }
 
 function saveSettings(patch){
   state.settings = Object.assign({}, state.settings, patch);
   applyBranding();
+  rebuildFormTypes();
   if(state.storeMode==="cloud"){
     return state.db.doc("definicoes/geral").set(state.settings);
   }
@@ -1517,6 +1878,8 @@ function renderSettings(){
         : '')
     + '</div>';
 
+  html += renderConfigFichasHtml();
+
   html += '<div class="section"><h3>Cópia de segurança</h3>'
     + '<p style="margin:0 0 14px;color:var(--ink-muted);font-size:12.5px;max-width:60ch;">Guarda um ficheiro com todas as fichas registadas, ou repõe fichas a partir de um ficheiro guardado anteriormente.</p>'
     + '<div style="display:flex;gap:10px;flex-wrap:wrap;">'
@@ -1551,6 +1914,8 @@ function renderSettings(){
   var bk = document.getElementById("backupBtn");
   if(bk) bk.addEventListener("click", function(){ Store.exportBackup(); });
 
+  ligarConfigFichas();
+
   var driveSave = document.getElementById("driveSaveBtn");
   if(driveSave) driveSave.addEventListener("click", function(){
     var pasta = document.getElementById("driveFolder").value.trim();
@@ -1563,6 +1928,171 @@ function renderSettings(){
       driveSave.disabled = false; driveSave.textContent = "Guardar definições da Drive";
       alertBanner("Não foi possível guardar: " + (err.message||"erro"));
     });
+  });
+}
+
+/* ============================================================
+   DEFINIÇÕES → FICHAS DE INSCRIÇÃO (época, preços, desconto, atividades)
+   ============================================================ */
+var configRascunho = null; // cópia em edição, até carregar em "Guardar"
+
+function contarFichasComAtividade(nome){
+  var n = 0;
+  FORM_ORDER.forEach(function(k){
+    state.records[k].forEach(function(r){ if((r.modalidade__opts||[]).indexOf(nome)>-1) n++; });
+  });
+  return n;
+}
+
+function renderConfigFichasHtml(){
+  var c = configRascunho || getConfig();
+  var numInput = function(id, label, val, step){
+    return '<div class="field"><label>'+esc(label)+'</label><input type="number" min="0" step="'+(step||"0.5")+'" id="'+id+'" value="'+esc(String(val))+'"></div>';
+  };
+  var html = '<div class="section" id="cfgFichas"><h3>Fichas de inscrição</h3>'
+    + '<p style="margin:0 0 14px;color:var(--ink-muted);font-size:12.5px;max-width:64ch;">'
+    + 'Tudo o que está aqui entra em vigor nas fichas novas assim que carregares em <b>Guardar</b>'
+    + (state.storeMode==="supa" || state.storeMode==="cloud" ? ', em todos os dispositivos que abram a aplicação.' : ' neste dispositivo.')
+    + ' As fichas já guardadas mantêm os valores e a modalidade com que foram registadas.</p>'
+    + '<div class="field-grid" style="max-width:760px;">'
+    + '<div class="field"><label>Época / ano letivo (valor por defeito)</label><input type="text" id="cfgEpoca" value="'+esc(c.epoca)+'" placeholder="2026/2027"></div>'
+    + numInput("cfgPrecoNova", "Nova inscrição (€)", c.precoNova)
+    + numInput("cfgPrecoRenov", "Renovação (€)", c.precoRenov)
+    + numInput("cfgDesconto", "Desconto irmão / 2.ª atividade (€)", c.desconto)
+    + '<div class="field span2"><label>Texto do desconto (aparece na ficha)</label><textarea id="cfgTextoDesconto" rows="2">'+esc(c.textoDesconto)+'</textarea></div>'
+    + '<div class="field span2"><label>Nota nas fichas de Crianças e Adultos (vazio = sem nota)</label><input type="text" id="cfgNota" value="'+esc(c.notaAulas)+'"></div>'
+    + '</div>';
+
+  html += '<h4 style="margin:22px 0 8px;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);">Atividades / modalidades</h4>'
+    + '<p style="margin:0 0 10px;color:var(--ink-muted);font-size:12.5px;max-width:64ch;">Marca em que fichas cada atividade aparece. Uma atividade pode estar em mais do que uma ficha.</p>'
+    + '<div class="table-wrap" style="max-width:760px;"><table class="cfg-table" style="min-width:520px;"><thead><tr>'
+    + '<th style="width:44%;">Atividade</th><th>Crianças</th><th>Adultos</th><th>Sócio Atleta</th><th></th></tr></thead><tbody id="cfgAtivBody">';
+  c.atividades.forEach(function(a, i){
+    var usada = contarFichasComAtividade(a.nome);
+    html += '<tr data-idx="'+i+'">'
+      + '<td><input type="text" class="cfg-nome" value="'+esc(a.nome)+'" placeholder="nome da atividade">'
+      + (usada ? '<span class="cfg-usada">'+usada+' ficha'+(usada>1?'s':'')+'</span>' : '') + '</td>'
+      + '<td style="text-align:center;"><input type="checkbox" class="cfg-chk" data-k="criancas" '+(a.criancas?"checked":"")+'></td>'
+      + '<td style="text-align:center;"><input type="checkbox" class="cfg-chk" data-k="adultos" '+(a.adultos?"checked":"")+'></td>'
+      + '<td style="text-align:center;"><input type="checkbox" class="cfg-chk" data-k="socios" '+(a.socios?"checked":"")+'></td>'
+      + '<td class="row-actions" style="justify-content:flex-end;">'
+      + '<button type="button" class="btn btn-ghost btn-sm" data-cfg-move="-1" title="Subir">↑</button>'
+      + '<button type="button" class="btn btn-ghost btn-sm" data-cfg-move="1" title="Descer">↓</button>'
+      + '<button type="button" class="btn btn-danger btn-sm" data-cfg-del="1">Remover</button>'
+      + '</td></tr>';
+  });
+  html += '</tbody></table></div>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;">'
+    + '<button type="button" class="btn btn-ghost" id="cfgAddBtn">+ Adicionar atividade</button>'
+    + '<span style="flex:1;"></span>'
+    + '<button type="button" class="btn btn-ghost" id="cfgResetBtn">Repor valores iniciais</button>'
+    + '<button type="button" class="btn btn-primary" id="cfgSaveBtn">Guardar fichas de inscrição</button>'
+    + '</div>'
+    + '<div id="cfgMsg" style="font-size:12px;margin-top:8px;color:var(--ink-muted);"></div>'
+    + '</div>';
+  return html;
+}
+
+function lerConfigDoEcra(){
+  var atividades = [];
+  document.querySelectorAll('#cfgAtivBody tr').forEach(function(tr){
+    var nome = tr.querySelector('.cfg-nome').value.trim();
+    var a = {nome:nome, criancas:false, adultos:false, socios:false};
+    tr.querySelectorAll('.cfg-chk').forEach(function(ch){ a[ch.getAttribute("data-k")] = ch.checked; });
+    atividades.push(a);
+  });
+  return {
+    epoca: document.getElementById("cfgEpoca").value.trim(),
+    precoNova: numOr(document.getElementById("cfgPrecoNova").value, CONFIG_PREDEFINIDA.precoNova),
+    precoRenov: numOr(document.getElementById("cfgPrecoRenov").value, CONFIG_PREDEFINIDA.precoRenov),
+    desconto: numOr(document.getElementById("cfgDesconto").value, CONFIG_PREDEFINIDA.desconto),
+    textoDesconto: document.getElementById("cfgTextoDesconto").value.trim(),
+    notaAulas: document.getElementById("cfgNota").value.trim(),
+    atividades: atividades
+  };
+}
+
+function redesenharConfig(){
+  var sec = document.getElementById("cfgFichas");
+  if(!sec) return;
+  var tmp = document.createElement("div");
+  tmp.innerHTML = renderConfigFichasHtml();
+  sec.replaceWith(tmp.firstChild);
+  ligarConfigFichas();
+}
+
+function ligarConfigFichas(){
+  var sec = document.getElementById("cfgFichas");
+  if(!sec) return;
+
+  sec.addEventListener("click", function(e){
+    var mv = e.target.closest("[data-cfg-move]");
+    if(mv){
+      configRascunho = lerConfigDoEcra();
+      var tr = mv.closest("tr"), i = parseInt(tr.getAttribute("data-idx"),10), d = parseInt(mv.getAttribute("data-cfg-move"),10);
+      var j = i + d;
+      if(j<0 || j>=configRascunho.atividades.length) return;
+      var t = configRascunho.atividades[i]; configRascunho.atividades[i] = configRascunho.atividades[j]; configRascunho.atividades[j] = t;
+      redesenharConfig();
+      return;
+    }
+    var del = e.target.closest("[data-cfg-del]");
+    if(del){
+      var trd = del.closest("tr"), idx = parseInt(trd.getAttribute("data-idx"),10);
+      var nome = trd.querySelector('.cfg-nome').value.trim();
+      var usada = contarFichasComAtividade(nome);
+      if(usada && del.getAttribute("data-armed")!=="1"){
+        del.setAttribute("data-armed","1");
+        del.textContent = "Usada em "+usada+" ficha"+(usada>1?"s":"")+" — remover?";
+        setTimeout(function(){ if(del.isConnected){ del.removeAttribute("data-armed"); del.textContent="Remover"; } }, 4000);
+        return;
+      }
+      configRascunho = lerConfigDoEcra();
+      configRascunho.atividades.splice(idx,1);
+      redesenharConfig();
+      return;
+    }
+    if(e.target.id==="cfgAddBtn"){
+      configRascunho = lerConfigDoEcra();
+      configRascunho.atividades.push({nome:"", criancas:false, adultos:false, socios:false});
+      redesenharConfig();
+      var inputs = document.querySelectorAll('#cfgAtivBody .cfg-nome');
+      if(inputs.length) inputs[inputs.length-1].focus();
+      return;
+    }
+    if(e.target.id==="cfgResetBtn"){
+      if(e.target.getAttribute("data-armed")!=="1"){
+        e.target.setAttribute("data-armed","1"); e.target.textContent = "Confirmar reposição?";
+        var rb = e.target;
+        setTimeout(function(){ if(rb.isConnected){ rb.removeAttribute("data-armed"); rb.textContent = "Repor valores iniciais"; } }, 4000);
+        return;
+      }
+      configRascunho = JSON.parse(JSON.stringify(CONFIG_PREDEFINIDA));
+      redesenharConfig();
+      return;
+    }
+    if(e.target.id==="cfgSaveBtn"){
+      var btn = e.target, msg = document.getElementById("cfgMsg");
+      var cfg = lerConfigDoEcra();
+      cfg.atividades = cfg.atividades.filter(function(a){ return a.nome; });
+      // nomes repetidos
+      var vistos = {}, dup = null;
+      cfg.atividades.forEach(function(a){ var k = normTxt(a.nome); if(vistos[k]) dup = a.nome; vistos[k] = true; });
+      if(dup){ msg.style.color = "var(--danger)"; msg.textContent = 'A atividade "'+dup+'" está repetida.'; return; }
+      if(!cfg.epoca){ msg.style.color = "var(--danger)"; msg.textContent = "Indica a época / ano letivo."; return; }
+      btn.disabled = true; btn.textContent = "A guardar…";
+      saveSettings({config: cfg}).then(function(){
+        configRascunho = null;
+        btn.textContent = "Guardado ✓";
+        msg.style.color = "var(--c-socios)";
+        msg.textContent = "Fichas atualizadas. As próximas fichas já usam estes valores e atividades.";
+        setTimeout(function(){ if(state.view.name==="settings") renderSettings(); }, 1200);
+      }).catch(function(err){
+        btn.disabled = false; btn.textContent = "Guardar fichas de inscrição";
+        msg.style.color = "var(--danger)"; msg.textContent = "Não foi possível guardar: " + (err.message||"erro");
+      });
+      return;
+    }
   });
 }
 
@@ -1615,6 +2145,7 @@ function sairDaConta(){
    NAVIGATION / RENDER DISPATCH
    ============================================================ */
 function navTo(view){
+  if(view.name!=="settings") configRascunho = null;
   state.view = view;
   renderSidebar();
   if(view.name==="home") renderHome();
@@ -1654,6 +2185,19 @@ document.addEventListener("click", function(e){
       driveBtn.disabled = false; driveBtn.textContent = oldTxt;
       alertBanner(driveErroTexto(err));
     });
+    return;
+  }
+  var acertoBtn = e.target.closest("[data-acerto]");
+  if(acertoBtn){
+    if(acertoBtn.getAttribute("data-armed")==="1"){
+      var ak = acertoBtn.getAttribute("data-acerto"), aid = acertoBtn.getAttribute("data-id");
+      var arec = state.records[ak].filter(function(r){ return r.id===aid; })[0];
+      var hist = (arec && arec.acertoPendente) ? Object.assign({}, arec.acertoPendente, {regularizadoEm:new Date().toISOString()}) : null;
+      Store.update(ak, aid, {acertoPendente:null, acertoRegularizado:hist}).catch(function(err){ alertBanner("Não foi possível atualizar: "+err.message); });
+    } else {
+      acertoBtn.setAttribute("data-armed","1"); acertoBtn.textContent = "Regularizado?";
+      setTimeout(function(){ if(acertoBtn.isConnected){ acertoBtn.removeAttribute("data-armed"); renderList(state.view.formKey); } }, 3000);
+    }
     return;
   }
   var delBtn = e.target.closest("[data-del]");
@@ -1905,6 +2449,8 @@ var Store = {
     // mostra já o que estiver guardado neste dispositivo, para abrir depressa
     var localData = Store.localRead();
     FORM_ORDER.forEach(function(k){ state.records[k] = localData[k] || []; });
+    try{ var rawDef = window.localStorage.getItem(LS_SETTINGS); if(rawDef) state.settings = JSON.parse(rawDef); }catch(e){}
+    applyBranding(); rebuildFormTypes();
 
     return supaLer().then(function(valor){
       FORM_ORDER.forEach(function(k){
@@ -1913,6 +2459,7 @@ var Store = {
       });
       if(valor.definicoes) state.settings = valor.definicoes;
       applyBranding();
+      rebuildFormTypes();
       Store.localWrite();
       renderSidebar();
       navTo(state.view.name==="login" ? {name:"home"} : state.view);
@@ -1963,7 +2510,8 @@ var Store = {
       exportadoEm: new Date().toISOString(),
       criancas: state.records.criancas,
       adultos: state.records.adultos,
-      socios: state.records.socios
+      socios: state.records.socios,
+      definicoes: {config: getConfig(), driveFolderId: state.settings.driveFolderId, driveAtivo: state.settings.driveAtivo}
     };
     Downloader.save("arca_copia_seguranca_"+todayISO()+".json", JSON.stringify(payload,null,2), "application/json");
   },
@@ -1984,6 +2532,9 @@ var Store = {
           state.records[k].sort(function(a,b){ return (b.createdAt||"").localeCompare(a.createdAt||""); });
         });
         Store.localWrite();
+        if(parsed.definicoes && parsed.definicoes.config && !state.settings.config){
+          saveSettings({config: parsed.definicoes.config}).catch(function(){});
+        }
         renderSidebar();
         navTo({name:"home"});
         alertBanner(added + " ficha(s) importadas da cópia de segurança.");
