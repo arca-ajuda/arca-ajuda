@@ -536,7 +536,8 @@ function toast(msg, ok=true){
 }
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+// Nota: propositadamente NÃO fecha ao clicar fora da caixa — um clique sem querer (ex: a selecionar texto)
+// já apagou formulários a meio de preencher. Fecha-se só pelo botão × ou "Cancelar".
 function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 async function supaAuthLogin(email, password){
