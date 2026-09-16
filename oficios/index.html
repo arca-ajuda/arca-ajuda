@@ -91,6 +91,9 @@ tbody tr:hover td{background:#F5F9FF}
 .badge-rascunho{background:var(--bg3);color:var(--text-2)}
 .badge-enviado{background:var(--teal-l);color:var(--teal-d)}
 .empty-state{text-align:center;padding:40px 20px;color:var(--text-3);font-size:13px}
+mark{background:var(--amber-l);color:var(--amber-d);border-radius:3px;padding:0 2px;font-weight:700}
+.snippet{font-size:11.5px;color:var(--text-2);margin-top:3px;line-height:1.4;white-space:normal}
+.snippet b{color:var(--text-3);font-weight:600}
 .inner-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .inner-tab{--c:#A995D2;padding:9px 16px;font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;border-radius:9px;border:none;color:#2B3440;background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 55%,#fff) 100%);box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .inner-tab:nth-child(2){--c:#83BEDD}.inner-tab:nth-child(3){--c:#7CCBB9}.inner-tab:nth-child(4){--c:#E9A27A}
@@ -207,7 +210,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!import
         <option value="rascunho">Rascunho</option>
         <option value="enviado">Enviado</option>
       </select>
-      <input type="text" class="filter-input" id="f-busca" placeholder="Pesquisar nº, destinatário, assunto..." oninput="renderOficios()">
+      <input type="date" class="filter-input" id="f-data-de" onchange="renderOficios()" style="min-width:0" title="De (data do ofício)">
+      <span style="color:var(--text-3);font-size:12px">até</span>
+      <input type="date" class="filter-input" id="f-data-ate" onchange="renderOficios()" style="min-width:0" title="Até (data do ofício)">
+      <input type="text" class="filter-input" id="f-busca" placeholder="Pesquisar nº, destinatário, assunto, texto do ofício, assinante..." oninput="renderOficios()" style="flex:1">
       <span class="contador" id="f-contagem">0 ofícios</span>
     </div>
     <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap" id="tabela-oficios"><div class="empty-state">Nenhum ofício encontrado. Carrega em "+ Novo Ofício" para criar.</div></div></div>
@@ -793,16 +799,36 @@ function fmtNum(o){
   return (diaChave(o.data)||o.ano||'—')+'/'+String(o.seq).padStart(2,'0');
 }
 function fmtData(d){ return d ? new Date(d+'T12:00:00').toLocaleDateString('pt-PT') : '—'; }
+function escRe(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+function highlight(text, termo){
+  const t = esc(text||'');
+  if(!termo) return t;
+  return t.replace(new RegExp('('+escRe(termo)+')','ig'), '<mark>$1</mark>');
+}
+function snippet(texto, termo, raio){
+  if(!termo || !texto) return '';
+  const i = texto.toLowerCase().indexOf(termo);
+  if(i<0) return '';
+  const r = raio||50;
+  const ini = Math.max(0, i-r), fim = Math.min(texto.length, i+termo.length+r);
+  let s = texto.slice(ini, fim).trim();
+  if(ini>0) s = '…'+s;
+  if(fim<texto.length) s = s+'…';
+  return `<div class="snippet"><b>no texto:</b> ${highlight(s, termo)}</div>`;
+}
 function renderOficios(){
   const fA=document.getElementById('f-ano').value, fT=document.getElementById('f-tipo').value, fE=document.getElementById('f-estado').value;
-  const fB=(document.getElementById('f-busca').value||'').toLowerCase();
+  const fDe=document.getElementById('f-data-de').value, fAte=document.getElementById('f-data-ate').value;
+  const fB=(document.getElementById('f-busca').value||'').trim().toLowerCase();
   const todos=soOficios(); let list=[...todos];
   if(fA) list=list.filter(o=>String(o.ano)===fA);
   if(fT) list=list.filter(o=>o.tipo===fT);
   if(fE) list=list.filter(o=>(o.estado||'rascunho')===fE);
-  if(fB) list=list.filter(o=>fmtNum(o).includes(fB)||(o.dest||'').toLowerCase().includes(fB)||(o.assunto||'').toLowerCase().includes(fB)||(o.notas||'').toLowerCase().includes(fB));
+  if(fDe) list=list.filter(o=>(o.data||'')>=fDe);
+  if(fAte) list=list.filter(o=>(o.data||'')<=fAte);
+  if(fB) list=list.filter(o=>fmtNum(o).toLowerCase().includes(fB)||(o.dest||'').toLowerCase().includes(fB)||(o.assunto||'').toLowerCase().includes(fB)||(o.corpo||'').toLowerCase().includes(fB)||(o.assinante||'').toLowerCase().includes(fB)||(o.notas||'').toLowerCase().includes(fB));
   const cont=document.getElementById('f-contagem');
-  cont.textContent = (fA||fT||fE||fB) ? `${list.length} de ${todos.length}` : `${todos.length} ofícios`;
+  cont.textContent = (fA||fT||fE||fDe||fAte||fB) ? `${list.length} de ${todos.length}` : `${todos.length} ofícios`;
   // métricas
   const anoAtual=new Date().getFullYear();
   const esteAno=todos.filter(o=>o.ano===anoAtual);
@@ -812,13 +838,17 @@ function renderOficios(){
     <div class="metric-card"><div class="metric-label">Rascunhos</div><div class="metric-value" style="color:var(--amber-d)">${todos.filter(o=>(o.estado||'rascunho')==='rascunho').length}</div></div>
     <div class="metric-card"><div class="metric-label">Enviados</div><div class="metric-value" style="color:#4A3F86">${todos.filter(o=>o.estado==='enviado').length}</div></div>`;
   const el=document.getElementById('tabela-oficios');
-  if(!list.length){ el.innerHTML='<div class="empty-state">Nenhum ofício encontrado. Carrega em "+ Novo Ofício" para criar.</div>'; return; }
-  el.innerHTML=`<table><thead><tr><th>Nº</th><th>Data</th><th>Tipo</th><th>Destinatário</th><th>Assunto</th><th>Estado</th><th></th></tr></thead><tbody>${list.map(o=>`<tr>
-    <td style="font-weight:700;color:var(--navy);white-space:nowrap">${fmtNum(o)}</td>
+  if(!list.length){ el.innerHTML=`<div class="empty-state">${(fA||fT||fE||fDe||fAte||fB)?'Nenhum ofício corresponde à pesquisa.':'Nenhum ofício encontrado. Carrega em "+ Novo Ofício" para criar.'}</div>`; return; }
+  el.innerHTML=`<table><thead><tr><th>Nº</th><th>Data</th><th>Tipo</th><th>Destinatário</th><th>Assunto</th><th>Estado</th><th></th></tr></thead><tbody>${list.map(o=>{
+    const destPrimeira=(o.dest||'—').split(/\n/)[0];
+    const assuntoOuCorpoBatem = fB && ((o.assunto||'').toLowerCase().includes(fB) || (o.dest||'').toLowerCase().includes(fB) || fmtNum(o).toLowerCase().includes(fB));
+    const trechoCorpo = (fB && !assuntoOuCorpoBatem) ? snippet(o.corpo||'', fB, 45) : '';
+    return `<tr>
+    <td style="font-weight:700;color:var(--navy);white-space:nowrap">${highlight(fmtNum(o),fB)}</td>
     <td style="white-space:nowrap;font-size:12px">${fmtData(o.data)}</td>
     <td><span class="badge badge-tipo">${esc(modelos[o.tipo]?.label||o.tipo||'—')}</span></td>
-    <td style="font-size:12.5px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(o.dest)}">${esc((o.dest||'—').split(/\n/)[0])}</td>
-    <td style="font-size:12.5px;color:var(--text-2);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(o.assunto)}">${esc(o.assunto||'—')}</td>
+    <td style="font-size:12.5px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(o.dest)}">${highlight(destPrimeira,fB)}</td>
+    <td style="font-size:12.5px;color:var(--text-2);max-width:260px" title="${esc(o.assunto)}"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${highlight(o.assunto||'—',fB)}</div>${trechoCorpo}</td>
     <td><span class="badge ${o.estado==='enviado'?'badge-enviado':'badge-rascunho'}">${o.estado==='enviado'?'Enviado':'Rascunho'}</span></td>
     <td><div class="td-actions">
       <button class="btn-edit" onclick="openModalOficio(${o.id})" title="Editar">✏</button>
@@ -827,7 +857,8 @@ function renderOficios(){
       <button class="btn-edit" onclick="duplicarOficio(${o.id})" title="Duplicar">⧉</button>
       <button class="btn-edit" style="color:var(--coral-d)" onclick="deleteOficio(${o.id})" title="Eliminar">🗑</button>
     </div></td>
-  </tr>`).join('')}</tbody></table>`;
+  </tr>`;
+  }).join('')}</tbody></table>`;
 }
 function exportarCSV(cat){
   const prot = cat==='protocolo';
