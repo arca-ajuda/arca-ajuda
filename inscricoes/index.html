@@ -132,7 +132,7 @@ button{font-family:inherit;}
 .logo-preview .empty{font-size:11px;color:#8a948a;text-align:center;padding:6px;}
 .file-btn{position:relative;overflow:hidden;display:inline-flex;}
 .file-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0;}
-.ps-logo{max-height:52px;max-width:170px;object-fit:contain;display:block;margin-bottom:4px;}
+.ps-logo{max-height:38px;max-width:120px;object-fit:contain;display:block;}
 .topbar .titles{display:flex;flex-direction:column;gap:1px;min-width:0;}
 .topbar h1{font-size:20px;color:#fff;line-height:1.1;}
 .topbar .sub{font-size:11.5px;color:#cfe4d6;letter-spacing:.02em;}
@@ -369,6 +369,7 @@ tbody tr:hover{background:var(--surface-2);}
 .ps-row h4{font-size:16px;line-height:1.1;}
 .ps-hd{border-bottom:2px solid #161616;padding-bottom:5px;margin-bottom:8px;}
 .ps-badge{display:inline-block;font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;border:1px solid #161616;border-radius:20px;padding:1px 8px;margin-bottom:3px;}
+.ps-brand{display:flex;align-items:center;gap:9px;}
 .ps-sec{margin-top:5px;}
 .ps-sec h5{font-size:10px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #999;padding-bottom:2px;margin:0 0 4px;}
 .ps-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 16px;}
@@ -925,6 +926,7 @@ function renderForm(formKey, editRecord){
   html += '<div class="form-header" style="--type-color:var('+ft.colorVar+');--type-bg:var('+ft.bgVar+');">'
     + '<div><span class="badge">'+ (isEdit? "A editar":"Nova inscrição") +'</span><h2>'+esc(ft.singular)+'</h2>'
     + (notaAulasTxt ? '<p style="margin:2px 0 0;font-size:11.5px;color:var(--ink-muted);">'+esc(notaAulasTxt)+'</p>' : '')
+    + (formKey==="socios" && !isEdit ? '<p style="margin:2px 0 0;font-size:11.5px;color:var(--ink-muted);">Ao guardar, cria-se automaticamente o sócio na plataforma de sócios (ou reaproveita-se o nº existente, se o NIF já lá estiver) — o nº atribuído é o nº de sócio.</p>' : '')
     + '</div>'
     + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">'
     + (ft.fees? '<div class="fees">'+esc(feesTexto())+'</div>' : '')
@@ -1173,6 +1175,31 @@ function handleSubmitForm(formKey, formEl){
   if(editId){
     payload.updatedAt = new Date().toISOString();
     promise = Store.update(formKey, editId, payload).then(function(){ return editId; });
+  } else if(formKey==="socios"){
+    // O nº de inscrição do Sócio Atleta É o nº de sócio: cria (ou reaproveita)
+    // o sócio diretamente na plataforma de sócios, na mesma base de dados.
+    btn.textContent = "A criar sócio na plataforma de sócios…";
+    payload.createdAt = new Date().toISOString();
+    promise = sincronizarSocioAtleta(payload).then(function(info){
+      payload.numeroInscricao = String(info.num);
+      payload.socioNum = info.num;
+      payload.socioReaproveitado = !!info.reaproveitado;
+      payload.socioSyncFalhou = false;
+      btn.textContent = "A guardar…";
+      return Store.add(formKey, payload);
+    }).catch(function(err){
+      // não bloqueia a inscrição: guarda com um número provisório local
+      // e assinala para regularizar mais tarde
+      console.warn("sync sócio falhou", err);
+      payload.socioSyncFalhou = true;
+      payload.socioSyncErro = (err && err.message) ? err.message : "erro desconhecido";
+      btn.textContent = "A atribuir número provisório…";
+      return assignNumero(payload.epocaAno).then(function(numero){
+        payload.numeroInscricao = numero;
+        btn.textContent = "A guardar…";
+        return Store.add(formKey, payload);
+      });
+    });
   } else {
     payload.createdAt = new Date().toISOString();
     btn.textContent = "A atribuir número…";
@@ -1189,6 +1216,47 @@ function handleSubmitForm(formKey, formEl){
   }).catch(function(err){
     btn.disabled = false; btn.textContent = editId? "Guardar alterações":"Guardar inscrição";
     alertBanner("Não foi possível guardar: " + (err && err.message ? err.message : "erro desconhecido") + ". Tenta novamente.");
+  });
+}
+
+/* ============================================================
+   LIGAÇÃO COM A PLATAFORMA DE SÓCIOS (mesma base de dados Supabase,
+   tabela "socios"). Uma ficha de Sócio Atleta cria — ou, se o NIF já
+   existir, reaproveita — um registo lá, com tipo "ATLETA".
+   ============================================================ */
+function socioEncontradoPorNif(nif){
+  if(!nif) return Promise.resolve(null);
+  return supaFetch("socios?nif=eq." + encodeURIComponent(nif) + "&select=num,nome&limit=1")
+    .then(function(rows){ return (rows && rows.length) ? rows[0] : null; });
+}
+function proximoNumSocio(){
+  return supaFetch("socios?select=num&order=num.desc&limit=1").then(function(rows){
+    var maior = (rows && rows.length && rows[0].num) ? parseInt(rows[0].num, 10) : 0;
+    return (isNaN(maior) ? 0 : maior) + 1;
+  });
+}
+function sincronizarSocioAtleta(payload){
+  if(state.storeMode !== "supa"){
+    return Promise.reject(new Error("Sincronização com a plataforma de sócios só está disponível na versão online."));
+  }
+  var nif = normDigits(payload.atlNif);
+  return socioEncontradoPorNif(nif).then(function(existente){
+    if(existente){
+      return {num: existente.num, reaproveitado: true, nomeExistente: existente.nome};
+    }
+    return proximoNumSocio().then(function(num){
+      var row = {
+        num: num, nome: payload.atlNome || "", sexo: null, nif: nif || null, tipo: "ATLETA",
+        data_inscricao: todayISO(), data_pagamento: null, periodo_quota: null, validade_quota: null,
+        estado: "ATIVO", tel: payload.atlTelemovel || null, morada: payload.atlMorada || null,
+        cp: payload.atlCodPostal || null, email: payload.atlEmail || null, quota: null,
+        situacao: "EM DIA", obs: "Criado automaticamente pela ficha de inscrição (Sócio Atleta).",
+        isento: false, aceita_email: false, aceita_sms: false
+      };
+      return supaFetch("socios", "POST", row).then(function(){
+        return {num: num, reaproveitado: false};
+      });
+    });
   });
 }
 
@@ -1239,8 +1307,18 @@ function renderSaved(formKey, id){
   var html = '<div class="section" style="--type-color:var('+ft.colorVar+');text-align:center;padding:34px 20px;">'
     + '<h2 style="color:var('+ft.colorVar+');font-size:22px;">Inscrição guardada</h2>'
     + (rec && rec.numeroInscricao
-        ? '<p style="margin:10px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-muted);">Nº de inscrição atribuído</p>'
+        ? '<p style="margin:10px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-muted);">'+(formKey==="socios"?"Nº de sócio atribuído":"Nº de inscrição atribuído")+'</p>'
           + '<p class="mono tabular" style="margin:0 0 10px;font-size:34px;font-weight:700;color:var('+ft.colorVar+');">'+esc(rec.numeroInscricao)+'</p>'
+        : '')
+    + (rec && formKey==="socios" && rec.socioReaproveitado
+        ? '<p style="margin:0 0 14px;font-size:13px;color:var(--ink-muted);">Este NIF já tinha sócio registado — foi reaproveitado o número existente na plataforma de sócios.</p>'
+        : '')
+    + (rec && formKey==="socios" && !rec.socioReaproveitado && !rec.socioSyncFalhou
+        ? '<p style="margin:0 0 14px;font-size:13px;color:var(--ink-muted);">Sócio criado automaticamente na plataforma de sócios (tipo Atleta).</p>'
+        : '')
+    + (rec && formKey==="socios" && rec.socioSyncFalhou
+        ? '<div class="status-banner warn" style="text-align:left;margin:0 auto 14px;max-width:560px;"><span class="pulse"></span> <span>Não foi possível criar o sócio na plataforma de sócios ('+esc(rec.socioSyncErro||"erro")+'). O número acima é provisório, só desta ficha — '
+          + '<button type="button" class="btn btn-ghost btn-sm" data-socio-retry="'+formKey+'" data-id="'+esc(id||"")+'" style="margin-left:4px;">Tentar criar sócio novamente</button></span></div>'
         : '')
     + '<p style="color:var(--ink-muted);margin:8px 0 14px;">Ficha de '+esc(ft.label.toLowerCase())+(rec && rec.epocaAno? ' · época '+esc(rec.epocaAno):'')
     + (rec && rec.modalidade__opts && rec.modalidade__opts.length ? ' · '+esc(modalidadeDe(rec)) : '')+'.</p>'
@@ -1466,7 +1544,7 @@ function handleDeleteClick(btn, formKey, id){
 function buildPrintSheet(formKey, rec){
   var ft = FORM_TYPES[formKey];
   var logoHtml = state.settings.logo ? '<img class="ps-logo" src="'+esc(state.settings.logo)+'" alt="">' : '';
-  var html = '<div class="ps-hd"><div class="ps-row"><div>'+logoHtml+'<h4>ASSOCIAÇÃO RECREATIVA E CULTURAL DA AJUDA</h4></div>'
+  var html = '<div class="ps-hd"><div class="ps-row"><div class="ps-brand">'+logoHtml+'<h4>ASSOCIAÇÃO RECREATIVA E CULTURAL DA AJUDA</h4></div>'
     + '<div style="text-align:right;font-size:10px;">NIPC 510 144 012<br>IBAN PT50 0036 0319 9910 0012 552 74</div></div>'
     + '<div class="ps-badge">'+esc(ft.singular)+'</div>'
     + '<div style="font-size:10.5px;">Época: <b>'+esc(rec.epocaAno||"—")+'</b>'
@@ -1533,7 +1611,7 @@ function buildBlankSheet(formKey){
   var DATE_LINE = '<span class="ps-dateline">___ ___ / ___ ___ / ___ ___ ___ ___</span>';
 
   var logoHtml = state.settings.logo ? '<img class="ps-logo" src="'+esc(state.settings.logo)+'" alt="">' : '';
-  var html = '<div class="ps-hd"><div class="ps-row"><div>'+logoHtml+'<h4>ASSOCIAÇÃO RECREATIVA E CULTURAL DA AJUDA</h4></div>'
+  var html = '<div class="ps-hd"><div class="ps-row"><div class="ps-brand">'+logoHtml+'<h4>ASSOCIAÇÃO RECREATIVA E CULTURAL DA AJUDA</h4></div>'
     + '<div style="text-align:right;font-size:10px;">NIPC 510 144 012<br>IBAN PT50 0036 0319 9910 0012 552 74</div></div>'
     + '<div class="ps-badge">'+esc(ft.singular)+'</div>'
     + '<div class="ps-row" style="font-size:11px;margin-top:4px;align-items:flex-end;">'
@@ -1625,7 +1703,7 @@ var SHEET_CSS = '@page{size:A4;margin:12mm 10mm;}'
   + '.ps-note{font-size:9px;line-height:1.28;color:#444;margin-top:4px;white-space:pre-line;}'
   + '.ps-sign{display:flex;justify-content:space-between;margin-top:12px;font-size:11px;}'
   + '.ps-foot{margin-top:10px;border-top:1px solid #999;padding-top:4px;font-size:9px;color:#555;text-align:center;}'
-  + '.ps-logo{max-height:44px;max-width:150px;object-fit:contain;display:block;margin-bottom:3px;}'
+  + '.ps-brand{display:flex;align-items:center;gap:9px;}.ps-logo{max-height:38px;max-width:120px;object-fit:contain;display:block;}'
   + '@media print{.print-sheet{padding:0;}}';
 
 function downloadCurrentSheet(){
@@ -2190,6 +2268,25 @@ document.addEventListener("click", function(e){
     guardarNaDrive(dk, did).catch(function(err){
       driveBtn.disabled = false; driveBtn.textContent = oldTxt;
       alertBanner(driveErroTexto(err));
+    });
+    return;
+  }
+  var socioRetryBtn = e.target.closest("[data-socio-retry]");
+  if(socioRetryBtn){
+    var srk = socioRetryBtn.getAttribute("data-socio-retry"), srid = socioRetryBtn.getAttribute("data-id");
+    var srec = state.records[srk].filter(function(r){ return r.id===srid; })[0];
+    if(!srec) return;
+    socioRetryBtn.disabled = true; socioRetryBtn.textContent = "A tentar…";
+    sincronizarSocioAtleta(srec).then(function(info){
+      return Store.update(srk, srid, {
+        numeroInscricao: String(info.num), socioNum: info.num,
+        socioReaproveitado: !!info.reaproveitado, socioSyncFalhou: false, socioSyncErro: null
+      });
+    }).then(function(){
+      if(state.view.name==="saved") renderSaved(srk, srid);
+    }).catch(function(err){
+      socioRetryBtn.disabled = false; socioRetryBtn.textContent = "Tentar criar sócio novamente";
+      alertBanner("Continua a não ser possível: " + (err && err.message ? err.message : "erro desconhecido"));
     });
     return;
   }
