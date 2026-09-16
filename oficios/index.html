@@ -302,7 +302,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!import
     </div>
     <div class="card">
       <div class="card-title">🔢 Numeração</div>
-      <div style="font-size:13px;line-height:1.7">Os ofícios são numerados automaticamente por ano, no formato <b>001/2026</b>, <b>002/2026</b>…; os protocolos têm numeração própria, <b>P-001/2026</b>, <b>P-002/2026</b>… A numeração recomeça em cada ano civil e nunca reutiliza números de documentos apagados.</div>
+      <div style="font-size:13px;line-height:1.7">Os ofícios são numerados automaticamente por dia (dia+mês+ano da data do ofício), no formato <b>16092026/01</b>, <b>16092026/02</b>…, reiniciando a sequência sempre que a data muda; os protocolos mantêm numeração própria por ano civil, <b>P-001/2026</b>, <b>P-002/2026</b>… Nenhum dos dois reutiliza números de documentos apagados.</div>
     </div>
   </div>
 </main>
@@ -769,7 +769,7 @@ function preencherSelectsTipo(){
   document.getElementById('pf-tipo').innerHTML = '<option value="">Todos os tipos</option>'+pr;
 }
 async function carregarOficios(){
-  try{ oficios = await supaFetch('oficios?order=ano.desc,seq.desc') || []; }
+  try{ oficios = await supaFetch('oficios?order=data.desc,seq.desc') || []; }
   catch(e){
     console.error(e);
     document.getElementById('tabela-oficios').innerHTML = `<div class="empty-state">Não foi possível carregar os ofícios.<br><small>${esc(e.message).slice(0,200)}</small><br><br>Se ainda não criaste a tabela no Supabase, corre o SQL da instalação.</div>`;
@@ -787,7 +787,11 @@ function soProtocolos(){ return oficios.filter(o=>o.categoria==='protocolo'); }
 // ============================================================
 // LISTA
 // ============================================================
-function fmtNum(o){ return (o.categoria==='protocolo'?'P-':'')+String(o.seq).padStart(3,'0')+'/'+o.ano; }
+function diaChave(data){ return data ? data.split('-').reverse().join('') : ''; }
+function fmtNum(o){
+  if(o.categoria==='protocolo') return 'P-'+String(o.seq).padStart(3,'0')+'/'+o.ano;
+  return (diaChave(o.data)||o.ano||'—')+'/'+String(o.seq).padStart(2,'0');
+}
 function fmtData(d){ return d ? new Date(d+'T12:00:00').toLocaleDateString('pt-PT') : '—'; }
 function renderOficios(){
   const fA=document.getElementById('f-ano').value, fT=document.getElementById('f-tipo').value, fE=document.getElementById('f-estado').value;
@@ -889,10 +893,10 @@ async function saveOficio(){
       toast('Ofício atualizado ✓');
     } else {
       const ano=new Date(f.data+'T12:00:00').getFullYear();
-      const seq=await proximoSeq('oficio',ano);
+      const seq=await proximoSeqDia('oficio',f.data);
       const rows=await supaFetch('oficios','POST',Object.assign({},f,{ano,seq,categoria:'oficio'}));
       if(rows&&rows[0]) oficios.unshift(rows[0]);
-      toast(`Ofício ${String(seq).padStart(3,'0')}/${ano} guardado ✓`);
+      toast(`Ofício ${diaChave(f.data)}/${String(seq).padStart(2,'0')} guardado ✓`);
     }
     editingId=null; closeModal('modal-oficio'); await carregarOficios();
   }catch(e){ console.error(e); toast('Erro ao guardar: '+e.message.slice(0,120),false); }
@@ -900,6 +904,10 @@ async function saveOficio(){
 }
 async function proximoSeq(categoria, ano){
   const ult=await supaFetch(`oficios?ano=eq.${ano}&categoria=eq.${categoria}&select=seq&order=seq.desc&limit=1`);
+  return (ult&&ult.length?ult[0].seq:0)+1;
+}
+async function proximoSeqDia(categoria, data){
+  const ult=await supaFetch(`oficios?data=eq.${data}&categoria=eq.${categoria}&select=seq&order=seq.desc&limit=1`);
   return (ult&&ult.length?ult[0].seq:0)+1;
 }
 async function marcarEnviado(id){
@@ -941,9 +949,20 @@ function imprimirOficio(of){
   const html=`<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"><title>Ofício ${esc(of.numeroTxt||'')}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-    @page{size:A4;margin:0}
+    @page{size:A4;margin:18mm 18mm 16mm}
     body{font-family:'Times New Roman',Times,serif;font-size:12pt;color:#111;background:#e5e7eb;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:60px 0 40px}
-    @media print{.noprint{display:none!important}body{background:#fff;padding:0}.pagina{box-shadow:none!important;margin:0!important}}
+    /* Em ecrã, .pagina simula a folha A4 inteira (sombra incluída). Na impressão real, a margem já vem da regra @page acima,
+       por isso aqui anulamos as margens internas repetidas para não ficar espaço a mais — e é isto que garante que uma
+       segunda folha (quando o ofício é longo) também nasce com espaço em vez de o texto colado ao topo. */
+    @media print{
+      .noprint{display:none!important}
+      body{background:#fff;padding:0}
+      .pagina{box-shadow:none!important;margin:0!important;width:auto!important;min-height:0!important;display:block!important}
+      .timbrado{padding:0 0 8mm!important}
+      .conteudo{padding:10mm 0!important}
+      .zona-envelope{top:32mm!important;right:0!important}
+      .rodape-timbrado{padding:5mm 0!important;margin-top:14mm!important}
+    }
     .noprint{position:fixed;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:99;background:#fff;padding:8px 16px;border-radius:30px;box-shadow:0 2px 12px rgba(0,0,0,.15)}
     .noprint button{padding:8px 20px;border:none;border-radius:20px;font-size:13px;cursor:pointer;font-family:Arial}
     .p{background:#1a3a6b;color:#fff}.s{background:#555;color:#fff}
@@ -1138,9 +1157,18 @@ function imprimirProtocolo(o){
   const html=`<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"><title>Protocolo ${esc(o.numeroTxt||'')}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-    @page{size:A4;margin:0}
+    @page{size:A4;margin:18mm 18mm 16mm}
     body{font-family:'Times New Roman',Times,serif;font-size:11.5pt;color:#111;background:#e5e7eb;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:60px 0 40px}
-    @media print{.noprint{display:none!important}body{background:#fff;padding:0}.pagina{box-shadow:none!important;margin:0!important}}
+    /* Ver nota equivalente no template do Ofício: a margem real vem do @page acima; aqui só anulamos as margens internas
+       repetidas para a 2.ª folha (quando o protocolo é longo) também nascer com espaço em vez de colada ao topo. */
+    @media print{
+      .noprint{display:none!important}
+      body{background:#fff;padding:0}
+      .pagina{box-shadow:none!important;margin:0!important;width:auto!important;min-height:0!important;display:block!important}
+      .timbrado{padding:0 0 6mm!important}
+      .conteudo{padding:8mm 0!important}
+      .rodape{padding:5mm 0!important;margin-top:14mm!important}
+    }
     .noprint{position:fixed;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:99;background:#fff;padding:8px 16px;border-radius:30px;box-shadow:0 2px 12px rgba(0,0,0,.15)}
     .noprint button{padding:8px 20px;border:none;border-radius:20px;font-size:13px;cursor:pointer;font-family:Arial}
     .p{background:#1a3a6b;color:#fff}.s{background:#555;color:#fff}
