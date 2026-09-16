@@ -368,7 +368,8 @@ tbody tr:hover{background:var(--surface-2);}
 .ps-row{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;}
 .ps-row h4{font-size:16px;line-height:1.1;}
 .ps-hd{border-bottom:2px solid #161616;padding-bottom:5px;margin-bottom:8px;}
-.ps-badge{display:inline-block;font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;border:1px solid #161616;border-radius:20px;padding:1px 8px;margin-bottom:3px;}
+.ps-badge-row{text-align:center;margin:2px 0 1px;}
+.ps-badge{display:inline-block;font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;border:1px solid #161616;border-radius:20px;padding:1px 8px;}
 .ps-brand{display:flex;align-items:center;gap:9px;}
 .ps-sec{margin-top:5px;}
 .ps-sec h5{font-size:10px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #999;padding-bottom:2px;margin:0 0 4px;}
@@ -1546,7 +1547,7 @@ function buildPrintSheet(formKey, rec){
   var logoHtml = state.settings.logo ? '<img class="ps-logo" src="'+esc(state.settings.logo)+'" alt="">' : '';
   var html = '<div class="ps-hd"><div class="ps-row"><div class="ps-brand">'+logoHtml+'<h4>ASSOCIAÇÃO RECREATIVA E CULTURAL DA AJUDA</h4></div>'
     + '<div style="text-align:right;font-size:10px;">NIPC 510 144 012<br>IBAN PT50 0036 0319 9910 0012 552 74</div></div>'
-    + '<div class="ps-badge">'+esc(ft.singular)+'</div>'
+    + '<div class="ps-badge-row"><span class="ps-badge">'+esc(ft.singular)+'</span></div>'
     + '<div style="font-size:10.5px;">Época: <b>'+esc(rec.epocaAno||"—")+'</b>'
     + (rec.tipoInscricao? '  ·  Tipo: <b>'+esc(rec.tipoInscricao)+'</b>' : '')
     + '  ·  Nº inscrição: <b>'+esc(rec.numeroInscricao||"—")+'</b>'
@@ -1613,7 +1614,7 @@ function buildBlankSheet(formKey){
   var logoHtml = state.settings.logo ? '<img class="ps-logo" src="'+esc(state.settings.logo)+'" alt="">' : '';
   var html = '<div class="ps-hd"><div class="ps-row"><div class="ps-brand">'+logoHtml+'<h4>ASSOCIAÇÃO RECREATIVA E CULTURAL DA AJUDA</h4></div>'
     + '<div style="text-align:right;font-size:10px;">NIPC 510 144 012<br>IBAN PT50 0036 0319 9910 0012 552 74</div></div>'
-    + '<div class="ps-badge">'+esc(ft.singular)+'</div>'
+    + '<div class="ps-badge-row"><span class="ps-badge">'+esc(ft.singular)+'</span></div>'
     + '<div class="ps-row" style="font-size:11px;margin-top:4px;align-items:flex-end;">'
     + '<div>Época / ano letivo: 20____ / 20____</div>'
     + '<div>Nº inscrição atleta/sócio ARCA: __________ <i style="font-size:9px;">(atribuído no secretariado)</i></div>'
@@ -1687,7 +1688,8 @@ var SHEET_CSS = '@page{size:A4;margin:12mm 10mm;}'
   + 'h4{font-family:Arial Narrow,Archivo,sans-serif;font-size:16px;margin:0;line-height:1.1;}'
   + '.ps-row{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;}'
   + '.ps-hd{border-bottom:2px solid #161616;padding-bottom:5px;margin-bottom:8px;}'
-  + '.ps-badge{display:inline-block;font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;border:1px solid #161616;border-radius:20px;padding:1px 8px;margin-bottom:3px;}'
+  + '.ps-badge-row{text-align:center;margin:2px 0 1px;}'
+  + '.ps-badge{display:inline-block;font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;border:1px solid #161616;border-radius:20px;padding:1px 8px;}'
   + '.ps-sec{margin-top:5px;}'
   + '.ps-sec h5{font-size:10px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #999;padding-bottom:2px;margin:0 0 4px;}'
   + '.ps-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 16px;}'
