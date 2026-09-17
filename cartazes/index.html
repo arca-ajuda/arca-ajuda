@@ -47,8 +47,15 @@
   header.top h1 .assoc{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   header.top h1 .app{font-size:12px;font-weight:500;opacity:.85;letter-spacing:.04em;text-transform:uppercase}
   header.top .logo-arca{height:38px;width:auto;max-width:120px;border-radius:6px;background:#fff;padding:3px;flex:none}
-  .fab-home{position:fixed;right:16px;bottom:16px;z-index:40;background:#fff;color:var(--primary);border:1px solid var(--line);border-radius:999px;padding:10px 16px;font-weight:600;font-size:14px;text-decoration:none;box-shadow:0 6px 20px rgba(15,23,42,.18);display:inline-flex;align-items:center;gap:6px}
-  .fab-home:hover{background:#eff6ff}
+  .side-tools{display:flex;flex-direction:column;gap:8px;margin:2px 0 14px}
+  .side-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;color:var(--text);text-decoration:none;font:inherit;cursor:pointer;box-shadow:var(--shadow)}
+  .side-btn:hover{background:#f8fafc;border-color:#94a3b8}
+  .side-btn .ico{font-size:22px;width:30px;text-align:center;flex:none}
+  .side-btn b{display:block;font-size:15px}
+  .side-btn small{display:block;font-size:11px;color:var(--muted);line-height:1.2}
+  .side-btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  .side-btn.primary:hover{background:var(--primary-h)}
+  .side-btn.primary small{color:rgba(255,255,255,.8)}
 
   /* ---------- Editor de faixas ---------- */
   .bn-wrap{display:flex;height:calc(100vh - 58px);min-height:420px}
@@ -169,8 +176,11 @@
     .detail{grid-template-columns:1fr}
     .grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
     header.top .lbl{display:none}
-    .fab-home{bottom:12px;right:12px;padding:10px 14px}
-    section.content{padding-bottom:70px}
+    .side-tools{flex-direction:row;margin:0;flex:none}
+    .side-btn{padding:6px 10px;border-radius:999px;box-shadow:none;width:auto;gap:6px}
+    .side-btn .ico{font-size:16px;width:auto}
+    .side-btn b{font-size:13px}
+    .side-btn small{display:none}
     .toolbar h2{flex-basis:100%;font-size:18px}
     .search{flex:1}
   }
@@ -210,12 +220,15 @@
   <header class="top">
     <img class="logo-arca" src="../logo.png" alt="" onerror="this.style.display='none'">
     <h1><span class="assoc">ARCA d'Ajuda</span><span class="app">Cartazes</span></h1>
-    <button class="icon-btn" id="banner-btn" title="Texto grande em várias folhas">✎ <span class="lbl">Faixas</span></button>
     <button class="icon-btn" id="upload-btn">⬆ <span class="lbl">Carregar</span></button>
     <button class="icon-btn" id="logout-btn" title="Sair">⎋</button>
   </header>
   <main>
     <aside class="years" id="years">
+      <div class="side-tools">
+        <button class="side-btn primary" id="banner-btn" title="Texto grande espalhado por várias folhas A4"><span class="ico">✎</span><span><b>Faixas</b><small>texto grande em várias folhas</small></span></button>
+        <a class="side-btn" href="https://arca-ajuda.github.io/arca-ajuda/" title="Voltar ao menu geral da ARCA"><span class="ico">🏠</span><span><b>Menu geral</b><small>ARCA d'Ajuda</small></span></a>
+      </div>
       <h2>Anos</h2>
       <div id="years-list"></div>
     </aside>
@@ -229,7 +242,6 @@
       <div class="empty hidden" id="empty"><div class="big">🗂️</div><p>Ainda não há cartazes aqui.<br>Usa o botão <b>Carregar</b> para adicionar o primeiro.</p></div>
     </section>
   </main>
-  <a class="fab-home" href="https://arca-ajuda.github.io/arca-ajuda/" title="Voltar ao menu geral">🏠 Menu geral</a>
 </div>
 
 <!-- ======== EDITOR DE FAIXAS (texto grande em várias folhas) ======== -->
@@ -658,15 +670,41 @@ const LAYOUTS = [
 ];
 const PAPER = { A4: [595.28, 841.89], A3: [841.89, 1190.55] };
 
-function layoutIcon(l){
-  // desenha uma folha com a grelha (orientação decidida na altura de imprimir)
-  const w = 30, h = 40, cells = [];
-  for (let r = 0; r < l.rows; r++) for (let c = 0; c < l.cols; c++)
-    cells.push(`<rect x="${7 + c*(w/l.cols)+1}" y="${2 + r*(h/l.rows)+1}" width="${w/l.cols-2}" height="${h/l.rows-2}" rx="1" fill="#93c5fd"/>`);
-  return `<svg viewBox="0 0 44 44"><rect x="7" y="2" width="${w}" height="${h}" rx="2" fill="#fff" stroke="#64748b"/>${cells.join('')}</svg>`;
+// Escolhe folha (ao alto/deitada), grelha e rotação do cartaz que dão o cartaz maior.
+// As células são divisões exatas da folha (A4÷2 = A5 verdadeiro, ÷4 = A6, ÷8 = A7).
+function pickArrangement(L, sw, sh, pad = 0){
+  const [pw, ph] = PAPER[L.paper];
+  const fitIn = (cw, ch) => {
+    const s0 = Math.min((cw - 2*pad) / sw, (ch - 2*pad) / sh);
+    const s90 = Math.min((cw - 2*pad) / sh, (ch - 2*pad) / sw);
+    return s90 > s0 * 1.02 ? { s: s90, rot: true } : { s: s0, rot: false };
+  };
+  const candidates = [];
+  for (const [W, H] of [[pw, ph], [ph, pw]])
+    for (const [cols, rows] of [[L.cols, L.rows], [L.rows, L.cols]]) {
+      const cw = W / cols, ch = H / rows;
+      candidates.push({ W, H, cols, rows, cw, ch, ...fitIn(cw, ch) });
+    }
+  return candidates.sort((a, b) => (b.s - a.s) || (a.rot - b.rot))[0];   // maior escala; em empate, sem rodar
 }
-$('#layouts').innerHTML = LAYOUTS.map(l => `<button class="lay ${l.id===currentLayout?'active':''}" data-id="${l.id}">${layoutIcon(l)}<b>${l.name}</b><small>${l.sub}</small></button>`).join('');
-$$('#layouts .lay').forEach(b => b.onclick = () => { currentLayout = b.dataset.id; $$('#layouts .lay').forEach(x => x.classList.toggle('active', x === b)); });
+function layoutIcon(l, sw = 595, sh = 842){
+  // desenha a folha na orientação real, a grelha e o cartaz dentro de cada célula
+  const a = pickArrangement(l, sw, sh);
+  const box = 40, k = box / Math.max(a.W, a.H), w = a.W*k, h = a.H*k, x0 = (44 - w)/2, y0 = (44 - h)/2;
+  const cw = w / a.cols, ch = h / a.rows, pw = (a.rot ? sh : sw) * a.s * k, ph = (a.rot ? sw : sh) * a.s * k;
+  const cells = [];
+  for (let r = 0; r < a.rows; r++) for (let c = 0; c < a.cols; c++)
+    cells.push(`<rect x="${(x0 + c*cw + (cw-pw)/2).toFixed(1)}" y="${(y0 + r*ch + (ch-ph)/2).toFixed(1)}" width="${Math.max(1,pw-1).toFixed(1)}" height="${Math.max(1,ph-1).toFixed(1)}" rx=".8" fill="#93c5fd"/>`);
+  const lines = [];
+  for (let c = 1; c < a.cols; c++) lines.push(`<line x1="${(x0+c*cw).toFixed(1)}" y1="${y0}" x2="${(x0+c*cw).toFixed(1)}" y2="${y0+h}" stroke="#64748b" stroke-width=".6" stroke-dasharray="2 1.5"/>`);
+  for (let r = 1; r < a.rows; r++) lines.push(`<line x1="${x0}" y1="${(y0+r*ch).toFixed(1)}" x2="${x0+w}" y2="${(y0+r*ch).toFixed(1)}" stroke="#64748b" stroke-width=".6" stroke-dasharray="2 1.5"/>`);
+  return `<svg viewBox="0 0 44 44"><rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="1.5" fill="#fff" stroke="#64748b"/>${cells.join('')}${lines.join('')}</svg>`;
+}
+function renderLayouts(sw, sh){
+  $('#layouts').innerHTML = LAYOUTS.map(l => `<button class="lay ${l.id===currentLayout?'active':''}" data-id="${l.id}">${layoutIcon(l, sw, sh)}<b>${l.name}</b><small>${l.sub}</small></button>`).join('');
+  $$('#layouts .lay').forEach(b => b.onclick = () => { currentLayout = b.dataset.id; $$('#layouts .lay').forEach(x => x.classList.toggle('active', x === b)); });
+}
+renderLayouts();
 
 async function openDetail(p){
   current = p; if (!p) return;
@@ -675,6 +713,9 @@ async function openDetail(p){
   $('#d-info').innerHTML = `${p.ano} · ${p.file_type === 'pdf' ? 'PDF' : 'Imagem'} · ${fmtSize(p.tamanho||0)} · adicionado em ${new Date(p.criado_em).toLocaleDateString('pt-PT')}` +
     (DRIVE_SYNC ? (p.drive_link ? ` · <a href="${esc(p.drive_link)}" target="_blank" rel="noopener">☁ Abrir na Drive</a>` : ' · ☁ ainda não está na Drive') : '');
   $('#d-preview').innerHTML = p.thumb_path && thumbCache[p.thumb_path] ? `<img src="${thumbCache[p.thumb_path]}" alt="">` : '<span style="font-size:60px">📄</span>';
+  renderLayouts();                                          // ícones para cartaz ao alto (por defeito)
+  const im = $('#d-preview img');
+  if (im) { const upd = () => { if (im.naturalWidth && im.naturalHeight) renderLayouts(im.naturalWidth, im.naturalHeight); }; im.complete ? upd() : (im.onload = upd); }
   show('modal-detail');
 }
 $$('[data-close]').forEach(b => b.onclick = () => hide(b.dataset.close));
@@ -749,21 +790,8 @@ async function buildPrintPdf(blob, isPdf, layoutId, opts){
   // sem margens entre elas, para que ao cortar pelas linhas cada pedaço tenha o tamanho A certo.
   // Dentro de cada célula o cartaz é ampliado ao máximo, rodado 90° se assim ocupar mais espaço.
   const { degrees } = PDFLib;
-  const [pw, ph] = PAPER[L.paper];
   const pad = (opts.margin || 0) * 72 / 25.4;              // margem branca DENTRO de cada célula (0 = borda a borda)
-  const fitIn = (cw, ch) => {                              // melhor escala: normal vs rodado
-    const s0 = Math.min((cw - 2*pad) / sw, (ch - 2*pad) / sh);
-    const s90 = Math.min((cw - 2*pad) / sh, (ch - 2*pad) / sw);
-    return s90 > s0 * 1.02 ? { s: s90, rot: true } : { s: s0, rot: false };
-  };
-  // experimenta folha ao alto e deitada × grelha normal e trocada (ex.: 2×1 e 1×2)
-  const candidates = [];
-  for (const [W, H] of [[pw, ph], [ph, pw]])
-    for (const [cols, rows] of [[L.cols, L.rows], [L.rows, L.cols]]) {
-      const cw = W / cols, ch = H / rows;
-      candidates.push({ W, H, cols, rows, cw, ch, ...fitIn(cw, ch) });
-    }
-  const best = candidates.sort((a, b) => (b.s - a.s) || (a.rot - b.rot))[0];   // maior escala; em empate, sem rodar
+  const best = pickArrangement(L, sw, sh, pad);
   const page = doc.addPage([best.W, best.H]);
   const s = opts.fit ? best.s : Math.min(best.s, 1);
   const w = sw * s, h = sh * s;                            // tamanho desenhado (antes de rodar)
