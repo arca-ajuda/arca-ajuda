@@ -70,8 +70,14 @@
   .bn-toggles .btn{min-width:38px;justify-content:center}
   .bn-toggles .btn.on{background:#dbeafe;border-color:var(--primary);color:var(--primary)}
   .bn-info{font-size:12px;color:var(--muted);margin:4px 0 8px;line-height:1.35}
-  .bn-help{font-size:12px;line-height:1.4;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 10px;margin:4px 0 8px;color:#1e3a8a}
-  .bn-help b{display:block;margin-bottom:3px}
+  .fab-help{position:fixed;right:18px;bottom:18px;z-index:45;width:48px;height:48px;border-radius:50%;border:0;background:var(--primary);color:#fff;font-size:24px;font-weight:700;box-shadow:0 6px 18px rgba(29,78,216,.45);cursor:pointer;display:grid;place-items:center}
+  .fab-help:hover{background:var(--primary-h);transform:translateY(-1px)}
+  .help-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;position:sticky;top:0;background:#fff;padding-bottom:6px}
+  .help-tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;color:var(--text)}
+  .help-tabs button.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .help h4{margin:14px 0 4px;font-size:14px;color:var(--primary)}
+  .help h4:first-child{margin-top:0}
+  .help p{margin:0 0 6px;font-size:14px;line-height:1.5;color:#334155}
   .bn-stage{flex:1;background:#cbd5e1;overflow:auto;display:grid;place-items:center;padding:20px}
   .bn-stage canvas{box-shadow:0 10px 40px rgba(0,0,0,.35)}
   .bn-item{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px}
@@ -276,12 +282,6 @@
         <label>Colagem <select id="bn-glue"><option value="0">0 mm</option><option value="10" selected>10 mm</option><option value="15">15 mm</option><option value="20">20 mm</option></select></label>
       </div>
       <div class="bn-info" id="bn-size"></div>
-      <div class="bn-help">
-        <b>Como colar as folhas</b>
-        As zonas azuis são sobreposições: a faixa junto a cada emenda sai impressa nas <u>duas</u> folhas vizinhas, para alinhares e colares.
-        Ao montar, corta pela linha tracejada de <u>uma</u> folha apenas e cola-a por cima da vizinha, fazendo coincidir o desenho.
-        Na impressora escolhe sempre escala <b>100% / tamanho real</b>. As folhas saem numeradas pela ordem: linha a linha, da esquerda para a direita.
-      </div>
 
       <h4>Adicionar</h4>
       <div class="bn-row">
@@ -330,6 +330,59 @@
       <div class="status" id="bn-status"></div>
     </aside>
     <div class="bn-stage" id="bn-stage"><canvas id="bn-canvas"></canvas></div>
+  </div>
+</div>
+
+<!-- ======== AJUDA ======== -->
+<button class="fab-help" id="help-btn" title="Ajuda">?</button>
+<div id="modal-help" class="modal hidden">
+  <div class="box" style="max-width:640px">
+    <header><h3>Ajuda</h3><button class="close" data-close="modal-help">×</button></header>
+    <div class="body help">
+      <div class="help-tabs"><button class="on" data-tab="h-cartazes">Cartazes</button><button data-tab="h-imprimir">Imprimir</button><button data-tab="h-faixas">Faixas</button><button data-tab="h-drive">Drive e conta</button></div>
+
+      <section id="h-cartazes">
+        <h4>Carregar um cartaz</h4>
+        <p>No Canva, exporta o cartaz em <b>PDF</b> (melhor para impressão) ou PNG/JPG. Na app, botão verde <b>Carregar cartaz</b> → escolhe o ficheiro (ou arrasta-o), dá-lhe um nome, o ano e uma descrição (atividade, data, local). Podes escolher vários ficheiros de uma vez; nesse caso o nome de cada um passa a título.</p>
+        <h4>Encontrar</h4>
+        <p>A coluna da esquerda lista os anos; a caixa de pesquisa procura no nome e na descrição. Clica num cartaz para o abrir.</p>
+        <h4>Editar e apagar</h4>
+        <p>Dentro da ficha do cartaz: <b>Editar</b> muda nome, ano e descrição; <b>Apagar</b> remove-o da app (e da Drive); <b>Original</b> descarrega o ficheiro tal como foi carregado.</p>
+      </section>
+
+      <section id="h-imprimir" class="hidden">
+        <h4>Formatos</h4>
+        <p>Abre o cartaz e escolhe o formato: <b>A3</b> e <b>A4</b> (1 por folha), <b>A5</b> (2 por folha A4), <b>A6</b> (4 por A4), <b>6×</b> e <b>A7</b> (8 por A4). A app divide a folha em partes exatas — ao cortar pelas linhas, cada pedaço fica com o tamanho A certo — e escolhe sozinha a orientação da folha que aproveita mais papel.</p>
+        <h4>Opções</h4>
+        <p><b>Margem</b> é a faixa branca dentro de cada cartaz (0 = borda a borda; usa 3–5 mm se a impressora não imprimir até à borda). <b>Linhas de corte</b> marca as divisões a tracejado. <b>Encher a célula</b> amplia o cartaz ao máximo.</p>
+        <h4>Na impressora</h4>
+        <p>Escolhe o papel certo (A4 ou A3) e a escala <b>100% / tamanho real</b>. Se ficar "ajustar à página", o A5 deixa de ser A5. <b>Abrir PDF</b> e <b>Guardar PDF</b> servem para enviar a uma gráfica ou imprimir noutro sítio.</p>
+      </section>
+
+      <section id="h-faixas" class="hidden">
+        <h4>Para que serve</h4>
+        <p>Para escrever um texto grande (com imagens) que ocupa várias folhas A4 coladas umas às outras — uma faixa, um título de parede, um painel.</p>
+        <h4>Como usar</h4>
+        <p>Define quantas folhas em largura e altura, ao alto ou deitadas, e a margem de colagem. A área branca é o papel: <b>T Texto</b> cria um texto no centro — faz <b>duplo clique</b> para escrever; <b>Imagem</b> carrega uma imagem do computador. Arrasta para mover, puxa os cantos para redimensionar. Com um texto selecionado, o painel da esquerda muda o tipo de letra, tamanho, cor, negrito, alinhamento e contorno. <b>Tipos de letra do computador</b> lista os que tens instalados (Chrome e Edge).</p>
+        <h4>Atalhos</h4>
+        <p><b>Ctrl+Z</b> anula, <b>Ctrl+Y</b> refaz, <b>Delete</b> apaga o selecionado. <b>Limpar tudo</b> começa de novo. <b>Guardar</b> grava o desenho para voltares a editar; <b>Abrir</b> lista os guardados. A app guarda também um rascunho automático no browser.</p>
+        <h4>Colar as folhas</h4>
+        <p>As zonas azuis são sobreposições: a faixa junto a cada emenda sai impressa nas <u>duas</u> folhas vizinhas, para alinhares e colares. Ao montar, corta pela linha tracejada de <u>uma</u> folha apenas e cola-a por cima da vizinha, fazendo coincidir o desenho. As folhas saem numeradas pela ordem: linha a linha, da esquerda para a direita, e cada uma tem no rodapé o seu número e esta instrução. Imprime a <b>100%</b>.</p>
+        <h4>Guardar na galeria</h4>
+        <p>Transforma a faixa numa imagem e coloca-a na galeria do ano, como qualquer cartaz (vai também para a Drive).</p>
+      </section>
+
+      <section id="h-drive" class="hidden">
+        <h4>Google Drive</h4>
+        <p>Cada cartaz carregado é copiado automaticamente para a Drive da conta gestaoarcadajuda@gmail.com, na pasta <b>Cartazes / ano</b>. O cartão mostra <b>☁ Drive</b> quando a cópia está feita e <b>☁ pendente</b> quando não. O botão <b>Sincronizar Drive</b> copia os pendentes. Apagar ou renomear na app faz o mesmo na Drive.</p>
+        <h4>Conta e sessão</h4>
+        <p>A entrada é feita com o email gestaoarcadajuda@gmail.com e a password definida no Supabase. A sessão fica memorizada no dispositivo; o botão ⎋ no canto superior direito termina-a.</p>
+        <h4>Instalar como app</h4>
+        <p>No telemóvel, abre o endereço no Chrome (Android) ou Safari (iPhone) → menu → <b>Adicionar ao ecrã principal</b>. No computador, ícone de instalar na barra de endereço do Chrome/Edge.</p>
+        <h4>Onde estão os ficheiros</h4>
+        <p>Supabase → Storage → bucket <b>cartazes</b> (pastas por ano) e na tua Drive. O plano gratuito do Supabase tem 1 GB, o suficiente para centenas de cartazes.</p>
+      </section>
+    </div>
   </div>
 </div>
 
@@ -1107,6 +1160,17 @@ $('#bn-gallery').onclick = async () => {
     await loadPosters(); $('#bn-status').textContent = ''; toast('Guardado na galeria.');
   } catch(e) { bnShowGuides = true; bn.requestRenderAll(); toast('Erro: ' + e.message); $('#bn-status').textContent = ''; }
 };
+
+// ---------- ajuda ----------
+function helpTab(id){
+  $$('.help-tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === id));
+  $$('.help section').forEach(s => s.classList.toggle('hidden', s.id !== id));
+}
+$$('.help-tabs button').forEach(b => b.onclick = () => helpTab(b.dataset.tab));
+$('#help-btn').onclick = () => { helpTab($('#screen-banner').classList.contains('hidden') ? 'h-cartazes' : 'h-faixas'); show('modal-help'); };
+$('#help-btn').classList.add('hidden');
+const helpVisible = () => $('#help-btn').classList.toggle('hidden', $('#screen-app').classList.contains('hidden') && $('#screen-banner').classList.contains('hidden'));
+new MutationObserver(helpVisible).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
 
 // ---------- abrir / fechar o editor ----------
 $('#banner-btn').onclick = () => {
