@@ -1640,7 +1640,7 @@ function construirHtmlOficio(of){
   const html=`<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"><title>Ofício ${esc(of.numeroTxt||'')}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-    @page{size:A4;margin:18mm 18mm 16mm}
+    @page{size:A4;margin:18mm 18mm 28mm}
     body{font-family:'Times New Roman',Times,serif;font-size:12pt;color:#111;background:#e5e7eb;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:60px 0 40px}
     /* Em ecrã, .pagina simula a folha A4 inteira (sombra incluída). Na impressão real, a margem já vem da regra @page acima,
        por isso aqui anulamos as margens internas repetidas para não ficar espaço a mais — e é isto que garante que uma
@@ -1650,7 +1650,7 @@ function construirHtmlOficio(of){
       body{background:#fff;padding:0}
       .pagina{box-shadow:none!important;margin:0!important;width:auto!important;min-height:0!important;display:block!important}
       .timbrado{padding:0 0 8mm!important}
-      .conteudo{padding:10mm 0 26mm 0!important}
+      .conteudo{padding:10mm 0!important}
       .zona-envelope{top:32mm!important;right:0!important}
       /* position:fixed repete o rodapé em todas as folhas impressas (Chrome), em vez de aparecer só na última */
       .rodape-timbrado{position:fixed!important;left:0!important;right:0!important;bottom:0!important;margin-top:0!important;padding:5mm 0!important;background:#fff!important}
@@ -1859,7 +1859,7 @@ function construirHtmlProtocolo(o){
   const html=`<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"><title>Protocolo ${esc(o.numeroTxt||'')}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-    @page{size:A4;margin:18mm 18mm 16mm}
+    @page{size:A4;margin:18mm 18mm 28mm}
     body{font-family:'Times New Roman',Times,serif;font-size:11.5pt;color:#111;background:#e5e7eb;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:60px 0 40px}
     /* Ver nota equivalente no template do Ofício: a margem real vem do @page acima; aqui só anulamos as margens internas
        repetidas para a 2.ª folha (quando o protocolo é longo) também nascer com espaço em vez de colada ao topo. */
@@ -1868,7 +1868,7 @@ function construirHtmlProtocolo(o){
       body{background:#fff;padding:0}
       .pagina{box-shadow:none!important;margin:0!important;width:auto!important;min-height:0!important;display:block!important}
       .timbrado{padding:0 0 6mm!important}
-      .conteudo{padding:8mm 0 26mm 0!important}
+      .conteudo{padding:8mm 0!important}
       /* position:fixed repete o rodapé em todas as folhas impressas (Chrome), em vez de aparecer só na última */
       .rodape{position:fixed!important;left:0!important;right:0!important;bottom:0!important;margin-top:0!important;padding:5mm 0!important;background:#fff!important}
     }
