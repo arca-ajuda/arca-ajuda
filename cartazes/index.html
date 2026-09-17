@@ -48,14 +48,15 @@
   header.top h1 .app{font-size:12px;font-weight:500;opacity:.85;letter-spacing:.04em;text-transform:uppercase}
   header.top .logo-arca{height:38px;width:auto;max-width:120px;border-radius:6px;background:#fff;padding:3px;flex:none}
   .side-tools{display:flex;flex-direction:column;gap:8px;margin:2px 0 14px}
-  .side-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;color:var(--text);text-decoration:none;font:inherit;cursor:pointer;box-shadow:var(--shadow)}
-  .side-btn:hover{background:#f8fafc;border-color:#94a3b8}
-  .side-btn .ico{font-size:22px;width:30px;text-align:center;flex:none}
+  .side-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;border-radius:12px;padding:10px 12px;color:#fff;text-decoration:none;font:inherit;cursor:pointer;box-shadow:0 3px 10px rgba(15,23,42,.18);transition:transform .1s,box-shadow .1s}
+  .side-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(15,23,42,.24);filter:brightness(1.06)}
+  .side-btn .ico{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.18);display:grid;place-items:center;flex:none}
+  .side-btn .ico svg{width:22px;height:22px}
   .side-btn b{display:block;font-size:15px}
-  .side-btn small{display:block;font-size:11px;color:var(--muted);line-height:1.2}
-  .side-btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
-  .side-btn.primary:hover{background:var(--primary-h)}
-  .side-btn.primary small{color:rgba(255,255,255,.8)}
+  .side-btn small{display:block;font-size:11px;color:rgba(255,255,255,.85);line-height:1.2}
+  .side-btn.c-home{background:linear-gradient(135deg,#475569,#334155)}
+  .side-btn.c-up{background:linear-gradient(135deg,#22c55e,#15803d)}
+  .side-btn.c-banner{background:linear-gradient(135deg,#f59e0b,#d97706)}
 
   /* ---------- Editor de faixas ---------- */
   .bn-wrap{display:flex;height:calc(100vh - 58px);min-height:420px}
@@ -83,7 +84,7 @@
   .icon-btn{background:rgba(255,255,255,.15);border:0;color:#fff;border-radius:8px;padding:7px 10px;font-size:14px;display:inline-flex;align-items:center;gap:6px}
   .icon-btn:hover{background:rgba(255,255,255,.25)}
   main{display:flex;min-height:calc(100% - 52px)}
-  aside.years{width:200px;flex:none;background:var(--card);border-right:1px solid var(--line);padding:12px}
+  aside.years{width:230px;flex:none;background:var(--card);border-right:1px solid var(--line);padding:12px}
   aside.years h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:8px 8px 6px}
   .year-btn{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;border:0;background:transparent;padding:9px 10px;border-radius:8px;font-size:15px;color:var(--text)}
   .year-btn:hover{background:#f1f5f9}
@@ -177,8 +178,9 @@
     .grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
     header.top .lbl{display:none}
     .side-tools{flex-direction:row;margin:0;flex:none}
-    .side-btn{padding:6px 10px;border-radius:999px;box-shadow:none;width:auto;gap:6px}
-    .side-btn .ico{font-size:16px;width:auto}
+    .side-btn{padding:6px 10px;border-radius:999px;box-shadow:0 2px 6px rgba(15,23,42,.18);width:auto;gap:6px}
+    .side-btn .ico{width:22px;height:22px;border-radius:6px;background:transparent}
+    .side-btn .ico svg{width:18px;height:18px}
     .side-btn b{font-size:13px}
     .side-btn small{display:none}
     .toolbar h2{flex-basis:100%;font-size:18px}
@@ -220,14 +222,20 @@
   <header class="top">
     <img class="logo-arca" src="../logo.png" alt="" onerror="this.style.display='none'">
     <h1><span class="assoc">ARCA d'Ajuda</span><span class="app">Cartazes</span></h1>
-    <button class="icon-btn" id="upload-btn">⬆ <span class="lbl">Carregar</span></button>
     <button class="icon-btn" id="logout-btn" title="Sair">⎋</button>
   </header>
   <main>
     <aside class="years" id="years">
       <div class="side-tools">
-        <a class="side-btn" href="https://arca-ajuda.github.io/arca-ajuda/" title="Voltar ao menu geral da ARCA"><span class="ico">🏠</span><span><b>Menu geral</b><small>ARCA d'Ajuda</small></span></a>
-        <button class="side-btn primary" id="banner-btn" title="Texto grande espalhado por várias folhas A4"><span class="ico">✎</span><span><b>Faixas</b><small>texto grande em várias folhas</small></span></button>
+        <a class="side-btn c-home" href="https://arca-ajuda.github.io/arca-ajuda/" title="Voltar ao menu geral da ARCA">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></span>
+          <span><b>Menu geral</b><small>ARCA d'Ajuda</small></span></a>
+        <button class="side-btn c-up" id="upload-btn" title="Carregar um cartaz (PDF ou imagem)">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg></span>
+          <span><b>Carregar cartaz</b><small>PDF ou imagem do Canva</small></span></button>
+        <button class="side-btn c-banner" id="banner-btn" title="Texto grande espalhado por várias folhas A4">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M12 4v16"/><path d="M9 20h6"/></svg></span>
+          <span><b>Faixas</b><small>texto grande em várias folhas</small></span></button>
       </div>
       <h2>Anos</h2>
       <div id="years-list"></div>
