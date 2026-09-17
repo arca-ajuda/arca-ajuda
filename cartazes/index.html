@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cartazes · Arca da Ajuda</title>
+<meta name="theme-color" content="#1d4ed8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cartazes">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d4ed8'/%3E%3Crect x='16' y='12' width='32' height='40' rx='4' fill='white'/%3E%3Crect x='21' y='19' width='22' height='14' rx='2' fill='%23fbbf24'/%3E%3Crect x='21' y='38' width='22' height='3' rx='1.5' fill='%2394a3b8'/%3E%3Crect x='21' y='44' width='14' height='3' rx='1.5' fill='%2394a3b8'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%231d4ed8'/%3E%3Crect x='16' y='12' width='32' height='40' rx='4' fill='white'/%3E%3Crect x='21' y='19' width='22' height='14' rx='2' fill='%23fbbf24'/%3E%3C/svg%3E">
+<script>
+// Manifest PWA embutido (permite "Adicionar ao ecrã principal")
+(function(){
+  const icon = "data:image/svg+xml," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='#1d4ed8'/><rect x='16' y='12' width='32' height='40' rx='4' fill='white'/><rect x='21' y='19' width='22' height='14' rx='2' fill='#fbbf24'/><rect x='21' y='38' width='22' height='3' rx='1.5' fill='#94a3b8'/></svg>");
+  const manifest = {
+    name: "Cartazes Arca da Ajuda", short_name: "Cartazes", start_url: location.href.split('#')[0],
+    display: "standalone", background_color: "#f1f5f9", theme_color: "#1d4ed8",
+    icons: [{ src: icon, sizes: "any", type: "image/svg+xml", purpose: "any" }]
+  };
+  const l = document.createElement('link'); l.rel = 'manifest';
+  l.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
+  document.head.appendChild(l);
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<style>
+  :root{
+    --bg:#f1f5f9; --card:#ffffff; --text:#0f172a; --muted:#64748b; --line:#e2e8f0;
+    --primary:#1d4ed8; --primary-h:#1e40af; --danger:#dc2626; --accent:#fbbf24;
+    --radius:12px; --shadow:0 1px 3px rgba(15,23,42,.08),0 4px 16px rgba(15,23,42,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.45}
+  button{font:inherit;cursor:pointer}
+  input,select,textarea{font:inherit;color:inherit}
+  .hidden{display:none!important}
+
+  /* ---------- Layout ---------- */
+  header.top{position:sticky;top:0;z-index:20;background:var(--primary);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  header.top h1{font-size:18px;margin:0;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  header.top .logo{width:30px;height:30px;border-radius:8px;background:#fff;display:grid;place-items:center;flex:none}
+  .icon-btn{background:rgba(255,255,255,.15);border:0;color:#fff;border-radius:8px;padding:7px 10px;font-size:14px;display:inline-flex;align-items:center;gap:6px}
+  .icon-btn:hover{background:rgba(255,255,255,.25)}
+  main{display:flex;min-height:calc(100% - 52px)}
+  aside.years{width:200px;flex:none;background:var(--card);border-right:1px solid var(--line);padding:12px}
+  aside.years h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:8px 8px 6px}
+  .year-btn{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;border:0;background:transparent;padding:9px 10px;border-radius:8px;font-size:15px;color:var(--text)}
+  .year-btn:hover{background:#f1f5f9}
+  .year-btn.active{background:#dbeafe;color:var(--primary);font-weight:600}
+  .year-btn .n{font-size:12px;color:var(--muted);background:#f1f5f9;border-radius:999px;padding:1px 8px}
+  section.content{flex:1;padding:16px;min-width:0}
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .toolbar h2{margin:0;font-size:20px;flex:1}
+  .search{padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;min-width:200px}
+  .btn{background:var(--primary);color:#fff;border:0;border-radius:8px;padding:9px 14px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{background:var(--primary-h)}
+  .btn.secondary{background:#fff;color:var(--text);border:1px solid var(--line)}
+  .btn.secondary:hover{background:#f8fafc}
+  .btn.danger{background:#fff;color:var(--danger);border:1px solid #fecaca}
+  .btn.danger:hover{background:#fef2f2}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .btn.sm{padding:6px 10px;font-size:13px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:transform .12s,box-shadow .12s;display:flex;flex-direction:column}
+  .card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(15,23,42,.14)}
+  .card .thumb{aspect-ratio:1/1.35;background:#e2e8f0 repeating-linear-gradient(45deg,#e2e8f0 0 10px,#e8edf3 10px 20px);display:grid;place-items:center;overflow:hidden}
+  .card .thumb img{width:100%;height:100%;object-fit:contain;background:#fff}
+  .card .info{padding:10px 12px}
+  .card .title{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .card .desc{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .badge{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 6px;background:#fee2e2;color:#991b1b;margin-top:6px}
+  .badge.img{background:#dcfce7;color:#166534}
+  .empty{text-align:center;color:var(--muted);padding:60px 20px}
+  .empty .big{font-size:48px}
+
+  /* ---------- Modais ---------- */
+  .modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:grid;place-items:center;z-index:50;padding:12px}
+  .modal .box{background:#fff;border-radius:16px;max-width:900px;width:100%;max-height:100%;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .box header{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:2}
+  .box header h3{margin:0;font-size:17px;flex:1}
+  .box .close{border:0;background:#f1f5f9;border-radius:8px;width:34px;height:34px;font-size:18px}
+  .box .body{padding:18px}
+  .field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+  .field label{font-size:13px;font-weight:600;color:#334155}
+  .field input,.field select,.field textarea{padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;background:#fff}
+  .field textarea{min-height:70px;resize:vertical}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .row .field{flex:1;min-width:140px}
+  .actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:8px}
+  .drop{border:2px dashed #cbd5e1;border-radius:12px;padding:22px;text-align:center;color:var(--muted);background:#f8fafc}
+  .drop.over{border-color:var(--primary);background:#eff6ff}
+  .drop input{display:none}
+  .filelist{font-size:13px;margin-top:8px}
+  .filelist div{padding:3px 0;border-bottom:1px dashed var(--line)}
+  .progress{height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin-top:12px}
+  .progress i{display:block;height:100%;width:0;background:var(--primary);transition:width .3s}
+
+  .detail{display:grid;grid-template-columns:minmax(220px,1fr) minmax(280px,1.2fr);gap:20px}
+  .detail .preview{background:#f1f5f9;border-radius:12px;display:grid;place-items:center;min-height:260px;overflow:hidden}
+  .detail .preview img{max-width:100%;max-height:70vh;object-fit:contain;background:#fff;box-shadow:var(--shadow)}
+  .detail h4{margin:16px 0 8px;font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .layouts{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+  .lay{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .lay:hover{border-color:var(--primary);background:#eff6ff}
+  .lay.active{border-color:var(--primary);background:#dbeafe;box-shadow:inset 0 0 0 1px var(--primary)}
+  .lay b{font-size:13px}
+  .lay small{color:var(--muted);font-size:11px}
+  .lay svg{width:44px;height:44px}
+  .opts{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:14px;margin:10px 0}
+  .opts label{display:flex;align-items:center;gap:6px}
+  .opts select{padding:5px 8px;border:1px solid #cbd5e1;border-radius:6px}
+  .meta{font-size:14px;color:#334155}
+  .meta b{display:block;font-size:20px;color:var(--text);margin-bottom:4px}
+  .status{font-size:13px;color:var(--muted);margin-top:8px;min-height:18px}
+
+  /* ---------- Login / Config ---------- */
+  .center{min-height:100vh;display:grid;place-items:center;padding:16px}
+  .panel{background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:28px;width:100%;max-width:420px}
+  .panel h2{margin:0 0 4px}
+  .panel p{color:var(--muted);margin:0 0 18px;font-size:14px}
+  .err{color:var(--danger);font-size:13px;min-height:18px;margin-top:6px}
+  .link{background:none;border:0;color:var(--primary);text-decoration:underline;padding:0;font-size:13px}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0f172a;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:99;box-shadow:0 8px 24px rgba(0,0,0,.3);opacity:0;transition:opacity .2s;pointer-events:none}
+  .toast.show{opacity:1}
+
+  @media (max-width:720px){
+    aside.years{display:none}
+    aside.years.open{display:block;position:fixed;top:52px;left:0;bottom:0;z-index:30;width:220px;box-shadow:0 0 30px rgba(0,0,0,.25)}
+    .detail{grid-template-columns:1fr}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+    header.top h1{font-size:16px}
+    .toolbar h2{flex-basis:100%;font-size:18px}
+    .search{flex:1}
+  }
+</style>
+</head>
+<body>
+
+<!-- ======== ECRÃ DE CONFIGURAÇÃO ======== -->
+<div id="screen-config" class="center hidden">
+  <div class="panel">
+    <h2>Configurar ligação</h2>
+    <p>Cola aqui os dados do teu projeto Supabase (Project Settings → API). Só precisas de fazer isto uma vez neste dispositivo.</p>
+    <div class="field"><label>Project URL</label><input id="cfg-url" placeholder="https://xxxx.supabase.co"></div>
+    <div class="field"><label>anon public key</label><input id="cfg-key" placeholder="eyJhbGciOi..."></div>
+    <div class="err" id="cfg-err"></div>
+    <div class="actions"><button class="btn" id="cfg-save">Guardar e continuar</button></div>
+  </div>
+</div>
+
+<!-- ======== ECRÃ DE LOGIN ======== -->
+<div id="screen-login" class="center hidden">
+  <div class="panel">
+    <h2>Cartazes · Arca da Ajuda</h2>
+    <p>Inicia sessão. A sessão fica memorizada neste dispositivo.</p>
+    <form id="login-form">
+      <div class="field"><label>Email</label><input id="login-email" type="email" value="gestaoarcadajuda@gmail.com" autocomplete="username" required></div>
+      <div class="field"><label>Password</label><input id="login-pass" type="password" autocomplete="current-password" required></div>
+      <div class="err" id="login-err"></div>
+      <div class="actions"><button class="btn" type="submit" id="login-btn">Entrar</button></div>
+    </form>
+    <p style="margin-top:14px"><button class="link" id="login-reconfig">Alterar ligação ao Supabase</button></p>
+  </div>
+</div>
+
+<!-- ======== APP ======== -->
+<div id="screen-app" class="hidden">
+  <header class="top">
+    <button class="icon-btn" id="menu-btn" title="Anos">☰</button>
+    <div class="logo"><svg viewBox="0 0 64 64" width="22" height="22"><rect x="16" y="12" width="32" height="40" rx="4" fill="#1d4ed8"/><rect x="21" y="19" width="22" height="14" rx="2" fill="#fbbf24"/><rect x="21" y="38" width="22" height="3" rx="1.5" fill="#fff"/><rect x="21" y="44" width="14" height="3" rx="1.5" fill="#fff"/></svg></div>
+    <h1>Cartazes · Arca da Ajuda</h1>
+    <button class="icon-btn" id="upload-btn">⬆ <span class="lbl">Carregar</span></button>
+    <button class="icon-btn" id="logout-btn" title="Sair">⎋</button>
+  </header>
+  <main>
+    <aside class="years" id="years">
+      <h2>Anos</h2>
+      <div id="years-list"></div>
+    </aside>
+    <section class="content">
+      <div class="toolbar">
+        <h2 id="content-title">Todos os cartazes</h2>
+        <input class="search" id="search" placeholder="Pesquisar por nome ou descrição…">
+        <button class="btn secondary hidden" id="sync-btn" title="Copiar para a Google Drive os cartazes que ainda lá não estão">☁ Sincronizar Drive (<span id="sync-n">0</span>)</button>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="empty hidden" id="empty"><div class="big">🗂️</div><p>Ainda não há cartazes aqui.<br>Usa o botão <b>Carregar</b> para adicionar o primeiro.</p></div>
+    </section>
+  </main>
+</div>
+
+<!-- ======== MODAL: CARREGAR ======== -->
+<div id="modal-upload" class="modal hidden">
+  <div class="box" style="max-width:560px">
+    <header><h3>Carregar cartaz</h3><button class="close" data-close="modal-upload">×</button></header>
+    <div class="body">
+      <div class="drop" id="drop">
+        <div style="font-size:30px">📄</div>
+        <div><b>Arrasta ficheiros para aqui</b> ou <button class="link" type="button" id="pick-btn">escolhe do dispositivo</button></div>
+        <div style="font-size:12px;margin-top:4px">PDF, PNG, JPG (exportados do Canva)</div>
+        <input type="file" id="file-input" multiple accept=".pdf,application/pdf,image/png,image/jpeg,image/webp">
+        <div class="filelist" id="filelist"></div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <div class="field"><label>Nome / Título</label><input id="up-title" placeholder="Ex.: Festa de Verão"></div>
+        <div class="field" style="max-width:130px"><label>Ano</label><input id="up-year" type="number" min="2000" max="2100"></div>
+      </div>
+      <div class="field"><label>Descrição</label><textarea id="up-desc" placeholder="Atividade, data, local…"></textarea></div>
+      <div class="progress hidden" id="up-progress"><i></i></div>
+      <div class="status" id="up-status"></div>
+      <div class="actions">
+        <button class="btn secondary" data-close="modal-upload">Cancelar</button>
+        <button class="btn" id="up-go">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== MODAL: DETALHE / IMPRIMIR ======== -->
+<div id="modal-detail" class="modal hidden">
+  <div class="box">
+    <header><h3 id="d-title">Cartaz</h3><button class="close" data-close="modal-detail">×</button></header>
+    <div class="body">
+      <div class="detail">
+        <div>
+          <div class="preview" id="d-preview"></div>
+          <div class="actions" style="justify-content:flex-start;margin-top:12px">
+            <button class="btn secondary sm" id="d-download">⬇ Original</button>
+            <button class="btn secondary sm" id="d-edit">✎ Editar</button>
+            <button class="btn danger sm" id="d-delete">🗑 Apagar</button>
+          </div>
+        </div>
+        <div>
+          <div class="meta"><b id="d-name"></b><div id="d-desc"></div><div id="d-info" style="color:var(--muted);font-size:13px;margin-top:6px"></div></div>
+          <h4>Formato de impressão</h4>
+          <div class="layouts" id="layouts"></div>
+          <div class="opts">
+            <label>Margem <select id="opt-margin"><option value="0">0 mm</option><option value="5" selected>5 mm</option><option value="10">10 mm</option></select></label>
+            <label><input type="checkbox" id="opt-cut" checked> Linhas de corte</label>
+            <label><input type="checkbox" id="opt-fit" checked> Ajustar à célula</label>
+          </div>
+          <div class="actions" style="justify-content:flex-start">
+            <button class="btn" id="d-print">🖨 Imprimir</button>
+            <button class="btn secondary" id="d-open">Abrir PDF</button>
+            <button class="btn secondary" id="d-save">⬇ Guardar PDF</button>
+          </div>
+          <div class="status" id="d-status"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== MODAL: EDITAR ======== -->
+<div id="modal-edit" class="modal hidden">
+  <div class="box" style="max-width:480px">
+    <header><h3>Editar cartaz</h3><button class="close" data-close="modal-edit">×</button></header>
+    <div class="body">
+      <div class="row">
+        <div class="field"><label>Nome / Título</label><input id="e-title"></div>
+        <div class="field" style="max-width:130px"><label>Ano</label><input id="e-year" type="number" min="2000" max="2100"></div>
+      </div>
+      <div class="field"><label>Descrição</label><textarea id="e-desc"></textarea></div>
+      <div class="actions"><button class="btn secondary" data-close="modal-edit">Cancelar</button><button class="btn" id="e-save">Guardar</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<iframe id="print-frame" style="position:fixed;width:0;height:0;border:0;opacity:0;pointer-events:none" title="print"></iframe>
+
+<script>
+/* =====================================================================
+   CONFIGURAÇÃO
+   Podes fixar aqui a URL e a chave para não teres de as introduzir
+   em cada dispositivo. Se ficarem vazias, a app pede-as no 1º arranque.
+   ===================================================================== */
+const DEFAULT_SUPABASE_URL = "https://gztmxvxdjltntvtnqaji.supabase.co";
+const DEFAULT_SUPABASE_KEY = "sb_publishable_ksS7iMVkqHGwYYjhqz3YfA_8HyqPqHo";
+const BUCKET = "cartazes";
+// Cópia automática para a Google Drive (requer a função "drive-sync" no Supabase — ver GUIA-DRIVE.md)
+const DRIVE_SYNC = true;
+
+/* ---------- utilitários ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const show = id => $('#' + id).classList.remove('hidden');
+const hide = id => $('#' + id).classList.add('hidden');
+let toastT; function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2800); }
+const fmtSize = b => b > 1e6 ? (b/1e6).toFixed(1)+' MB' : Math.round(b/1e3)+' kB';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+/* ---------- estado ---------- */
+let sb = null;             // cliente supabase
+let posters = [];          // todos os registos
+let currentYear = 'all';   // filtro
+let current = null;        // cartaz aberto no detalhe
+let currentLayout = 'A4-1';
+let thumbCache = {};       // path -> signed url
+
+/* =====================================================================
+   ARRANQUE: config → sessão → app
+   ===================================================================== */
+function getConfig(){
+  try {
+    const c = JSON.parse(localStorage.getItem('cartazes.cfg') || 'null');
+    if (c && c.url && c.key) return c;
+  } catch(e){}
+  if (DEFAULT_SUPABASE_URL && DEFAULT_SUPABASE_KEY) return { url: DEFAULT_SUPABASE_URL, key: DEFAULT_SUPABASE_KEY };
+  return null;
+}
+
+async function boot(){
+  const cfg = getConfig();
+  if (!cfg) { show('screen-config'); return; }
+  try {
+    sb = supabase.createClient(cfg.url, cfg.key, { auth: { persistSession: true, autoRefreshToken: true } });
+  } catch(e) { show('screen-config'); $('#cfg-err').textContent = 'Configuração inválida.'; return; }
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) enterApp(); else show('screen-login');
+  sb.auth.onAuthStateChange((ev, s) => {
+    if (ev === 'SIGNED_OUT') { hide('screen-app'); show('screen-login'); }
+  });
+}
+
+$('#cfg-save').onclick = () => {
+  const url = $('#cfg-url').value.trim().replace(/\/+$/,''), key = $('#cfg-key').value.trim();
+  if (!/^https:\/\/.+supabase\.(co|in)$/.test(url) && !/^https?:\/\//.test(url)) { $('#cfg-err').textContent = 'URL inválida.'; return; }
+  if (key.length < 20) { $('#cfg-err').textContent = 'Chave inválida.'; return; }
+  localStorage.setItem('cartazes.cfg', JSON.stringify({ url, key }));
+  hide('screen-config'); boot();
+};
+$('#login-reconfig').onclick = () => { localStorage.removeItem('cartazes.cfg'); hide('screen-login'); show('screen-config'); };
+
+$('#login-form').onsubmit = async e => {
+  e.preventDefault();
+  const btn = $('#login-btn'); btn.disabled = true; $('#login-err').textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email: $('#login-email').value.trim(), password: $('#login-pass').value });
+  btn.disabled = false;
+  if (error) { $('#login-err').textContent = 'Não foi possível entrar: ' + (error.message === 'Invalid login credentials' ? 'email ou password errados.' : error.message); return; }
+  hide('screen-login'); enterApp();
+};
+$('#logout-btn').onclick = async () => { if (confirm('Terminar sessão neste dispositivo?')) await sb.auth.signOut(); };
+
+async function enterApp(){
+  hide('screen-login'); show('screen-app');
+  $('#up-year').value = new Date().getFullYear();
+  await loadPosters();
+}
+
+/* =====================================================================
+   DADOS
+   ===================================================================== */
+async function loadPosters(){
+  const { data, error } = await sb.from('cartazes').select('*').order('ano', { ascending: false }).order('criado_em', { ascending: false });
+  if (error) { toast('Erro a carregar: ' + error.message); console.error(error); return; }
+  posters = data || [];
+  await refreshThumbs();
+  renderYears(); renderGrid();
+}
+
+async function refreshThumbs(){
+  const paths = posters.map(p => p.thumb_path).filter(p => p && !thumbCache[p]);
+  if (!paths.length) return;
+  const { data } = await sb.storage.from(BUCKET).createSignedUrls(paths, 60 * 60 * 6);
+  (data || []).forEach(d => { if (d.signedUrl) thumbCache[d.path] = d.signedUrl; });
+}
+
+function renderYears(){
+  const counts = {};
+  posters.forEach(p => counts[p.ano] = (counts[p.ano] || 0) + 1);
+  const years = Object.keys(counts).map(Number).sort((a,b)=>b-a);
+  if (currentYear !== 'all' && !counts[currentYear]) currentYear = 'all';
+  const html = [`<button class="year-btn ${currentYear==='all'?'active':''}" data-year="all"><span>Todos</span><span class="n">${posters.length}</span></button>`]
+    .concat(years.map(y => `<button class="year-btn ${currentYear===y?'active':''}" data-year="${y}"><span>${y}</span><span class="n">${counts[y]}</span></button>`));
+  $('#years-list').innerHTML = html.join('');
+  $$('#years-list .year-btn').forEach(b => b.onclick = () => {
+    currentYear = b.dataset.year === 'all' ? 'all' : Number(b.dataset.year);
+    $('#years').classList.remove('open'); renderYears(); renderGrid();
+  });
+}
+
+function renderGrid(){
+  const q = $('#search').value.trim().toLowerCase();
+  const list = posters.filter(p => (currentYear === 'all' || p.ano === currentYear) &&
+    (!q || (p.titulo + ' ' + (p.descricao||'')).toLowerCase().includes(q)));
+  $('#content-title').textContent = currentYear === 'all' ? 'Todos os cartazes' : 'Cartazes de ' + currentYear;
+  $('#grid').innerHTML = list.map(p => `
+    <div class="card" data-id="${p.id}">
+      <div class="thumb">${p.thumb_path && thumbCache[p.thumb_path] ? `<img loading="lazy" src="${thumbCache[p.thumb_path]}" alt="">` : '<span style="font-size:40px">📄</span>'}</div>
+      <div class="info">
+        <div class="title" title="${esc(p.titulo)}">${esc(p.titulo)}</div>
+        <div class="desc">${esc(p.descricao) || '&nbsp;'}</div>
+        <span class="badge ${p.file_type==='image'?'img':''}">${p.file_type==='pdf'?'PDF':'IMAGEM'}</span>
+        ${currentYear==='all' ? `<span class="badge" style="background:#e0e7ff;color:#3730a3">${p.ano}</span>` : ''}
+        ${DRIVE_SYNC ? (p.drive_file_id ? `<span class="badge" style="background:#dbeafe;color:#1e40af" title="Guardado na Google Drive">☁ Drive</span>` : `<span class="badge" style="background:#f1f5f9;color:#64748b" title="Ainda não copiado para a Drive">☁ pendente</span>`) : ''}
+      </div>
+    </div>`).join('');
+  list.length ? hide('empty') : show('empty');
+  const pend = DRIVE_SYNC ? posters.filter(p => !p.drive_file_id).length : 0;
+  $('#sync-n').textContent = pend; pend ? show('sync-btn') : hide('sync-btn');
+  $$('#grid .card').forEach(c => c.onclick = () => openDetail(posters.find(p => p.id === c.dataset.id)));
+}
+$('#search').oninput = renderGrid;
+$('#menu-btn').onclick = () => $('#years').classList.toggle('open');
+
+/* =====================================================================
+   UPLOAD
+   ===================================================================== */
+let pending = [];
+$('#upload-btn').onclick = () => { pending = []; $('#filelist').innerHTML = ''; $('#up-title').value = ''; $('#up-desc').value = ''; $('#up-status').textContent=''; hide('up-progress'); $('#up-year').value = currentYear === 'all' ? new Date().getFullYear() : currentYear; show('modal-upload'); };
+$('#pick-btn').onclick = () => $('#file-input').click();
+$('#file-input').onchange = e => addFiles([...e.target.files]);
+const drop = $('#drop');
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); addFiles([...e.dataTransfer.files]); };
+function addFiles(files){
+  files = files.filter(f => /pdf|image\/(png|jpe?g|webp)/.test(f.type));
+  if (!files.length) { toast('Só PDF, PNG, JPG ou WEBP.'); return; }
+  pending = pending.concat(files);
+  $('#filelist').innerHTML = pending.map(f => `<div>${esc(f.name)} · ${fmtSize(f.size)}</div>`).join('');
+  if (!$('#up-title').value && pending.length === 1) $('#up-title').value = pending[0].name.replace(/\.[^.]+$/, '').replace(/[_-]+/g,' ');
+  $('#up-title').placeholder = pending.length > 1 ? 'Deixa vazio para usar o nome de cada ficheiro' : 'Ex.: Festa de Verão';
+}
+
+$('#up-go').onclick = async () => {
+  if (!pending.length) { toast('Escolhe pelo menos um ficheiro.'); return; }
+  const ano = parseInt($('#up-year').value, 10);
+  if (!ano) { toast('Indica o ano.'); return; }
+  const btn = $('#up-go'); btn.disabled = true; show('up-progress');
+  const bar = $('#up-progress i'); let done = 0, failed = 0;
+  for (const f of pending) {
+    try {
+      $('#up-status').textContent = `A guardar ${f.name}…`;
+      await uploadOne(f, ano, pending.length === 1 ? $('#up-title').value.trim() : ($('#up-title').value.trim() || ''), $('#up-desc').value.trim());
+    } catch (e) { console.error(e); failed++; toast('Falhou: ' + f.name + ' — ' + (e.message || e)); }
+    done++; bar.style.width = Math.round(done / pending.length * 100) + '%';
+  }
+  btn.disabled = false;
+  $('#up-status').textContent = failed ? `${done-failed} guardado(s), ${failed} com erro.` : 'Guardado!';
+  await loadPosters();
+  if (!failed) { hide('modal-upload'); toast(done === 1 ? 'Cartaz guardado.' : done + ' cartazes guardados.'); }
+};
+
+async function uploadOne(file, ano, title, desc){
+  const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+  const ext = isPdf ? 'pdf' : (file.name.split('.').pop() || 'png').toLowerCase();
+  const id = crypto.randomUUID();
+  const path = `${ano}/${id}.${ext}`;
+  const thumbPath = `${ano}/${id}_thumb.jpg`;
+  // miniatura
+  let thumb = null;
+  try { thumb = isPdf ? await pdfThumb(file) : await imageThumb(file); } catch(e){ console.warn('thumb', e); }
+  // ficheiro original
+  let r = await sb.storage.from(BUCKET).upload(path, file, { contentType: file.type || (isPdf ? 'application/pdf' : 'image/png'), upsert: false });
+  if (r.error) throw r.error;
+  if (thumb) {
+    r = await sb.storage.from(BUCKET).upload(thumbPath, thumb, { contentType: 'image/jpeg', upsert: true });
+    if (r.error) { console.warn(r.error); thumb = null; }
+  }
+  const rec = { titulo: title || file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g,' '), descricao: desc, ano,
+                file_path: path, file_type: isPdf ? 'pdf' : 'image', mime: file.type, thumb_path: thumb ? thumbPath : null, tamanho: file.size };
+  const { data: inserted, error } = await sb.from('cartazes').insert(rec).select().single();
+  if (error) { await sb.storage.from(BUCKET).remove([path, thumbPath]); throw error; }
+  if (DRIVE_SYNC && inserted) {
+    $('#up-status').textContent = `A copiar ${file.name} para a Drive…`;
+    const r = await driveSync('upload', inserted.id);
+    if (!r.ok) toast('Guardado no Supabase, mas a cópia para a Drive falhou: ' + r.error);
+  }
+}
+
+/* ---------- Google Drive (via função drive-sync no Supabase) ---------- */
+async function driveSync(action, id){
+  try {
+    const { data, error } = await sb.functions.invoke('drive-sync', { body: { action, id } });
+    if (error) {
+      let msg = error.message || String(error);
+      try { const j = await error.context?.json(); if (j?.error) msg = j.error; } catch(e){}
+      return { ok: false, error: msg };
+    }
+    if (data?.error) return { ok: false, error: data.error };
+    return { ok: true, ...data };
+  } catch(e) { return { ok: false, error: e.message || String(e) }; }
+}
+$('#sync-btn').onclick = async () => {
+  const pend = posters.filter(p => !p.drive_file_id);
+  const btn = $('#sync-btn'); btn.disabled = true; let ok = 0, fail = 0, lastErr = '';
+  for (const p of pend) {
+    btn.firstChild.textContent = `☁ A copiar ${ok+fail+1}/${pend.length}… `;
+    const r = await driveSync('upload', p.id);
+    r.ok ? ok++ : (fail++, lastErr = r.error);
+  }
+  btn.disabled = false; btn.firstChild.textContent = '☁ Sincronizar Drive (';
+  toast(fail ? `${ok} copiado(s), ${fail} falharam: ${lastErr}` : `${ok} cartaz(es) copiado(s) para a Drive.`);
+  await loadPosters();
+};
+
+async function pdfThumb(file){
+  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const page = await pdf.getPage(1);
+  const v0 = page.getViewport({ scale: 1 });
+  const scale = 700 / Math.max(v0.width, v0.height);
+  const vp = page.getViewport({ scale });
+  const c = document.createElement('canvas'); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0,0,c.width,c.height);
+  await page.render({ canvasContext: ctx, viewport: vp }).promise;
+  return new Promise(res => c.toBlob(res, 'image/jpeg', 0.85));
+}
+async function imageThumb(file){
+  const img = await loadImage(URL.createObjectURL(file));
+  const scale = Math.min(1, 700 / Math.max(img.width, img.height));
+  const c = document.createElement('canvas'); c.width = Math.round(img.width*scale); c.height = Math.round(img.height*scale);
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0,0,c.width,c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
+  return new Promise(res => c.toBlob(res, 'image/jpeg', 0.85));
+}
+const loadImage = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+
+/* =====================================================================
+   DETALHE / EDITAR / APAGAR
+   ===================================================================== */
+const LAYOUTS = [
+  { id:'A4-1', paper:'A4', cols:1, rows:1, name:'A4', sub:'1 por folha' },
+  { id:'A3-1', paper:'A3', cols:1, rows:1, name:'A3', sub:'1 por folha' },
+  { id:'A4-2', paper:'A4', cols:2, rows:1, name:'2 × A5', sub:'folha A4' },
+  { id:'A4-4', paper:'A4', cols:2, rows:2, name:'4 × A6', sub:'folha A4' },
+  { id:'A4-6', paper:'A4', cols:2, rows:3, name:'6 ×', sub:'folha A4' },
+  { id:'A4-8', paper:'A4', cols:2, rows:4, name:'8 × A7', sub:'folha A4' },
+  { id:'A3-2', paper:'A3', cols:2, rows:1, name:'2 × A4', sub:'folha A3' },
+  { id:'A3-4', paper:'A3', cols:2, rows:2, name:'4 × A5', sub:'folha A3' },
+];
+const PAPER = { A4: [595.28, 841.89], A3: [841.89, 1190.55] };
+
+function layoutIcon(l){
+  // desenha uma folha com a grelha (orientação decidida na altura de imprimir)
+  const w = 30, h = 40, cells = [];
+  for (let r = 0; r < l.rows; r++) for (let c = 0; c < l.cols; c++)
+    cells.push(`<rect x="${7 + c*(w/l.cols)+1}" y="${2 + r*(h/l.rows)+1}" width="${w/l.cols-2}" height="${h/l.rows-2}" rx="1" fill="#93c5fd"/>`);
+  return `<svg viewBox="0 0 44 44"><rect x="7" y="2" width="${w}" height="${h}" rx="2" fill="#fff" stroke="#64748b"/>${cells.join('')}</svg>`;
+}
+$('#layouts').innerHTML = LAYOUTS.map(l => `<button class="lay ${l.id===currentLayout?'active':''}" data-id="${l.id}">${layoutIcon(l)}<b>${l.name}</b><small>${l.sub}</small></button>`).join('');
+$$('#layouts .lay').forEach(b => b.onclick = () => { currentLayout = b.dataset.id; $$('#layouts .lay').forEach(x => x.classList.toggle('active', x === b)); });
+
+async function openDetail(p){
+  current = p; if (!p) return;
+  $('#d-title').textContent = p.titulo; $('#d-name').textContent = p.titulo;
+  $('#d-desc').textContent = p.descricao || ''; $('#d-status').textContent = '';
+  $('#d-info').innerHTML = `${p.ano} · ${p.file_type === 'pdf' ? 'PDF' : 'Imagem'} · ${fmtSize(p.tamanho||0)} · adicionado em ${new Date(p.criado_em).toLocaleDateString('pt-PT')}` +
+    (DRIVE_SYNC ? (p.drive_link ? ` · <a href="${esc(p.drive_link)}" target="_blank" rel="noopener">☁ Abrir na Drive</a>` : ' · ☁ ainda não está na Drive') : '');
+  $('#d-preview').innerHTML = p.thumb_path && thumbCache[p.thumb_path] ? `<img src="${thumbCache[p.thumb_path]}" alt="">` : '<span style="font-size:60px">📄</span>';
+  show('modal-detail');
+}
+$$('[data-close]').forEach(b => b.onclick = () => hide(b.dataset.close));
+$$('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.add('hidden'); }));
+
+async function fetchOriginal(p){
+  const { data, error } = await sb.storage.from(BUCKET).download(p.file_path);
+  if (error) throw error;
+  return data; // Blob
+}
+$('#d-download').onclick = async () => {
+  try { $('#d-status').textContent = 'A descarregar…'; const b = await fetchOriginal(current);
+    saveBlob(b, current.titulo + '.' + current.file_path.split('.').pop()); $('#d-status').textContent = ''; }
+  catch(e){ toast('Erro: ' + e.message); }
+};
+function saveBlob(blob, name){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 60000); }
+
+$('#d-delete').onclick = async () => {
+  if (!confirm(`Apagar "${current.titulo}"?${DRIVE_SYNC && current.drive_file_id ? ' Também será apagado da Google Drive.' : ''} Esta ação não pode ser anulada.`)) return;
+  if (DRIVE_SYNC && current.drive_file_id) {
+    $('#d-status').textContent = 'A apagar da Drive…';
+    const r = await driveSync('delete', current.id);
+    if (!r.ok && !confirm('Não foi possível apagar da Drive (' + r.error + '). Apagar na mesma da app?')) { $('#d-status').textContent=''; return; }
+  }
+  const { error } = await sb.from('cartazes').delete().eq('id', current.id);
+  if (error) { toast('Erro: ' + error.message); return; }
+  await sb.storage.from(BUCKET).remove([current.file_path, current.thumb_path].filter(Boolean));
+  hide('modal-detail'); toast('Cartaz apagado.'); await loadPosters();
+};
+
+$('#d-edit').onclick = () => { $('#e-title').value = current.titulo; $('#e-year').value = current.ano; $('#e-desc').value = current.descricao || ''; show('modal-edit'); };
+$('#e-save').onclick = async () => {
+  const upd = { titulo: $('#e-title').value.trim(), ano: parseInt($('#e-year').value,10), descricao: $('#e-desc').value.trim() };
+  if (!upd.titulo || !upd.ano) { toast('Nome e ano são obrigatórios.'); return; }
+  const { error } = await sb.from('cartazes').update(upd).eq('id', current.id);
+  if (error) { toast('Erro: ' + error.message); return; }
+  hide('modal-edit'); toast('Alterado.');
+  if (DRIVE_SYNC && current.drive_file_id && (upd.titulo !== current.titulo || upd.ano !== current.ano)) {
+    const r = await driveSync('rename', current.id);
+    if (!r.ok) toast('Alterado na app, mas não na Drive: ' + r.error);
+  }
+  await loadPosters(); openDetail(posters.find(p => p.id === current.id));
+};
+
+/* =====================================================================
+   IMPRESSÃO — gera um PDF com o cartaz repetido na grelha escolhida
+   ===================================================================== */
+async function buildPrintPdf(blob, isPdf, layoutId, opts){
+  const { PDFDocument, rgb } = PDFLib;
+  const L = LAYOUTS.find(l => l.id === layoutId);
+  const doc = await PDFDocument.create();
+  const bytes = await blob.arrayBuffer();
+
+  // fonte: página de PDF ou imagem
+  let src, sw, sh;
+  if (isPdf) {
+    const [emb] = await doc.embedPdf(bytes, [0]);
+    src = emb; sw = emb.width; sh = emb.height;
+  } else {
+    let img;
+    try { img = blob.type.includes('png') ? await doc.embedPng(bytes) : await doc.embedJpg(bytes); }
+    catch(e) { // webp ou outro → converter para PNG via canvas
+      const im = await loadImage(URL.createObjectURL(blob));
+      const c = document.createElement('canvas'); c.width = im.width; c.height = im.height; c.getContext('2d').drawImage(im,0,0);
+      const png = await new Promise(r => c.toBlob(r, 'image/png'));
+      img = await doc.embedPng(await png.arrayBuffer());
+    }
+    src = img; sw = img.width; sh = img.height;
+  }
+
+  // escolher orientação da folha que dá o cartaz maior
+  const [pw, ph] = PAPER[L.paper];
+  const margin = (opts.margin || 0) * 72 / 25.4, gutter = L.cols * L.rows > 1 ? 2 * 72 / 25.4 : 0;
+  const candidates = [
+    { W: pw, H: ph, cols: L.cols, rows: L.rows },
+    { W: ph, H: pw, cols: L.rows, rows: L.cols },
+  ].map(c => {
+    const cw = (c.W - 2*margin - (c.cols-1)*gutter) / c.cols, ch = (c.H - 2*margin - (c.rows-1)*gutter) / c.rows;
+    return { ...c, cw, ch, scale: Math.min(cw / sw, ch / sh) };
+  });
+  const best = candidates.sort((a,b) => b.scale - a.scale)[0];
+  const page = doc.addPage([best.W, best.H]);
+
+  for (let r = 0; r < best.rows; r++) for (let c = 0; c < best.cols; c++) {
+    const x0 = margin + c * (best.cw + gutter);
+    const y0 = best.H - margin - (r + 1) * best.ch - r * gutter;   // origem em baixo-esquerda
+    const s = opts.fit ? best.scale : Math.min(best.scale, 1);
+    const w = sw * s, h = sh * s;
+    const x = x0 + (best.cw - w) / 2, y = y0 + (best.ch - h) / 2;
+    if (isPdf) page.drawPage(src, { x, y, width: w, height: h }); else page.drawImage(src, { x, y, width: w, height: h });
+    if (opts.cut && best.cols * best.rows > 1) {
+      page.drawRectangle({ x: x0, y: y0, width: best.cw, height: best.ch, borderColor: rgb(.6,.6,.6), borderWidth: .4, borderDashArray: [4, 4], opacity: 0, borderOpacity: 1 });
+    }
+  }
+  doc.setTitle(opts.title || 'Cartaz');
+  return new Blob([await doc.save()], { type: 'application/pdf' });
+}
+
+async function makePrint(){
+  const opts = { margin: parseFloat($('#opt-margin').value), cut: $('#opt-cut').checked, fit: $('#opt-fit').checked, title: current.titulo };
+  $('#d-status').textContent = 'A preparar o PDF…';
+  const blob = await fetchOriginal(current);
+  const pdf = await buildPrintPdf(blob, current.file_type === 'pdf', currentLayout, opts);
+  $('#d-status').textContent = '';
+  return pdf;
+}
+$('#d-print').onclick = async () => {
+  try {
+    const pdf = await makePrint();
+    const url = URL.createObjectURL(pdf);
+    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+    if (isMobile) { window.open(url, '_blank'); $('#d-status').textContent = 'PDF aberto num novo separador — usa "Partilhar/Imprimir".'; return; }
+    const f = $('#print-frame');
+    f.onload = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch(e){ window.open(url, '_blank'); } };
+    f.src = url;
+  } catch(e){ console.error(e); toast('Erro ao preparar impressão: ' + e.message); $('#d-status').textContent=''; }
+};
+$('#d-open').onclick = async () => { try { window.open(URL.createObjectURL(await makePrint()), '_blank'); } catch(e){ toast('Erro: ' + e.message); } };
+$('#d-save').onclick = async () => { try { saveBlob(await makePrint(), `${current.titulo} - ${LAYOUTS.find(l=>l.id===currentLayout).name}.pdf`); } catch(e){ toast('Erro: ' + e.message); } };
+
+boot();
+</script>
+</body>
+</html>
