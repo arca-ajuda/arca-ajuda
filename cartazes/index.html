@@ -42,8 +42,12 @@
 
   /* ---------- Layout ---------- */
   header.top{position:sticky;top:0;z-index:20;background:var(--primary);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-  header.top h1{font-size:18px;margin:0;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  header.top .logo{width:30px;height:30px;border-radius:8px;background:#fff;display:grid;place-items:center;flex:none}
+  header.top h1{margin:0;flex:1;display:flex;flex-direction:column;line-height:1.15;min-width:0}
+  header.top h1 .assoc{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  header.top h1 .app{font-size:12px;font-weight:500;opacity:.85;letter-spacing:.04em;text-transform:uppercase}
+  header.top .logo-arca{height:38px;width:auto;max-width:120px;border-radius:6px;background:#fff;padding:3px;flex:none}
+  .fab-home{position:fixed;right:16px;bottom:16px;z-index:40;background:#fff;color:var(--primary);border:1px solid var(--line);border-radius:999px;padding:10px 16px;font-weight:600;font-size:14px;text-decoration:none;box-shadow:0 6px 20px rgba(15,23,42,.18);display:inline-flex;align-items:center;gap:6px}
+  .fab-home:hover{background:#eff6ff}
   .icon-btn{background:rgba(255,255,255,.15);border:0;color:#fff;border-radius:8px;padding:7px 10px;font-size:14px;display:inline-flex;align-items:center;gap:6px}
   .icon-btn:hover{background:rgba(255,255,255,.25)}
   main{display:flex;min-height:calc(100% - 52px)}
@@ -131,12 +135,17 @@
   .toast.show{opacity:1}
 
   @media (max-width:720px){
-    aside.years{display:none}
-    aside.years.open{display:block;position:fixed;top:52px;left:0;bottom:0;z-index:30;width:220px;box-shadow:0 0 30px rgba(0,0,0,.25)}
+    main{flex-direction:column}
+    aside.years{width:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px 12px;display:flex;align-items:center;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    aside.years h2{margin:0 6px 0 0;white-space:nowrap}
+    #years-list{display:flex;gap:6px}
+    .year-btn{white-space:nowrap;padding:6px 10px;border:1px solid var(--line);border-radius:999px;gap:6px;font-size:14px}
+    .year-btn.active{border-color:var(--primary)}
     .detail{grid-template-columns:1fr}
     .grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
-    header.top h1{font-size:16px}
     header.top .lbl{display:none}
+    .fab-home{bottom:12px;right:12px;padding:10px 14px}
+    section.content{padding-bottom:70px}
     .toolbar h2{flex-basis:100%;font-size:18px}
     .search{flex:1}
   }
@@ -174,10 +183,8 @@
 <!-- ======== APP ======== -->
 <div id="screen-app" class="hidden">
   <header class="top">
-    <a class="icon-btn" href="https://arca-ajuda.github.io/arca-ajuda/" title="Menu geral ARCA d'Ajuda" style="text-decoration:none">🏠 <span class="lbl">Menu geral</span></a>
-    <button class="icon-btn" id="menu-btn" title="Anos">☰</button>
-    <div class="logo"><svg viewBox="0 0 64 64" width="22" height="22"><rect x="16" y="12" width="32" height="40" rx="4" fill="#1d4ed8"/><rect x="21" y="19" width="22" height="14" rx="2" fill="#fbbf24"/><rect x="21" y="38" width="22" height="3" rx="1.5" fill="#fff"/><rect x="21" y="44" width="14" height="3" rx="1.5" fill="#fff"/></svg></div>
-    <h1>Cartazes · Arca da Ajuda</h1>
+    <img class="logo-arca" src="../logo.png" alt="" onerror="this.style.display='none'">
+    <h1><span class="assoc">ARCA d'Ajuda</span><span class="app">Cartazes</span></h1>
     <button class="icon-btn" id="upload-btn">⬆ <span class="lbl">Carregar</span></button>
     <button class="icon-btn" id="logout-btn" title="Sair">⎋</button>
   </header>
@@ -196,6 +203,7 @@
       <div class="empty hidden" id="empty"><div class="big">🗂️</div><p>Ainda não há cartazes aqui.<br>Usa o botão <b>Carregar</b> para adicionar o primeiro.</p></div>
     </section>
   </main>
+  <a class="fab-home" href="https://arca-ajuda.github.io/arca-ajuda/" title="Voltar ao menu geral">🏠 Menu geral</a>
 </div>
 
 <!-- ======== MODAL: CARREGAR ======== -->
@@ -412,7 +420,6 @@ function renderGrid(){
   $$('#grid .card').forEach(c => c.onclick = () => openDetail(posters.find(p => p.id === c.dataset.id)));
 }
 $('#search').oninput = renderGrid;
-$('#menu-btn').onclick = () => $('#years').classList.toggle('open');
 
 /* =====================================================================
    UPLOAD
@@ -530,14 +537,12 @@ const loadImage = src => new Promise((res, rej) => { const i = new Image(); i.on
    DETALHE / EDITAR / APAGAR
    ===================================================================== */
 const LAYOUTS = [
-  { id:'A4-1', paper:'A4', cols:1, rows:1, name:'A4', sub:'1 por folha' },
-  { id:'A3-1', paper:'A3', cols:1, rows:1, name:'A3', sub:'1 por folha' },
-  { id:'A4-2', paper:'A4', cols:2, rows:1, name:'2 × A5', sub:'folha A4' },
-  { id:'A4-4', paper:'A4', cols:2, rows:2, name:'4 × A6', sub:'folha A4' },
-  { id:'A4-6', paper:'A4', cols:2, rows:3, name:'6 ×', sub:'folha A4' },
-  { id:'A4-8', paper:'A4', cols:2, rows:4, name:'8 × A7', sub:'folha A4' },
-  { id:'A3-2', paper:'A3', cols:2, rows:1, name:'2 × A4', sub:'folha A3' },
-  { id:'A3-4', paper:'A3', cols:2, rows:2, name:'4 × A5', sub:'folha A3' },
+  { id:'A3-1', paper:'A3', cols:1, rows:1, name:'A3', sub:'1 por folha A3' },
+  { id:'A4-1', paper:'A4', cols:1, rows:1, name:'A4', sub:'1 por folha A4' },
+  { id:'A4-2', paper:'A4', cols:2, rows:1, name:'A5', sub:'2 por folha A4' },
+  { id:'A4-4', paper:'A4', cols:2, rows:2, name:'A6', sub:'4 por folha A4' },
+  { id:'A4-6', paper:'A4', cols:2, rows:3, name:'6 ×', sub:'6 por folha A4' },
+  { id:'A4-8', paper:'A4', cols:2, rows:4, name:'A7', sub:'8 por folha A4' },
 ];
 const PAPER = { A4: [595.28, 841.89], A3: [841.89, 1190.55] };
 
