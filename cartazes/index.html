@@ -27,6 +27,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fabric@5.5.2/dist/fabric.min.js"></script>
 <style>
   :root{
     --bg:#f1f5f9; --card:#ffffff; --text:#0f172a; --muted:#64748b; --line:#e2e8f0;
@@ -48,6 +49,30 @@
   header.top .logo-arca{height:38px;width:auto;max-width:120px;border-radius:6px;background:#fff;padding:3px;flex:none}
   .fab-home{position:fixed;right:16px;bottom:16px;z-index:40;background:#fff;color:var(--primary);border:1px solid var(--line);border-radius:999px;padding:10px 16px;font-weight:600;font-size:14px;text-decoration:none;box-shadow:0 6px 20px rgba(15,23,42,.18);display:inline-flex;align-items:center;gap:6px}
   .fab-home:hover{background:#eff6ff}
+
+  /* ---------- Editor de faixas ---------- */
+  .bn-wrap{display:flex;height:calc(100vh - 58px);min-height:420px}
+  .bn-tools{width:270px;flex:none;background:var(--card);border-right:1px solid var(--line);padding:10px 12px;overflow-y:auto}
+  .bn-tools h4{margin:12px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .bn-tools h4:first-child{margin-top:0}
+  .bn-row{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;margin-bottom:6px}
+  .bn-row label{display:flex;flex-direction:column;font-size:12px;color:#334155;gap:3px;flex:1;min-width:70px}
+  .bn-row input[type=number],.bn-row select{padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;width:100%;min-width:0}
+  .bn-row input[type=color]{width:100%;height:32px;padding:2px;border:1px solid #cbd5e1;border-radius:6px;background:#fff}
+  .bn-toggles .btn{min-width:38px;justify-content:center}
+  .bn-toggles .btn.on{background:#dbeafe;border-color:var(--primary);color:var(--primary)}
+  .bn-info{font-size:12px;color:var(--muted);margin:4px 0 8px;line-height:1.35}
+  .bn-help{font-size:12px;line-height:1.4;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 10px;margin:4px 0 8px;color:#1e3a8a}
+  .bn-help b{display:block;margin-bottom:3px}
+  .bn-stage{flex:1;background:#cbd5e1;overflow:auto;display:grid;place-items:center;padding:20px}
+  .bn-stage canvas{box-shadow:0 10px 40px rgba(0,0,0,.35)}
+  .bn-item{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px}
+  .bn-item b{flex:1}
+  @media (max-width:720px){
+    .bn-wrap{flex-direction:column;height:auto}
+    .bn-tools{width:auto;border-right:0;border-bottom:1px solid var(--line);max-height:45vh}
+    .bn-stage{min-height:50vh;padding:10px}
+  }
   .icon-btn{background:rgba(255,255,255,.15);border:0;color:#fff;border-radius:8px;padding:7px 10px;font-size:14px;display:inline-flex;align-items:center;gap:6px}
   .icon-btn:hover{background:rgba(255,255,255,.25)}
   main{display:flex;min-height:calc(100% - 52px)}
@@ -185,6 +210,7 @@
   <header class="top">
     <img class="logo-arca" src="../logo.png" alt="" onerror="this.style.display='none'">
     <h1><span class="assoc">ARCA d'Ajuda</span><span class="app">Cartazes</span></h1>
+    <button class="icon-btn" id="banner-btn" title="Texto grande em várias folhas">✎ <span class="lbl">Faixas</span></button>
     <button class="icon-btn" id="upload-btn">⬆ <span class="lbl">Carregar</span></button>
     <button class="icon-btn" id="logout-btn" title="Sair">⎋</button>
   </header>
@@ -204,6 +230,92 @@
     </section>
   </main>
   <a class="fab-home" href="https://arca-ajuda.github.io/arca-ajuda/" title="Voltar ao menu geral">🏠 Menu geral</a>
+</div>
+
+<!-- ======== EDITOR DE FAIXAS (texto grande em várias folhas) ======== -->
+<div id="screen-banner" class="hidden">
+  <header class="top">
+    <button class="icon-btn" id="banner-back">← <span class="lbl">Cartazes</span></button>
+    <h1><span class="assoc">Faixas</span><span class="app">Texto grande em várias folhas</span></h1>
+    <button class="icon-btn" id="bn-save" title="Guardar este desenho para editar mais tarde">💾 <span class="lbl">Guardar</span></button>
+    <button class="icon-btn" id="bn-open" title="Abrir desenho guardado">📂 <span class="lbl">Abrir</span></button>
+    <button class="icon-btn" id="bn-print" title="Imprimir folha a folha, com margens para colar">🖨 <span class="lbl">Imprimir</span></button>
+  </header>
+  <div class="bn-wrap">
+    <aside class="bn-tools">
+      <h4>Folhas</h4>
+      <div class="bn-row">
+        <label>Largura <input type="number" id="bn-cols" min="1" max="8" value="2"></label>
+        <label>Altura <input type="number" id="bn-rows" min="1" max="8" value="1"></label>
+      </div>
+      <div class="bn-row">
+        <label>Folha <select id="bn-orient"><option value="P">A4 ao alto</option><option value="L" selected>A4 deitada</option></select></label>
+        <label>Colagem <select id="bn-glue"><option value="0">0 mm</option><option value="10" selected>10 mm</option><option value="15">15 mm</option><option value="20">20 mm</option></select></label>
+      </div>
+      <div class="bn-info" id="bn-size"></div>
+      <div class="bn-help">
+        <b>Como colar as folhas</b>
+        As zonas azuis são sobreposições: a faixa junto a cada emenda sai impressa nas <u>duas</u> folhas vizinhas, para alinhares e colares.
+        Ao montar, corta pela linha tracejada de <u>uma</u> folha apenas e cola-a por cima da vizinha, fazendo coincidir o desenho.
+        Na impressora escolhe sempre escala <b>100% / tamanho real</b>. As folhas saem numeradas pela ordem: linha a linha, da esquerda para a direita.
+      </div>
+
+      <h4>Adicionar</h4>
+      <div class="bn-row">
+        <button class="btn sm" id="bn-add-text">T Texto</button>
+        <button class="btn secondary sm" id="bn-add-img">🖼 Imagem</button>
+        <input type="file" id="bn-img-input" accept="image/*" class="hidden">
+      </div>
+
+      <h4>Texto selecionado</h4>
+      <div class="bn-row">
+        <label style="flex:1">Tipo de letra
+          <select id="bn-font"></select>
+        </label>
+      </div>
+      <div class="bn-row">
+        <button class="btn secondary sm" id="bn-fonts-local" title="Lista os tipos de letra instalados neste computador (Chrome/Edge)">Tipos de letra do computador</button>
+      </div>
+      <div class="bn-row">
+        <label>Tamanho <input type="number" id="bn-fsize" min="8" max="2000" value="200"></label>
+        <label>Cor <input type="color" id="bn-color" value="#111111"></label>
+      </div>
+      <div class="bn-row bn-toggles">
+        <button class="btn secondary sm" id="bn-bold"><b>B</b></button>
+        <button class="btn secondary sm" id="bn-italic"><i>I</i></button>
+        <button class="btn secondary sm" data-align="left">⯇</button>
+        <button class="btn secondary sm" data-align="center">☰</button>
+        <button class="btn secondary sm" data-align="right">⯈</button>
+      </div>
+      <div class="bn-row">
+        <label>Contorno <input type="color" id="bn-stroke" value="#000000"></label>
+        <label>Espessura <input type="number" id="bn-strokew" min="0" max="50" value="0"></label>
+      </div>
+
+      <h4>Objeto</h4>
+      <div class="bn-row">
+        <button class="btn secondary sm" id="bn-front">↑ Frente</button>
+        <button class="btn secondary sm" id="bn-back">↓ Trás</button>
+        <button class="btn secondary sm" id="bn-center">⌖ Centrar</button>
+        <button class="btn danger sm" id="bn-del">🗑</button>
+      </div>
+      <div class="bn-info">Duplo clique num texto para o editar. Arrasta para mover; puxa os cantos para redimensionar.</div>
+
+      <h4>Fundo</h4>
+      <div class="bn-row"><label>Cor <input type="color" id="bn-bg" value="#ffffff"></label></div>
+      <div class="bn-row"><button class="btn secondary sm" id="bn-gallery">⬆ Guardar na galeria de cartazes</button></div>
+      <div class="status" id="bn-status"></div>
+    </aside>
+    <div class="bn-stage" id="bn-stage"><canvas id="bn-canvas"></canvas></div>
+  </div>
+</div>
+
+<!-- ======== MODAL: ABRIR / GUARDAR FAIXA ======== -->
+<div id="modal-banner-list" class="modal hidden">
+  <div class="box" style="max-width:520px">
+    <header><h3>Desenhos guardados</h3><button class="close" data-close="modal-banner-list">×</button></header>
+    <div class="body"><div id="bn-list"></div></div>
+  </div>
 </div>
 
 <!-- ======== MODAL: CARREGAR ======== -->
@@ -700,6 +812,235 @@ $('#d-print').onclick = async () => {
 };
 $('#d-open').onclick = async () => { try { window.open(URL.createObjectURL(await makePrint()), '_blank'); } catch(e){ toast('Erro: ' + e.message); } };
 $('#d-save').onclick = async () => { try { saveBlob(await makePrint(), `${current.titulo} - ${LAYOUTS.find(l=>l.id===currentLayout).name}.pdf`); } catch(e){ toast('Erro: ' + e.message); } };
+
+/* =====================================================================
+   EDITOR DE FAIXAS — texto grande espalhado por várias folhas A4
+   ===================================================================== */
+const MM = 3;                                   // unidades do desenho: 3 px por mm
+const A4MM = { P: [210, 297], L: [297, 210] };
+const DEFAULT_FONTS = ['Arial','Arial Black','Verdana','Tahoma','Trebuchet MS','Impact','Georgia','Times New Roman','Comic Sans MS','Courier New','Segoe UI','Calibri','Cambria'];
+let bn = null;                                  // fabric canvas
+let bnShowGuides = true, bnCurrentId = null, bnCurrentTitle = '';
+const bnCfg = () => ({ cols: +$('#bn-cols').value || 1, rows: +$('#bn-rows').value || 1, orient: $('#bn-orient').value, glue: +$('#bn-glue').value, bg: $('#bn-bg').value });
+function bnDesignMM(cfg){ const [pw, ph] = A4MM[cfg.orient]; return { pw, ph, W: cfg.cols*pw - (cfg.cols-1)*cfg.glue, H: cfg.rows*ph - (cfg.rows-1)*cfg.glue }; }
+
+function bnInit(){
+  if (bn) return;
+  bn = new fabric.Canvas('bn-canvas', { backgroundColor: '#ffffff', preserveObjectStacking: true, selection: true });
+  fabric.Object.prototype.transparentCorners = false;
+  fabric.Object.prototype.cornerColor = '#1d4ed8';
+  fabric.Object.prototype.cornerStyle = 'circle';
+  fabric.Object.prototype.borderColor = '#1d4ed8';
+  bn.on('after:render', bnDrawGuides);
+  bn.on('selection:created', bnSync); bn.on('selection:updated', bnSync); bn.on('selection:cleared', bnSync);
+  bn.on('object:modified', bnAutosave);
+  const sel = $('#bn-font'); sel.innerHTML = DEFAULT_FONTS.map(f => `<option value="${f}" style="font-family:'${f}'">${f}</option>`).join('');
+  bnResize();
+  window.addEventListener('resize', () => { if (!$('#screen-banner').classList.contains('hidden')) bnResize(); });
+}
+
+// ajusta a área de trabalho ao número de folhas e ao espaço disponível no ecrã
+function bnResize(){
+  const cfg = bnCfg(), d = bnDesignMM(cfg);
+  const stage = $('#bn-stage');
+  const availW = stage.clientWidth - 40, availH = stage.clientHeight - 40;
+  const z = Math.max(0.05, Math.min(availW / (d.W*MM), availH / (d.H*MM)));
+  bn.setZoom(z);
+  bn.setDimensions({ width: Math.round(d.W*MM*z), height: Math.round(d.H*MM*z) });
+  bn.backgroundColor = cfg.bg;
+  bn.requestRenderAll();
+  $('#bn-size').textContent = `${cfg.cols}×${cfg.rows} folhas · área total ${Math.round(d.W/10)} × ${Math.round(d.H/10)} cm` + (cfg.glue ? ` · sobreposição ${cfg.glue} mm para colar` : '');
+}
+['#bn-cols','#bn-rows','#bn-orient','#bn-glue','#bn-bg'].forEach(s => $(s).addEventListener('change', () => { bnResize(); bnAutosave(); }));
+
+// linhas de guia (divisões das folhas e zonas de colagem) — só no ecrã, nunca na impressão
+function bnDrawGuides(){
+  if (!bnShowGuides) return;
+  const cfg = bnCfg(), d = bnDesignMM(cfg), ctx = bn.getContext(), z = bn.getZoom();
+  ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+  const px = mm => mm*MM*z;
+  ctx.fillStyle = 'rgba(29,78,216,.08)'; ctx.strokeStyle = 'rgba(29,78,216,.55)'; ctx.lineWidth = 1; ctx.setLineDash([6,4]);
+  for (let c = 1; c < cfg.cols; c++) { const x = c*(d.pw - cfg.glue); ctx.fillRect(px(x), 0, px(cfg.glue), px(d.H)); ctx.beginPath(); ctx.moveTo(px(x),0); ctx.lineTo(px(x),px(d.H)); ctx.moveTo(px(x+cfg.glue),0); ctx.lineTo(px(x+cfg.glue),px(d.H)); ctx.stroke(); }
+  for (let r = 1; r < cfg.rows; r++) { const y = r*(d.ph - cfg.glue); ctx.fillRect(0, px(y), px(d.W), px(cfg.glue)); ctx.beginPath(); ctx.moveTo(0,px(y)); ctx.lineTo(px(d.W),px(y)); ctx.moveTo(0,px(y+cfg.glue)); ctx.lineTo(px(d.W),px(y+cfg.glue)); ctx.stroke(); }
+  ctx.setLineDash([]); ctx.fillStyle = 'rgba(29,78,216,.5)'; ctx.font = `${Math.max(10, px(6))}px system-ui`;
+  for (let r = 0; r < cfg.rows; r++) for (let c = 0; c < cfg.cols; c++) ctx.fillText(`${r*cfg.cols + c + 1}`, px(c*(d.pw-cfg.glue) + (c ? cfg.glue : 0) + 3), px(r*(d.ph-cfg.glue) + (r ? cfg.glue : 0) + 8));
+  ctx.restore();
+}
+
+// ---------- objetos ----------
+$('#bn-add-text').onclick = () => {
+  const d = bnDesignMM(bnCfg());
+  const t = new fabric.IText('Escreve aqui', { left: d.W*MM/2, top: d.H*MM/2, originX: 'center', originY: 'center',
+    fontFamily: $('#bn-font').value || 'Arial', fontSize: +$('#bn-fsize').value || 200, fill: $('#bn-color').value, fontWeight: 'bold', textAlign: 'center', paintFirst: 'stroke' });
+  bn.add(t); bn.setActiveObject(t); bn.requestRenderAll();
+};
+$('#bn-add-img').onclick = () => $('#bn-img-input').click();
+$('#bn-img-input').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => fabric.Image.fromURL(rd.result, img => {
+    const d = bnDesignMM(bnCfg());
+    const s = Math.min((d.W*MM*0.5) / img.width, (d.H*MM*0.5) / img.height, 1);
+    img.set({ left: d.W*MM/2, top: d.H*MM/2, originX: 'center', originY: 'center', scaleX: s, scaleY: s });
+    bn.add(img); bn.setActiveObject(img); bn.requestRenderAll(); bnAutosave();
+  });
+  rd.readAsDataURL(f); e.target.value = '';
+};
+const bnActive = () => bn && bn.getActiveObject();
+const bnActiveText = () => { const o = bnActive(); return o && (o.type === 'i-text' || o.type === 'text' || o.type === 'textbox') ? o : null; };
+function bnSetText(prop, val){ const o = bnActiveText(); if (!o) return; o.set(prop, val); bn.requestRenderAll(); bnAutosave(); }
+$('#bn-font').onchange = e => bnSetText('fontFamily', e.target.value);
+$('#bn-fsize').onchange = e => bnSetText('fontSize', +e.target.value);
+$('#bn-color').oninput = e => bnSetText('fill', e.target.value);
+$('#bn-stroke').oninput = e => bnSetText('stroke', e.target.value);
+$('#bn-strokew').onchange = e => { bnSetText('stroke', $('#bn-stroke').value); bnSetText('strokeWidth', +e.target.value); };
+$('#bn-bold').onclick = () => { const o = bnActiveText(); if (o) bnSetText('fontWeight', o.fontWeight === 'bold' ? 'normal' : 'bold'); bnSync(); };
+$('#bn-italic').onclick = () => { const o = bnActiveText(); if (o) bnSetText('fontStyle', o.fontStyle === 'italic' ? 'normal' : 'italic'); bnSync(); };
+$$('[data-align]').forEach(b => b.onclick = () => { bnSetText('textAlign', b.dataset.align); bnSync(); });
+$('#bn-front').onclick = () => { const o = bnActive(); if (o) { bn.bringToFront(o); bn.requestRenderAll(); } };
+$('#bn-back').onclick = () => { const o = bnActive(); if (o) { bn.sendToBack(o); bn.requestRenderAll(); } };
+$('#bn-center').onclick = () => { const o = bnActive(); if (!o) return; const d = bnDesignMM(bnCfg()); o.set({ left: d.W*MM/2, top: d.H*MM/2, originX: 'center', originY: 'center' }); o.setCoords(); bn.requestRenderAll(); bnAutosave(); };
+$('#bn-del').onclick = bnDelete;
+function bnDelete(){ const objs = bn.getActiveObjects(); if (!objs.length) return; objs.forEach(o => bn.remove(o)); bn.discardActiveObject(); bn.requestRenderAll(); bnAutosave(); }
+document.addEventListener('keydown', e => {
+  if ($('#screen-banner').classList.contains('hidden')) return;
+  const o = bnActive(); if (!o || o.isEditing) return;
+  if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); bnDelete(); }
+});
+function bnSync(){
+  const o = bnActiveText();
+  if (!o) return;
+  const sel = $('#bn-font');
+  if (![...sel.options].some(x => x.value === o.fontFamily)) sel.add(new Option(o.fontFamily, o.fontFamily));
+  sel.value = o.fontFamily; $('#bn-fsize').value = Math.round(o.fontSize);
+  if (/^#[0-9a-f]{6}$/i.test(o.fill)) $('#bn-color').value = o.fill;
+  $('#bn-strokew').value = o.strokeWidth || 0;
+  $('#bn-bold').classList.toggle('on', o.fontWeight === 'bold');
+  $('#bn-italic').classList.toggle('on', o.fontStyle === 'italic');
+  $$('[data-align]').forEach(b => b.classList.toggle('on', b.dataset.align === o.textAlign));
+}
+
+// tipos de letra instalados no computador (Chrome/Edge; pede autorização uma vez)
+$('#bn-fonts-local').onclick = async () => {
+  if (!window.queryLocalFonts) { toast('Só disponível no Chrome ou Edge, no computador. Podes escrever o nome do tipo de letra na lista.'); return; }
+  try {
+    const fonts = await window.queryLocalFonts();
+    const fams = [...new Set(fonts.map(f => f.family))].sort((a, b) => a.localeCompare(b));
+    const sel = $('#bn-font'), cur = sel.value;
+    sel.innerHTML = fams.map(f => `<option value="${esc(f)}" style="font-family:'${esc(f)}'">${esc(f)}</option>`).join('');
+    sel.value = fams.includes(cur) ? cur : fams[0];
+    toast(`${fams.length} tipos de letra carregados.`);
+  } catch(e) { toast('Não foi possível ler os tipos de letra: ' + e.message); }
+};
+
+// ---------- guardar / abrir ----------
+function bnSerialize(){ return { cfg: bnCfg(), json: bn.toJSON() }; }
+function bnAutosave(){ try { localStorage.setItem('cartazes.faixa.rascunho', JSON.stringify(bnSerialize())); } catch(e){} }
+function bnLoad(data, cb){
+  const c = data.cfg || {};
+  if (c.cols) $('#bn-cols').value = c.cols; if (c.rows) $('#bn-rows').value = c.rows;
+  if (c.orient) $('#bn-orient').value = c.orient; if (c.glue != null) $('#bn-glue').value = c.glue; if (c.bg) $('#bn-bg').value = c.bg;
+  bn.loadFromJSON(data.json, () => { bnResize(); cb && cb(); });
+}
+$('#bn-save').onclick = async () => {
+  const titulo = prompt('Nome do desenho:', bnCurrentTitle || 'Faixa');
+  if (!titulo) return;
+  const data = bnSerialize();
+  const rec = { titulo, cols: data.cfg.cols, rows: data.cfg.rows, orient: data.cfg.orient, glue: data.cfg.glue, dados: data };
+  let q = bnCurrentId ? sb.from('faixas').update(rec).eq('id', bnCurrentId).select().single() : sb.from('faixas').insert(rec).select().single();
+  const { data: saved, error } = await q;
+  if (error) { toast('Erro ao guardar: ' + error.message + (error.code === '42P01' ? ' (falta criar a tabela "faixas" no Supabase)' : '')); return; }
+  bnCurrentId = saved.id; bnCurrentTitle = saved.titulo; toast('Desenho guardado.');
+};
+$('#bn-open').onclick = async () => {
+  const { data, error } = await sb.from('faixas').select('id,titulo,cols,rows,orient,criado_em').order('criado_em', { ascending: false });
+  if (error) { toast('Erro: ' + error.message); return; }
+  const list = $('#bn-list');
+  list.innerHTML = (data.length ? data.map(f => `<div class="bn-item" data-id="${f.id}"><b>${esc(f.titulo)}</b><span style="color:var(--muted);font-size:13px">${f.cols}×${f.rows} · ${new Date(f.criado_em).toLocaleDateString('pt-PT')}</span><button class="btn sm" data-open="${f.id}">Abrir</button><button class="btn danger sm" data-delf="${f.id}">🗑</button></div>`).join('') : '<p style="color:var(--muted)">Ainda não há desenhos guardados.</p>')
+    + `<div class="bn-item"><b>Novo desenho em branco</b><button class="btn secondary sm" id="bn-new">Novo</button></div>`;
+  $$('[data-open]', list).forEach(b => b.onclick = async () => {
+    const { data: f, error } = await sb.from('faixas').select('*').eq('id', b.dataset.open).single();
+    if (error) { toast('Erro: ' + error.message); return; }
+    bnLoad(f.dados, () => { bnCurrentId = f.id; bnCurrentTitle = f.titulo; hide('modal-banner-list'); toast('Desenho aberto.'); });
+  });
+  $$('[data-delf]', list).forEach(b => b.onclick = async () => {
+    if (!confirm('Apagar este desenho?')) return;
+    await sb.from('faixas').delete().eq('id', b.dataset.delf); b.closest('.bn-item').remove();
+    if (bnCurrentId === b.dataset.delf) { bnCurrentId = null; bnCurrentTitle = ''; }
+  });
+  $('#bn-new').onclick = () => { bn.clear(); bn.backgroundColor = '#ffffff'; $('#bn-bg').value = '#ffffff'; bnCurrentId = null; bnCurrentTitle = ''; bnResize(); hide('modal-banner-list'); };
+  show('modal-banner-list');
+};
+
+// ---------- exportar: cada folha A4 como imagem (≈150 dpi) ----------
+const EXPORT_PX_MM = 6;
+function bnTileDataUrl(cfg, d, r, c){
+  const z = bn.getZoom();
+  const x = c*(d.pw - cfg.glue), y = r*(d.ph - cfg.glue);
+  return bn.toDataURL({ format: 'png', left: x*MM*z, top: y*MM*z, width: d.pw*MM*z, height: d.ph*MM*z, multiplier: EXPORT_PX_MM / (MM*z), enableRetinaScaling: false });
+}
+function bnFullDataUrl(cfg, d){
+  const z = bn.getZoom();
+  return bn.toDataURL({ format: 'png', multiplier: EXPORT_PX_MM / (MM*z), enableRetinaScaling: false });
+}
+async function bnBuildPdf(){
+  const { PDFDocument, rgb, StandardFonts } = PDFLib;
+  const cfg = bnCfg(), d = bnDesignMM(cfg);
+  bn.discardActiveObject(); bnShowGuides = false; bn.requestRenderAll();
+  const doc = await PDFDocument.create(); const font = await doc.embedFont(StandardFonts.Helvetica);
+  const pt = mm => mm * 72 / 25.4;
+  try {
+    for (let r = 0; r < cfg.rows; r++) for (let c = 0; c < cfg.cols; c++) {
+      const png = await doc.embedPng(await (await fetch(bnTileDataUrl(cfg, d, r, c))).arrayBuffer());
+      const page = doc.addPage([pt(d.pw), pt(d.ph)]);
+      page.drawImage(png, { x: 0, y: 0, width: pt(d.pw), height: pt(d.ph) });
+      if (cfg.glue && cfg.cols*cfg.rows > 1) {
+        const g = { color: rgb(.45,.45,.45), thickness: .5, dashArray: [4, 4] };
+        if (c > 0)          page.drawLine({ start: { x: pt(cfg.glue), y: 0 }, end: { x: pt(cfg.glue), y: pt(d.ph) }, ...g });          // lado esquerdo: cola por cima da folha anterior até aqui
+        if (c < cfg.cols-1) page.drawLine({ start: { x: pt(d.pw - cfg.glue), y: 0 }, end: { x: pt(d.pw - cfg.glue), y: pt(d.ph) }, ...g });
+        if (r > 0)          page.drawLine({ start: { x: 0, y: pt(d.ph - cfg.glue) }, end: { x: pt(d.pw), y: pt(d.ph - cfg.glue) }, ...g });
+        if (r < cfg.rows-1) page.drawLine({ start: { x: 0, y: pt(cfg.glue) }, end: { x: pt(d.pw), y: pt(cfg.glue) }, ...g });
+      }
+      const n = cfg.rows*cfg.cols;
+      let info = `Folha ${r*cfg.cols + c + 1}/${n} · linha ${r+1}, coluna ${c+1}`;
+      if (n > 1 && cfg.glue) info += `   ·   Zona tracejada = sobreposicao de ${cfg.glue} mm (sai nas duas folhas vizinhas). Corta pelo tracejado de UMA folha e cola-a por cima da vizinha, alinhando o desenho. Imprimir a 100%.`;
+      page.drawText(info, { x: 6, y: 4, size: 6, font, color: rgb(.55,.55,.55) });
+    }
+  } finally { bnShowGuides = true; bn.requestRenderAll(); }
+  doc.setTitle(bnCurrentTitle || 'Faixa');
+  return new Blob([await doc.save()], { type: 'application/pdf' });
+}
+$('#bn-print').onclick = async () => {
+  try {
+    $('#bn-status').textContent = 'A preparar as folhas…';
+    const pdf = await bnBuildPdf(); const url = URL.createObjectURL(pdf);
+    $('#bn-status').textContent = '';
+    if (/Android|iPhone|iPad/i.test(navigator.userAgent)) { window.open(url, '_blank'); return; }
+    const f = $('#print-frame'); f.onload = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch(e){ window.open(url, '_blank'); } }; f.src = url;
+  } catch(e) { console.error(e); toast('Erro: ' + e.message); $('#bn-status').textContent = ''; }
+};
+$('#bn-gallery').onclick = async () => {
+  const titulo = prompt('Nome para a galeria:', bnCurrentTitle || 'Faixa'); if (!titulo) return;
+  const ano = parseInt(prompt('Ano:', new Date().getFullYear()), 10); if (!ano) return;
+  try {
+    $('#bn-status').textContent = 'A gerar imagem…';
+    const cfg = bnCfg(), d = bnDesignMM(cfg);
+    bn.discardActiveObject(); bnShowGuides = false; bn.requestRenderAll();
+    const blob = await (await fetch(bnFullDataUrl(cfg, d))).blob();
+    bnShowGuides = true; bn.requestRenderAll();
+    const file = new File([blob], titulo + '.png', { type: 'image/png' });
+    $('#bn-status').textContent = 'A guardar…';
+    await uploadOne(file, ano, titulo, `Faixa ${cfg.cols}×${cfg.rows} folhas A4 ${cfg.orient === 'P' ? 'ao alto' : 'deitadas'}`);
+    await loadPosters(); $('#bn-status').textContent = ''; toast('Guardado na galeria.');
+  } catch(e) { bnShowGuides = true; bn.requestRenderAll(); toast('Erro: ' + e.message); $('#bn-status').textContent = ''; }
+};
+
+// ---------- abrir / fechar o editor ----------
+$('#banner-btn').onclick = () => {
+  hide('screen-app'); show('screen-banner'); bnInit(); bnResize();
+  if (!bn.getObjects().length) { try { const dr = JSON.parse(localStorage.getItem('cartazes.faixa.rascunho') || 'null'); if (dr) bnLoad(dr); } catch(e){} }
+};
+$('#banner-back').onclick = () => { bnAutosave(); hide('screen-banner'); show('screen-app'); };
 
 boot();
 </script>
