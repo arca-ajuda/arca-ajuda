@@ -257,6 +257,9 @@
   <header class="top">
     <button class="icon-btn" id="banner-back">← <span class="lbl">Cartazes</span></button>
     <h1><span class="assoc">Faixas</span><span class="app">Texto grande em várias folhas</span></h1>
+    <button class="icon-btn" id="bn-undo" title="Anular o último passo (Ctrl+Z)">↶ <span class="lbl">Anular</span></button>
+    <button class="icon-btn" id="bn-redo" title="Refazer (Ctrl+Y)">↷</button>
+    <button class="icon-btn" id="bn-clear" title="Apagar tudo e começar de novo">🗑 <span class="lbl">Limpar tudo</span></button>
     <button class="icon-btn" id="bn-save" title="Guardar este desenho para editar mais tarde">💾 <span class="lbl">Guardar</span></button>
     <button class="icon-btn" id="bn-open" title="Abrir desenho guardado">📂 <span class="lbl">Abrir</span></button>
     <button class="icon-btn" id="bn-print" title="Imprimir folha a folha, com margens para colar">🖨 <span class="lbl">Imprimir</span></button>
@@ -870,10 +873,43 @@ function bnInit(){
   bn.on('after:render', bnDrawGuides);
   bn.on('selection:created', bnSync); bn.on('selection:updated', bnSync); bn.on('selection:cleared', bnSync);
   bn.on('object:modified', bnAutosave);
+  // histórico para Anular / Refazer
+  ['object:added','object:removed','object:modified'].forEach(ev => bn.on(ev, () => { if (!bnRestoring) bnPushHistory(); }));
+  bn.on('text:changed', () => { clearTimeout(bnTextT); bnTextT = setTimeout(() => { if (!bnRestoring) bnPushHistory(); }, 600); });
+  bnPushHistory();
   const sel = $('#bn-font'); sel.innerHTML = DEFAULT_FONTS.map(f => `<option value="${f}" style="font-family:'${f}'">${f}</option>`).join('');
   bnResize();
   window.addEventListener('resize', () => { if (!$('#screen-banner').classList.contains('hidden')) bnResize(); });
 }
+
+// ---------- anular / refazer / limpar ----------
+let bnHist = [], bnHistPos = -1, bnRestoring = false, bnTextT;
+function bnPushHistory(){
+  const snap = JSON.stringify(bn.toJSON());
+  if (bnHist[bnHistPos] === snap) return;
+  bnHist = bnHist.slice(0, bnHistPos + 1); bnHist.push(snap); if (bnHist.length > 50) bnHist.shift();
+  bnHistPos = bnHist.length - 1; bnUpdateHistBtns();
+}
+function bnRestore(pos){
+  if (pos < 0 || pos >= bnHist.length) return;
+  bnRestoring = true; bnHistPos = pos;
+  bn.loadFromJSON(bnHist[pos], () => { bn.backgroundColor = $('#bn-bg').value; bn.requestRenderAll(); bnRestoring = false; bnUpdateHistBtns(); bnAutosave(); });
+}
+function bnUpdateHistBtns(){ $('#bn-undo').disabled = bnHistPos <= 0; $('#bn-redo').disabled = bnHistPos >= bnHist.length - 1; }
+$('#bn-undo').onclick = () => bnRestore(bnHistPos - 1);
+$('#bn-redo').onclick = () => bnRestore(bnHistPos + 1);
+$('#bn-clear').onclick = () => {
+  if (!bn.getObjects().length) return;
+  if (!confirm('Apagar tudo o que está no papel? (podes anular com o botão ↶)')) return;
+  bnRestoring = true; bn.clear(); bnRestoring = false;
+  bn.backgroundColor = $('#bn-bg').value; bn.requestRenderAll(); bnPushHistory(); bnAutosave();
+};
+document.addEventListener('keydown', e => {
+  if ($('#screen-banner').classList.contains('hidden')) return;
+  const o = bnActive(); if (o && o.isEditing) return;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? bnRestore(bnHistPos + 1) : bnRestore(bnHistPos - 1); }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); bnRestore(bnHistPos + 1); }
+});
 
 // ajusta a área de trabalho ao número de folhas e ao espaço disponível no ecrã
 function bnResize(){
@@ -976,7 +1012,8 @@ function bnLoad(data, cb){
   const c = data.cfg || {};
   if (c.cols) $('#bn-cols').value = c.cols; if (c.rows) $('#bn-rows').value = c.rows;
   if (c.orient) $('#bn-orient').value = c.orient; if (c.glue != null) $('#bn-glue').value = c.glue; if (c.bg) $('#bn-bg').value = c.bg;
-  bn.loadFromJSON(data.json, () => { bnResize(); cb && cb(); });
+  bnRestoring = true;
+  bn.loadFromJSON(data.json, () => { bnRestoring = false; bnResize(); bnPushHistory(); cb && cb(); });
 }
 $('#bn-save').onclick = async () => {
   const titulo = prompt('Nome do desenho:', bnCurrentTitle || 'Faixa');
@@ -1004,7 +1041,7 @@ $('#bn-open').onclick = async () => {
     await sb.from('faixas').delete().eq('id', b.dataset.delf); b.closest('.bn-item').remove();
     if (bnCurrentId === b.dataset.delf) { bnCurrentId = null; bnCurrentTitle = ''; }
   });
-  $('#bn-new').onclick = () => { bn.clear(); bn.backgroundColor = '#ffffff'; $('#bn-bg').value = '#ffffff'; bnCurrentId = null; bnCurrentTitle = ''; bnResize(); hide('modal-banner-list'); };
+  $('#bn-new').onclick = () => { bnRestoring = true; bn.clear(); bnRestoring = false; bn.backgroundColor = '#ffffff'; $('#bn-bg').value = '#ffffff'; bnCurrentId = null; bnCurrentTitle = ''; bnResize(); bnPushHistory(); hide('modal-banner-list'); };
   show('modal-banner-list');
 };
 
