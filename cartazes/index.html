@@ -252,9 +252,9 @@
           <h4>Formato de impressão</h4>
           <div class="layouts" id="layouts"></div>
           <div class="opts">
-            <label>Margem <select id="opt-margin"><option value="0">0 mm</option><option value="5" selected>5 mm</option><option value="10">10 mm</option></select></label>
+            <label title="Margem branca dentro de cada cartaz. 0 = borda a borda">Margem <select id="opt-margin"><option value="0" selected>0 mm</option><option value="3">3 mm</option><option value="5">5 mm</option></select></label>
             <label><input type="checkbox" id="opt-cut" checked> Linhas de corte</label>
-            <label><input type="checkbox" id="opt-fit" checked> Ajustar à célula</label>
+            <label title="Amplia o cartaz até encher a célula (roda 90° se aproveitar melhor)"><input type="checkbox" id="opt-fit" checked> Encher a célula</label>
           </div>
           <div class="actions" style="justify-content:flex-start">
             <button class="btn" id="d-print">🖨 Imprimir</button>
@@ -633,29 +633,44 @@ async function buildPrintPdf(blob, isPdf, layoutId, opts){
     src = img; sw = img.width; sh = img.height;
   }
 
-  // escolher orientação da folha que dá o cartaz maior
+  // As células são divisões EXATAS da folha (A4 ÷ 2 = A5 verdadeiro, ÷ 4 = A6, ÷ 8 = A7),
+  // sem margens entre elas, para que ao cortar pelas linhas cada pedaço tenha o tamanho A certo.
+  // Dentro de cada célula o cartaz é ampliado ao máximo, rodado 90° se assim ocupar mais espaço.
+  const { degrees } = PDFLib;
   const [pw, ph] = PAPER[L.paper];
-  const margin = (opts.margin || 0) * 72 / 25.4, gutter = L.cols * L.rows > 1 ? 2 * 72 / 25.4 : 0;
+  const pad = (opts.margin || 0) * 72 / 25.4;              // margem branca DENTRO de cada célula (0 = borda a borda)
+  const fitIn = (cw, ch) => {                              // melhor escala: normal vs rodado
+    const s0 = Math.min((cw - 2*pad) / sw, (ch - 2*pad) / sh);
+    const s90 = Math.min((cw - 2*pad) / sh, (ch - 2*pad) / sw);
+    return s90 > s0 * 1.02 ? { s: s90, rot: true } : { s: s0, rot: false };
+  };
   const candidates = [
-    { W: pw, H: ph, cols: L.cols, rows: L.rows },
-    { W: ph, H: pw, cols: L.rows, rows: L.cols },
-  ].map(c => {
-    const cw = (c.W - 2*margin - (c.cols-1)*gutter) / c.cols, ch = (c.H - 2*margin - (c.rows-1)*gutter) / c.rows;
-    return { ...c, cw, ch, scale: Math.min(cw / sw, ch / sh) };
-  });
-  const best = candidates.sort((a,b) => b.scale - a.scale)[0];
+    { W: pw, H: ph, cols: L.cols, rows: L.rows },          // folha ao alto
+    { W: ph, H: pw, cols: L.rows, rows: L.cols },          // folha deitada
+  ].map(c => { const cw = c.W / c.cols, ch = c.H / c.rows; return { ...c, cw, ch, ...fitIn(cw, ch) }; });
+  const best = candidates.sort((a, b) => (b.s - a.s) || (a.rot - b.rot))[0];   // maior escala; em empate, sem rodar
   const page = doc.addPage([best.W, best.H]);
+  const s = opts.fit ? best.s : Math.min(best.s, 1);
+  const w = sw * s, h = sh * s;                            // tamanho desenhado (antes de rodar)
 
   for (let r = 0; r < best.rows; r++) for (let c = 0; c < best.cols; c++) {
-    const x0 = margin + c * (best.cw + gutter);
-    const y0 = best.H - margin - (r + 1) * best.ch - r * gutter;   // origem em baixo-esquerda
-    const s = opts.fit ? best.scale : Math.min(best.scale, 1);
-    const w = sw * s, h = sh * s;
-    const x = x0 + (best.cw - w) / 2, y = y0 + (best.ch - h) / 2;
-    if (isPdf) page.drawPage(src, { x, y, width: w, height: h }); else page.drawImage(src, { x, y, width: w, height: h });
-    if (opts.cut && best.cols * best.rows > 1) {
-      page.drawRectangle({ x: x0, y: y0, width: best.cw, height: best.ch, borderColor: rgb(.6,.6,.6), borderWidth: .4, borderDashArray: [4, 4], opacity: 0, borderOpacity: 1 });
+    const x0 = c * best.cw, y0 = best.H - (r + 1) * best.ch;   // canto inferior esquerdo da célula
+    if (best.rot) {
+      // rodado 90°: ocupa h de largura e w de altura; a origem do desenho fica no canto inferior direito
+      const x = x0 + (best.cw - h) / 2 + h, y = y0 + (best.ch - w) / 2;
+      const o = { x, y, width: w, height: h, rotate: degrees(90) };
+      isPdf ? page.drawPage(src, o) : page.drawImage(src, o);
+    } else {
+      const x = x0 + (best.cw - w) / 2, y = y0 + (best.ch - h) / 2;
+      const o = { x, y, width: w, height: h };
+      isPdf ? page.drawPage(src, o) : page.drawImage(src, o);
     }
+  }
+  // linhas de corte: exatamente nas divisões da folha
+  if (opts.cut && best.cols * best.rows > 1) {
+    const g = { color: rgb(.55,.55,.55), thickness: .5, dashArray: [5, 4] };
+    for (let c = 1; c < best.cols; c++) page.drawLine({ start: { x: c*best.cw, y: 0 }, end: { x: c*best.cw, y: best.H }, ...g });
+    for (let r = 1; r < best.rows; r++) page.drawLine({ start: { x: 0, y: r*best.ch }, end: { x: best.W, y: r*best.ch }, ...g });
   }
   doc.setTitle(opts.title || 'Cartaz');
   return new Blob([await doc.save()], { type: 'application/pdf' });
