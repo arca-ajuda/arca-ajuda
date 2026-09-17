@@ -644,10 +644,13 @@ async function buildPrintPdf(blob, isPdf, layoutId, opts){
     const s90 = Math.min((cw - 2*pad) / sh, (ch - 2*pad) / sw);
     return s90 > s0 * 1.02 ? { s: s90, rot: true } : { s: s0, rot: false };
   };
-  const candidates = [
-    { W: pw, H: ph, cols: L.cols, rows: L.rows },          // folha ao alto
-    { W: ph, H: pw, cols: L.rows, rows: L.cols },          // folha deitada
-  ].map(c => { const cw = c.W / c.cols, ch = c.H / c.rows; return { ...c, cw, ch, ...fitIn(cw, ch) }; });
+  // experimenta folha ao alto e deitada × grelha normal e trocada (ex.: 2×1 e 1×2)
+  const candidates = [];
+  for (const [W, H] of [[pw, ph], [ph, pw]])
+    for (const [cols, rows] of [[L.cols, L.rows], [L.rows, L.cols]]) {
+      const cw = W / cols, ch = H / rows;
+      candidates.push({ W, H, cols, rows, cw, ch, ...fitIn(cw, ch) });
+    }
   const best = candidates.sort((a, b) => (b.s - a.s) || (a.rot - b.rot))[0];   // maior escala; em empate, sem rodar
   const page = doc.addPage([best.W, best.H]);
   const s = opts.fit ? best.s : Math.min(best.s, 1);
