@@ -142,6 +142,8 @@
   .mes .dias .d:hover{border-color:var(--teal)}
   .mes .dias .d.fim{color:var(--text-3);background:#F3F6F5}
   .mes .dias .d.fechado{background:var(--coral-l);color:var(--coral-d);text-decoration:line-through}
+  .mes .dias .d.pausa{background:#EDE7F6;color:#5B21B6}
+  .mes .dias .d.evento{background:#FFF1D8;color:#8A5A05}
   .mes .dias .d.forcado{outline:2px solid var(--amber);outline-offset:-2px}
   .mes .dias .d.vazio{visibility:hidden}
 
@@ -206,6 +208,9 @@
   .modal label{display:block;font-size:12px;font-weight:600;color:var(--text-2);margin:10px 0 4px}
   .modal input[type=text],.modal select{width:100%;padding:9px 10px;border:1.5px solid var(--line);border-radius:8px}
   .modal .acoes{display:flex;gap:8px;justify-content:space-between;margin-top:16px;flex-wrap:wrap}
+  .modal #ma-pausas .row{flex-wrap:nowrap}
+  .modal #ma-pausas input{width:auto;flex:1;min-width:0;padding:6px 8px}
+  .modal #ma-pausas input[type=date]{flex:0 0 118px}
   .modal .aviso{font-size:12px;color:var(--coral-d);margin-top:8px}
 
   /* ---- PRINT ---- */
@@ -460,11 +465,11 @@ function dadosIniciais(){
   const fechados=[
     ['Implantação da República','2025-10-05','2025-10-05'],['Todos os Santos','2025-11-01','2025-11-01'],
     ['Restauração da Independência','2025-12-01','2025-12-01'],['Imaculada Conceição','2025-12-08','2025-12-08'],
-    ['Pausa de Natal / Ano Novo','2025-12-24','2026-01-01'],['Carnaval','2026-02-17','2026-02-17'],
+    ['Pausa de Natal / Ano Novo','2025-12-24','2026-01-01','feriado'],['Carnaval','2026-02-17','2026-02-17'],
     ['Sexta-feira Santa','2026-04-03','2026-04-03'],['Páscoa','2026-04-05','2026-04-05'],['25 de Abril','2026-04-25','2026-04-25'],
     ['Dia do Trabalhador','2026-05-01','2026-05-01'],['Corpo de Deus','2026-06-04','2026-06-04'],['Dia de Portugal','2026-06-10','2026-06-10'],
     ['Dia da Região Autónoma da Madeira','2026-07-01','2026-07-01'],['Assunção de Nossa Senhora','2026-08-15','2026-08-15'],['Feriado municipal do Funchal','2026-08-21','2026-08-21']
-  ].map(f=>({id:uid(),desc:f[0],inicio:f[1],fim:f[2]}));
+  ].map(f=>({id:uid(),desc:f[0],inicio:f[1],fim:f[2],tipo:f[3]||'feriado'}));
   return {versao:3, inicio:'2025-09-01', nMeses:12, horaIni:8, horaFim:22, passo:30, salas, atividades, mapa, fechados, ajustes:{}, precoManual:{}, acertos:[], rotulos:{p1:'1 HORA',p2:'2 OU MAIS'},
     assoc:{nome:"Associação Recreativa e Cultural da Ajuda - ARCA d'Ajuda", nipc:'510144012', morada:'Rua Velha da Ajuda Nº89, Edifício Vale da Ajuda Fração LA, 9000-749 Funchal', contacto:'932 341 062 · arcadajuda@gmail.com', nota:'As aulas têm a duração de 45 minutos com 15 minutos para mudança — cada aula ocupa 1 hora no mapa.', rodape:'Gestão das Salas ARCA', obs:'', inscNova:'20 EUROS', inscRenov:'15 EUROS', notaMapa:'Nota: Preencher meias horas', aviso:'TODOS OS INSCRITOS NAS MODALIDADES/ATIVIDADES DA ARCA SÃO SÓCIOS E PODEM USUFRUIR DOS DESCONTOS NOS NOSSOS PARCEIROS.'},
     txt:{titulo:'HORÁRIO DAS ATIVIDADES DESPORTIVAS E CULTURAIS DA ARCA', profLbl:'PROFESSOR / TREINADOR', atividades:'ATIVIDADES>>>', numAtiv:'NÚMERO ATIVIDADES SALA / CAMPO', naoFed:'NÃO FEDERADAS', fed:'FEDERADAS', precario:'PREÇÁRIO SALAS', inscricao:'VALOR INSCRIÇÃO', nova:'NOVA', renov:'RENOVAÇÃO', atencao:'ATENÇÃO:', horas:'NÚMERO TOTAL HORAS', total:'TOTAL', obs:'OBSERVAÇÕES:', colHoras:'Horas', nipc:'NIPC:', morada:'Morada:', contacto:'Contacto:'},
@@ -475,7 +480,7 @@ function normalizar(v){
   if(!v||typeof v!=='object') return base;
   const d=Object.assign({},base,v);
   d.salas=Array.isArray(d.salas)?d.salas:base.salas; d.atividades=Array.isArray(d.atividades)?d.atividades:base.atividades;
-  d.mapa=d.mapa||{}; d.fechados=Array.isArray(d.fechados)?d.fechados:[]; d.ajustes=d.ajustes||{}; d.precoManual=d.precoManual||{};
+  d.mapa=d.mapa||{}; d.fechados=Array.isArray(d.fechados)?d.fechados:[]; d.fechados.forEach(f=>{ if(!f.tipo) f.tipo='feriado'; }); d.atividades.forEach(a=>{ if(a.feriados===undefined) a.feriados=false; if(!Array.isArray(a.pausas)) a.pausas=[]; }); d.ajustes=d.ajustes||{}; d.precoManual=d.precoManual||{};
   d.horaIni=Number(d.horaIni)||8; d.horaFim=Number(d.horaFim)||22; d.passo=[15,30,60].includes(Number(d.passo))?Number(d.passo):30; d.nMeses=Math.max(1,Math.min(24,Number(d.nMeses)||12));
   d.acertos=Array.isArray(d.acertos)?d.acertos:[]; d.obsManual=d.obsManual||{}; d.assoc=Object.assign({},base.assoc,d.assoc||{}); d.rotulos=Object.assign({},base.rotulos,d.rotulos||{}); d.txt=Object.assign({},base.txt,d.txt||{}); d.dias=Array.isArray(d.dias)&&d.dias.length===7?d.dias:DIAS_DEF.slice(); d.diasS=Array.isArray(d.diasS)&&d.diasS.length===7?d.diasS:DIAS_S_DEF.slice(); DIAS=d.dias; DIAS_S=d.diasS; d.salas.forEach(x=>{ if(!x.base) x.base='semana'; if(!x.tipo) x.tipo='sala'; if(x.cobrar===undefined) x.cobrar=true; });
   if((Number(v.versao)||1)<3 && !d.salas.some(x=>x.tipo==='campo')){ base.salas.filter(x=>x.tipo==='campo').forEach(x=>{ d.salas.push(x); d.mapa[x.id]=base.mapa[x.id]; }); base.atividades.forEach(a=>{ if(!d.atividades.some(b=>b.nome===a.nome)) d.atividades.push(a); }); }
@@ -577,11 +582,38 @@ function meses(){ // 12 meses a partir do início
   for(let i=0;i<D.nMeses;i++){ const d=new Date(ini.getFullYear(), ini.getMonth()+i, 1); out.push({ym:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'), ano:d.getFullYear(), mes:d.getMonth(), nome:MESES[d.getMonth()]+' '+d.getFullYear(), curto:MESES[d.getMonth()].slice(0,3)+' '+String(d.getFullYear()).slice(2)}); }
   return out;
 }
-function fechadoPorPeriodo(iso){ return D.fechados.some(f=>f.inicio && f.fim && f.inicio<=iso && iso<=f.fim); }
-function temAulas(iso){ const a=D.ajustes[iso]; if(a==='A') return true; if(a==='S') return false; return !fechadoPorPeriodo(iso); }
-function sessoesMes(ano,mes){ // [7] nº de dias com aulas por dia da semana
+function periodosEm(iso){ return D.fechados.filter(f=>f.inicio && f.fim && f.inicio<=iso && iso<=f.fim); }
+function fechadoPorPeriodo(iso){ return periodosEm(iso).length>0; }
+// motivo pelo qual um dia não tem aulas (null = tem aulas). a = atividade (opcional) para aplicar as regras dela
+function salasDaAtividade(a){ return D.salas.filter(s=>horasDia(s.id,a.id).some(v=>v>0)).map(s=>s.id); }
+function eventoAfeta(f, salaId, a){ // evento (sala ocupada pela ARCA): afeta a sala indicada, ou qualquer sala da atividade
+  const ss=Array.isArray(f.salas)?f.salas:[]; if(!ss.length) return true;
+  if(salaId) return ss.includes(salaId);
+  if(a) return salasDaAtividade(a).some(id=>ss.includes(id));
+  return true;
+}
+// motivo pelo qual um dia não tem aulas (null = tem aulas). a = atividade, salaId = sala (opcionais)
+function motivoSemAulas(iso, a, salaId){
+  const aj=D.ajustes[iso]; if(aj==='A') return null; if(aj==='S') return 'manual';
+  const per=periodosEm(iso);
+  const enc=per.find(f=>f.tipo==='encerramento'); if(enc) return 'encerramento';
+  const ev=per.find(f=>f.tipo==='evento' && eventoAfeta(f, salaId, a)); if(ev) return 'evento';
+  if(per.some(f=>f.tipo==='feriado' || !f.tipo) && !(a && a.feriados)) return 'feriado';
+  if(a && (a.pausas||[]).some(p=>p.inicio && p.fim && p.inicio<=iso && iso<=p.fim)) return 'pausa';
+  return null;
+}
+function eventosEm(iso, salaId, a){ return periodosEm(iso).filter(f=>f.tipo==='evento' && eventoAfeta(f, salaId, a)); }
+function temAulas(iso, a, salaId){ return motivoSemAulas(iso, a, salaId)===null; }
+function sessoesMes(ano,mes,a,salaId){ // [7] nº de dias com aulas por dia da semana (para a atividade a / sala, se dadas)
   const out=[0,0,0,0,0,0,0]; const n=new Date(ano,mes+1,0).getDate();
-  for(let d=1; d<=n; d++){ const dt=new Date(ano,mes,d); if(temAulas(isoD(dt))) out[diaSemana(dt)]++; }
+  for(let d=1; d<=n; d++){ const dt=new Date(ano,mes,d); if(temAulas(isoD(dt), a, salaId)) out[diaSemana(dt)]++; }
+  return out;
+}
+function valorMesM(row, m){ return valorMes(row, sessoesMes(m.ano,m.mes,row.atv,row.sala.id)); }
+// dias do mês em que uma ocupação (sala×atividade) perde aula por evento da ARCA, com motivo
+function eventosDoMes(row, m){
+  const out=[]; const n=new Date(m.ano,m.mes+1,0).getDate();
+  for(let d=1; d<=n; d++){ const dt=new Date(m.ano,m.mes,d); const k=diaSemana(dt); if(!(row.horasDia[k]>0)) continue; const iso=isoD(dt); if(D.ajustes[iso]==='A') continue; const evs=eventosEm(iso,row.sala.id,row.atv); if(evs.length) out.push({iso, motivo:evs.map(e=>e.desc).join(' / ')}); }
   return out;
 }
 function acertoTotal(atvId, ym){ return D.acertos.filter(x=>x.atvId===atvId && x.ym===ym).reduce((a,x)=>a+(Number(x.valor)||0),0); }
@@ -630,6 +662,8 @@ function abrirAtividade(id){
   $('modal').innerHTML=`<h3>${a?'Editar atividade':'Nova atividade'}</h3>
     <label>Nome</label><input type="text" id="ma-nome" value="${esc(a?a.nome:'')}" placeholder="ex.: ESGRIMA" onkeydown="if(event.key==='Enter')guardarAtividade('${id||''}')">
     <label>Professor / treinador</label><input type="text" id="ma-prof" value="${esc(a?(a.prof||''):'')}" placeholder="nome (opcional)">
+    <label>Feriados</label><select id="ma-fer"><option value="0" ${!(a&&a.feriados)?'selected':''}>Não dá aulas nos feriados (não paga esses dias)</option><option value="1" ${a&&a.feriados?'selected':''}>Dá aulas nos feriados (paga esses dias)</option></select>
+    ${a?`<label>Pausas / férias desta atividade</label><div id="ma-pausas">${pausasHtml(a)}</div>`:`<div class="small muted" style="margin-top:8px">Depois de guardar, volta a abrir o ✏️ para definir pausas/férias desta atividade.</div>`}
     <label>Federada?</label><select id="ma-fed"><option value="0" ${a&&!a.federada||!a?'selected':''}>Não federada</option><option value="1" ${a&&a.federada?'selected':''}>Federada</option></select>
     <label>Cor no mapa</label><div class="row"><input type="color" id="ma-cor" value="${esc(cor)}"> ${cores.map(c=>`<span class="chip" style="background:${c};padding:4px 9px" onclick="$('ma-cor').value='${c}'">&nbsp;</span>`).join('')}</div>
     ${a?`<div class="small muted" style="margin-top:10px">No mapa: ${fmtH(uso.horas)} h/semana${uso.escondidas?` (+${uso.escondidas} células escondidas)`:''}.</div>`:''}
@@ -637,7 +671,15 @@ function abrirAtividade(id){
     ${a&&uso.horas>0?`<div class="aviso">Ao eliminar, as ${fmtH(uso.horas)} h marcadas no mapa são também apagadas.</div>`:''}`;
   $('modal-bg').classList.add('open'); setTimeout(()=>$('ma-nome').focus(),50);
 }
-function fecharModal(){ $('modal-bg').classList.remove('open'); $('modal').classList.remove('ajuda'); }
+function pausasHtml(a){
+  let h=(a.pausas||[]).map(p=>`<div class="row" style="margin-bottom:4px"><input class="cell" style="width:150px" placeholder="descrição" value="${esc(p.desc||'')}" onchange="edPausa('${a.id}','${p.id}','desc',this.value)"><input type="date" class="cell" value="${esc(p.inicio||'')}" onchange="edPausa('${a.id}','${p.id}','inicio',this.value)"><input type="date" class="cell" value="${esc(p.fim||'')}" onchange="edPausa('${a.id}','${p.id}','fim',this.value)"><button class="btn btn-sm btn-danger" onclick="delPausa('${a.id}','${p.id}')">✕</button></div>`).join('');
+  h+=`<button class="btn btn-sm" onclick="addPausa('${a.id}')">+ Pausa</button> <span class="small muted">Nestes dias a atividade não tem aula e não paga. Podem ser 1, 2 ou 3 períodos.</span>`;
+  return h;
+}
+function addPausa(aid){ const a=atv(aid); if(!a) return; a.pausas=a.pausas||[]; a.pausas.push({id:uid(),desc:'Férias',inicio:'',fim:''}); guardar(); $('ma-pausas').innerHTML=pausasHtml(a); }
+function edPausa(aid,pid,k,v){ const a=atv(aid); const p=(a.pausas||[]).find(x=>x.id===pid); if(!p) return; p[k]=v; if(k==='inicio' && (!p.fim||p.fim<v)) p.fim=v; guardar(); if(k!=='desc') $('ma-pausas').innerHTML=pausasHtml(a); }
+function delPausa(aid,pid){ const a=atv(aid); a.pausas=(a.pausas||[]).filter(x=>x.id!==pid); guardar(); $('ma-pausas').innerHTML=pausasHtml(a); }
+function fecharModal(){ $('modal-bg').classList.remove('open'); $('modal').classList.remove('ajuda'); render(tabAtual()); }
 
 function initAjudaFab(){}
 function abrirAjuda(){
@@ -655,7 +697,7 @@ function abrirAjuda(){
       <li><b>Ano letivo</b>: começa em (data) e acaba em (mês). O nome do ano vem da data de início.</li>
       <li>Preço/hora de cada sala: <b>1 HORA</b> e <b>2 OU MAIS</b>, o <b>limiar</b> e a base (horas por semana ou por aula). <b>Cobrar? Não</b> = aparece no mapa mas não paga (campos).</li>
       <li>Lista de atividades e <b>preços manuais</b> para exceções.</li></ul>
-    <div class="subt">📅 Calendário</div><ul><li>Feriados e pausas (períodos sem aulas). Clica num dia para o marcar/desmarcar. Conta quantas 2ªs, 3ªs… há em cada mês — é isso que faz o valor mensal.</li></ul>
+    <div class="subt">📅 Calendário e regras por professor</div><ul><li>Períodos gerais: <b>Feriado / pausa geral</b> (só perde a aula quem não dá aulas nos feriados; a ARCA fechada não impede o acesso à sala), <b>Sala ocupada pela ARCA</b> (evento: escreve o motivo, marca as salas — sem aula e sem pagamento nesses dias; o motivo aparece nos Pagamentos) ou <b>Encerramento total</b>. Clica num dia para forçar com/sem aulas para todos.</li><li>Em cada atividade (✏️): <b>Feriados: dá / não dá aulas</b> e as <b>pausas/férias</b> próprias (1, 2 ou 3 períodos). Esses dias não contam nem pagam. No Calendário, «Ver o calendário de» mostra os dias de cada atividade.</li></ul>
     <div class="subt">💶 Pagamentos</div><ul><li>Valor a pagar por atividade/professor em cada mês (ou ano completo), detalhe por aula, <b>acertos manuais</b> (descontos, extras), impressão e CSV.</li></ul>
     <ul><li>Também: dados da associação, dias da semana, horário e tamanho das células do mapa, anos letivos, ocupações escondidas, teste da ligação à cloud e cópia de segurança.</li></ul>
     <div class="subt">📚 Anos letivos</div><ul><li>O seletor no menu lateral muda de ano. <b>+ Novo ano letivo</b> cria o seguinte (copiando o atual ou vazio). Em Pagamentos há a comparação entre anos; em Definições podes eliminar um ano.</li></ul>
@@ -667,8 +709,8 @@ function guardarAtividade(id){
   const nome=$('ma-nome').value.trim(); if(!nome){ toast('Escreve o nome da atividade.',false); return; }
   const dup=D.atividades.find(x=>x.nome.toLowerCase()===nome.toLowerCase() && x.id!==id); if(dup){ toast('Já existe uma atividade com esse nome.',false); return; }
   const fed=$('ma-fed').value==='1', cor=$('ma-cor').value;
-  const prof=$('ma-prof').value.trim();
-  if(id){ const a=atv(id); a.nome=nome; a.federada=fed; a.cor=cor; a.prof=prof; } else { const nid=uid(); D.atividades.push({id:nid,nome,federada:fed,cor,prof}); brush=nid; }
+  const prof=$('ma-prof').value.trim(); const fer=$('ma-fer').value==='1';
+  if(id){ const a=atv(id); a.nome=nome; a.federada=fed; a.cor=cor; a.prof=prof; a.feriados=fer; } else { const nid=uid(); D.atividades.push({id:nid,nome,federada:fed,cor,prof,feriados:fer,pausas:[]}); brush=nid; }
   guardar(); fecharModal(); renderAll(); toast(id?'Atividade atualizada.':'Atividade criada — já podes marcá-la no mapa.');
 }
 function eliminarAtividade(id, btn){
@@ -742,7 +784,7 @@ function renderFolha(){
     const sesPorMes=ms.map(m=>sessoesMes(m.ano,m.mes));
     h+=`<table class="ft" style="margin-top:10px"><thead><tr><th class="l">VALOR A PAGAR POR MÊS (ocupação das salas)</th><th>h/sem</th><th>€/hora</th>${ms.map(m=>`<th>${m.curto}</th>`).join('')}<th>Total ano</th></tr></thead><tbody>`;
     const colTot=new Array(ms.length).fill(0);
-    D.atividades.forEach(a=>{ const rows=det.filter(r=>r.atv.id===a.id); if(!rows.length && !D.acertos.some(x=>x.atvId===a.id)) return; const vals=ms.map((m,i)=>rows.reduce((x,r)=>x+valorMes(r,sesPorMes[i]),0)+acertoTotal(a.id,m.ym)); vals.forEach((v,i)=>colTot[i]+=v);
+    D.atividades.forEach(a=>{ const rows=det.filter(r=>r.atv.id===a.id); if(!rows.length && !D.acertos.some(x=>x.atvId===a.id)) return; const vals=ms.map((m,i)=>rows.reduce((x,r)=>x+valorMesM(r,ms[i]),0)+acertoTotal(a.id,m.ym)); vals.forEach((v,i)=>colTot[i]+=v);
       h+=`<tr><td class="l" style="background:${esc(a.cor)}"><b>${esc(a.nome)}</b></td><td>${fmtH(rows.reduce((x,r)=>x+r.horasSemana,0))}</td><td>${[...new Set(rows.map(r=>fmt(r.preco)))].join(' / ')}</td>${vals.map(v=>`<td>${fmt(v)}</td>`).join('')}<td><b>${fmt(vals.reduce((x,y)=>x+y,0))}</b></td></tr>`; });
     h+=`<tr class="tot"><td class="l">TOTAL</td><td></td><td></td>${colTot.map(v=>`<td>${fmt(v)}</td>`).join('')}<td>${fmt(colTot.reduce((x,y)=>x+y,0))}</td></tr></tbody></table>`;
   }
@@ -841,13 +883,15 @@ function htmlPrecos(){
   h+=`</tbody></table></div>
     <div class="row" style="margin-top:10px"><label class="small muted">Nome do escalão normal <input class="cell" style="width:140px" value="${esc(D.rotulos.p1)}" onchange="D.rotulos.p1=this.value.trim()||'1 HORA';guardar();renderDefinicoes()"></label><label class="small muted">Nome do escalão reduzido <input class="cell" style="width:140px" value="${esc(D.rotulos.p2)}" onchange="D.rotulos.p2=this.value.trim()||'2 OU MAIS';guardar();renderDefinicoes()"></label></div>
     <p class="small muted" style="margin-top:8px">«Cobrar? Não» = o espaço aparece no mapa mas não entra nos pagamentos (ex.: campos). O horário no mapa em branco usa o horário geral das Definições. Base «horas por semana»: se a atividade somar na sala pelo menos o limiar de horas semanais, todas as horas ficam ao preço reduzido. Base «horas de cada aula»: só as aulas com duração igual ou superior ao limiar ficam ao preço reduzido.</p></div>`;
-  h+=`<div class="card" id="cfg-atividades"><h3><span>Atividades</span><button class="btn btn-sm" onclick="addAtv()">+ Atividade</button></h3><div class="table-wrap"><table><thead><tr><th>Cor</th><th>Nome</th><th>Professor / treinador</th><th>Federada?</th><th>Horas/semana (todas as salas)</th><th></th></tr></thead><tbody>`;
+  h+=`<div class="card" id="cfg-atividades"><h3><span>Atividades</span><button class="btn btn-sm" onclick="addAtv()">+ Atividade</button></h3><div class="table-wrap"><table><thead><tr><th>Cor</th><th>Nome</th><th>Professor / treinador</th><th>Federada?</th><th>Feriados</th><th>Pausas</th><th>Horas/semana (todas as salas)</th><th></th></tr></thead><tbody>`;
   D.atividades.forEach(a=>{
     const hs=D.salas.reduce((acc,s)=>acc+horasDia(s.id,a.id).reduce((x,y)=>x+y,0),0);
     h+=`<tr><td><input type="color" value="${esc(a.cor)}" onchange="edAtv('${a.id}','cor',this.value)"></td>
       <td><input class="cell wide" value="${esc(a.nome)}" onchange="edAtv('${a.id}','nome',this.value)"></td>
       <td><input class="cell wide" value="${esc(a.prof||'')}" placeholder="opcional" onchange="edAtv('${a.id}','prof',this.value)"></td>
       <td><select class="cell" onchange="edAtv('${a.id}','federada',this.value==='1')"><option value="1" ${a.federada?'selected':''}>Federada</option><option value="0" ${!a.federada?'selected':''}>Não federada</option></select></td>
+      <td><select class="cell" onchange="edAtv('${a.id}','feriados',this.value==='1')"><option value="0" ${!a.feriados?'selected':''}>Não dá aulas</option><option value="1" ${a.feriados?'selected':''}>Dá aulas</option></select></td>
+      <td><button class="btn btn-sm" onclick="abrirAtividade('${a.id}')">${(a.pausas||[]).length?(a.pausas.length+' pausa(s)'):'—'} ✏️</button></td>
       <td class="mono">${fmtH(hs)} h</td>
       <td>${hs>0?'<span class="small muted">no mapa</span>':`<button class="btn btn-sm btn-danger" onclick="delAtv('${a.id}')">Apagar</button>`}</td></tr>`;
   });
@@ -873,34 +917,37 @@ function edManual(key,v){ if(v===''||v===null) delete D.precoManual[key]; else D
 /* ---------- CALENDÁRIO ---------- */
 function renderCalendario(){
   const ms=meses();
-  let h=`<div class="page-head"><div><h2>Calendário do ano letivo</h2><p>Os dias riscados não têm aulas (feriados, férias, encerramentos). Clica num dia para o alternar manualmente (fica marcado a laranja). O valor mensal de cada atividade usa o número de 2ªs, 3ªs, … com aulas em cada mês.</p></div>
+  let h=`<div class="page-head"><div><h2>Calendário do ano letivo</h2><p>Dias riscados: vermelho = feriado/encerramento, amarelo = sala ocupada pela ARCA (evento), roxo = pausa da atividade. Clica num dia para o forçar manualmente para todos (fica com contorno laranja). O valor mensal de cada atividade usa o número de 2ªs, 3ªs, … com aulas em cada mês.</p></div>
     <div class="row"><label class="small muted">Início do ano letivo</label><input type="date" class="cell" style="width:auto" value="${esc(D.inicio)}" onchange="D.inicio=this.value||D.inicio;guardar();renderAll()"></div></div>`;
-  h+=`<div class="card"><h3><span>Períodos sem aulas</span><button class="btn btn-sm" onclick="addFechado()">+ Período</button></h3><div class="table-wrap"><table><thead><tr><th>Descrição</th><th>Início</th><th>Fim</th><th></th></tr></thead><tbody>`;
+  h+=`<div class="card"><h3><span>Períodos gerais sem aulas</span><button class="btn btn-sm" onclick="addFechado()">+ Período</button></h3><div class="table-wrap"><table><thead><tr><th>Descrição / motivo</th><th>Início</th><th>Fim</th><th>Tipo</th><th></th></tr></thead><tbody>`;
   D.fechados.slice().sort((a,b)=>(a.inicio||'').localeCompare(b.inicio||'')).forEach(f=>{
-    h+=`<tr><td><input class="cell wide" value="${esc(f.desc)}" onchange="edFechado('${f.id}','desc',this.value)"></td><td><input type="date" class="cell" value="${esc(f.inicio)}" onchange="edFechado('${f.id}','inicio',this.value)"></td><td><input type="date" class="cell" value="${esc(f.fim)}" onchange="edFechado('${f.id}','fim',this.value)"></td><td><button class="btn btn-sm btn-danger" onclick="delFechado('${f.id}')">Apagar</button></td></tr>`;
+    h+=`<tr><td><input class="cell wide" value="${esc(f.desc)}" onchange="edFechado('${f.id}','desc',this.value)"></td><td><input type="date" class="cell" value="${esc(f.inicio)}" onchange="edFechado('${f.id}','inicio',this.value)"></td><td><input type="date" class="cell" value="${esc(f.fim)}" onchange="edFechado('${f.id}','fim',this.value)"></td><td><select class="cell" onchange="edFechado('${f.id}','tipo',this.value)"><option value="feriado" ${(!f.tipo||f.tipo==='feriado')?'selected':''}>Feriado / pausa geral (quem dá aulas nos feriados tem aula)</option><option value="evento" ${f.tipo==='evento'?'selected':''}>Sala ocupada pela ARCA — evento (sem aula, sem pagamento)</option><option value="encerramento" ${f.tipo==='encerramento'?'selected':''}>Encerramento total (ninguém tem aula, ex.: obras)</option></select>${f.tipo==='evento'?`<div class="row" style="margin-top:4px;gap:8px"><span class="small muted">Salas:</span>${D.salas.map(s=>`<label class="small"><input type="checkbox" ${(f.salas||[]).includes(s.id)?'checked':''} onchange="toggleSalaEvento('${f.id}','${s.id}',this.checked)"> ${esc(s.nome)}</label>`).join('')}<span class="small muted">(nenhuma marcada = todas)</span></div>`:''}</td><td><button class="btn btn-sm btn-danger" onclick="delFechado('${f.id}')">Apagar</button></td></tr>`;
   });
-  h+=`</tbody></table></div><p class="small muted" style="margin-top:8px">Para um só dia, Início = Fim. Acrescenta as férias de verão ou outros encerramentos.</p></div>`;
+  h+=`</tbody></table></div><p class="small muted" style="margin-top:8px">Para um só dia, Início = Fim. <b>Feriado / pausa geral</b>: só perde a aula quem, na atividade, tiver «Feriados: não dá aulas» (a ARCA pode estar fechada — os professores continuam a ter acesso à sala). <b>Sala ocupada pela ARCA</b>: a associação precisa da sala para um evento — escreve o motivo na descrição e marca as salas; as atividades dessas salas não têm aula nem pagam esses dias. <b>Encerramento total</b>: ninguém tem aula. As <b>pausas de cada professor</b> definem-se na própria atividade (✏️ na barra, ou em Configurações → Atividades).</p></div>`;
+  h+=`<div class="card"><h3><span>Ver o calendário de</span><select class="cell" onchange="calAtv=this.value;renderCalendario()"><option value="" ${!calAtv?'selected':''}>Geral (regras da ARCA)</option>${D.atividades.map(a=>`<option value="${a.id}" ${calAtv===a.id?'selected':''}>${esc(a.nome)}${a.feriados?' · dá aulas nos feriados':''}${(a.pausas||[]).length?' · '+a.pausas.length+' pausa(s)':''}</option>`).join('')}</select></h3>${calAtv&&atv(calAtv)?`<div class="small muted">${esc(atv(calAtv).nome)}: ${atv(calAtv).feriados?'<b>dá aulas nos feriados</b>':'não dá aulas nos feriados'}${(atv(calAtv).pausas||[]).length?' · pausas: '+atv(calAtv).pausas.map(p=>esc(p.desc||'')+' '+fmtData(p.inicio)+'–'+fmtData(p.fim)).join(', '):' · sem pausas próprias'} — <a href="#" onclick="abrirAtividade('${calAtv}');return false">editar</a></div>`:`<div class="small muted">Escolhe uma atividade para ver os dias em que essa atividade tem aulas (feriados e pausas próprias).</div>`}</div>`;
   h+=`<div class="meses">`;
   ms.forEach(m=>{
-    const ses=sessoesMes(m.ano,m.mes); const n=new Date(m.ano,m.mes+1,0).getDate(); const off=diaSemana(new Date(m.ano,m.mes,1));
+    const aSel=calAtv?atv(calAtv):null; const ses=sessoesMes(m.ano,m.mes,aSel); const n=new Date(m.ano,m.mes+1,0).getDate(); const off=diaSemana(new Date(m.ano,m.mes,1));
     h+=`<div class="mes"><h4><span>${m.nome}</span><span class="muted">${ses.reduce((a,b)=>a+b,0)} dias c/ aulas</span></h4><div class="dias">`;
     DIAS_S.forEach(d=>h+=`<div class="h">${d}</div>`); for(let i=0;i<off;i++) h+=`<div class="d vazio"></div>`;
-    for(let d=1; d<=n; d++){ const dt=new Date(m.ano,m.mes,d), iso=isoD(dt); const cls=['d']; if(diaSemana(dt)>=5) cls.push('fim'); if(!temAulas(iso)) cls.push('fechado'); if(D.ajustes[iso]) cls.push('forcado'); h+=`<div class="${cls.join(' ')}" title="${iso}${D.ajustes[iso]?' (manual)':''}" onclick="toggleDia('${iso}')">${d}</div>`; }
+    for(let d=1; d<=n; d++){ const dt=new Date(m.ano,m.mes,d), iso=isoD(dt); const cls=['d']; if(diaSemana(dt)>=5) cls.push('fim'); const mot=motivoSemAulas(iso,aSel); if(mot) cls.push('fechado'); if(mot==='pausa') cls.push('pausa'); if(mot==='evento') cls.push('evento'); if(D.ajustes[iso]) cls.push('forcado'); h+=`<div class="${cls.join(' ')}" title="${iso}${mot?' — '+({manual:'sem aulas (manual)',encerramento:'encerramento total',evento:'sala ocupada pela ARCA: '+eventosEm(iso,null,aSel).map(e=>e.desc).join(' / '),feriado:'feriado',pausa:'pausa da atividade'})[mot]:''}" onclick="toggleDia('${iso}')">${d}</div>`; }
     h+=`</div><div class="small muted" style="margin-top:6px">${DIAS_S.map((d,i)=>d+' '+ses[i]).join(' · ')}</div></div>`;
   });
   h+=`</div>`;
-  h+=`<div class="card" style="margin-top:16px"><h3>Nº de dias com aulas por dia da semana em cada mês</h3><div class="table-wrap"><table><thead><tr><th>Mês</th>`; DIAS_S.forEach(d=>h+=`<th class="right">${d}</th>`); h+=`<th class="right">Total</th></tr></thead><tbody>`;
-  ms.forEach(m=>{ const s=sessoesMes(m.ano,m.mes); h+=`<tr><td>${m.nome}</td>${s.map(x=>`<td class="right mono">${x}</td>`).join('')}<td class="right mono"><b>${s.reduce((a,b)=>a+b,0)}</b></td></tr>`; });
+  h+=`<div class="card" style="margin-top:16px"><h3>Nº de dias com aulas por dia da semana em cada mês${calAtv&&atv(calAtv)?' — '+esc(atv(calAtv).nome):' — geral'}</h3><div class="table-wrap"><table><thead><tr><th>Mês</th>`; DIAS_S.forEach(d=>h+=`<th class="right">${d}</th>`); h+=`<th class="right">Total</th></tr></thead><tbody>`;
+  ms.forEach(m=>{ const s=sessoesMes(m.ano,m.mes,calAtv?atv(calAtv):null); h+=`<tr><td>${m.nome}</td>${s.map(x=>`<td class="right mono">${x}</td>`).join('')}<td class="right mono"><b>${s.reduce((a,b)=>a+b,0)}</b></td></tr>`; });
   h+=`</tbody></table></div></div>`;
   $('sec-calendario').innerHTML=h;
 }
 function toggleDia(iso){ const cur=D.ajustes[iso]; const auto=!fechadoPorPeriodo(iso); if(cur){ delete D.ajustes[iso]; } else { D.ajustes[iso]= auto?'S':'A'; } guardar(); renderCalendario(); }
-function addFechado(){ D.fechados.push({id:uid(),desc:'Novo período',inicio:'',fim:''}); guardar(); renderCalendario(); }
+function addFechado(){ D.fechados.push({id:uid(),desc:'Novo período',inicio:'',fim:'',tipo:'feriado'}); guardar(); renderCalendario(); }
 function edFechado(id,k,v){ const f=D.fechados.find(x=>x.id===id); if(!f) return; f[k]=v; if(k==='inicio' && (!f.fim||f.fim<v)) f.fim=v; guardar(); renderCalendario(); }
+function toggleSalaEvento(fid,sid,on){ const f=D.fechados.find(x=>x.id===fid); if(!f) return; f.salas=(f.salas||[]).filter(x=>x!==sid); if(on) f.salas.push(sid); guardar(); renderCalendario(); }
 function delFechado(id){ D.fechados=D.fechados.filter(x=>x.id!==id); guardar(); renderCalendario(); }
 
 /* ---------- PAGAMENTOS ---------- */
-let mesSel = 'todos';
+let mesSel = 'todos'; let calAtv='';
+function fmtData(iso){ if(!iso) return '?'; const p=iso.split('-'); return p.length===3? p[2]+'/'+p[1] : iso; }
 function renderPagamentos(){
   const ms=meses(); const det=detalhe();
   const sesPorMes=ms.map(m=>sessoesMes(m.ano,m.mes));
@@ -908,29 +955,30 @@ function renderPagamentos(){
     <div class="row"><select class="cell" onchange="mesSel=this.value;renderPagamentos()"><option value="todos" ${mesSel==='todos'?'selected':''}>Ano completo</option>${ms.map((m,i)=>`<option value="${i}" ${String(mesSel)===String(i)?'selected':''}>${m.nome}</option>`).join('')}</select>
     <button class="btn" onclick="imprimirPagamentos()">🖶 Imprimir</button><button class="btn" onclick="exportarCSV()">⭳ CSV</button></div></div>`;
   if(mesSel==='todos'){
-    const totAno=det.reduce((a,r)=>a+ms.reduce((x,m,i)=>x+valorMes(r,sesPorMes[i]),0),0)+D.acertos.reduce((a,x)=>a+(Number(x.valor)||0),0);
+    const totAno=det.reduce((a,r)=>a+ms.reduce((x,m,i)=>x+valorMesM(r,ms[i]),0),0)+D.acertos.reduce((a,x)=>a+(Number(x.valor)||0),0);
     h+=`<div class="kpis"><div class="kpi"><div class="n">${fmt(totAno)}</div><div class="l">total do ano letivo</div></div><div class="kpi"><div class="n">${fmt(totAno/ms.length)}</div><div class="l">média mensal</div></div><div class="kpi"><div class="n">${fmt(det.reduce((a,r)=>a+r.valorSemana,0))}</div><div class="l">valor semanal</div></div></div>`;
     h+=`<div class="card"><h3>Por atividade / professor</h3><div class="table-wrap"><table id="tab-anual"><thead><tr><th>Atividade</th><th class="right">h/sem</th><th class="right">€/sem</th>${ms.map(m=>`<th class="right">${m.curto}</th>`).join('')}<th class="right">Total ano</th></tr></thead><tbody>`;
     const colTot=new Array(ms.length).fill(0);
     D.atividades.forEach(a=>{ const rows=det.filter(r=>r.atv.id===a.id); const temAc=D.acertos.some(x=>x.atvId===a.id); if(!rows.length && !temAc) return;
-      const vals=ms.map((m,i)=>rows.reduce((x,r)=>x+valorMes(r,sesPorMes[i]),0)+acertoTotal(a.id,m.ym)); vals.forEach((v,i)=>colTot[i]+=v);
+      const vals=ms.map((m,i)=>rows.reduce((x,r)=>x+valorMesM(r,ms[i]),0)+acertoTotal(a.id,m.ym)); vals.forEach((v,i)=>colTot[i]+=v);
       h+=`<tr><td><span class="legend"><span><i style="background:${esc(a.cor)}"></i><b>${esc(a.nome)}</b></span></span></td><td class="right mono">${fmtH(rows.reduce((x,r)=>x+r.horasSemana,0))}</td><td class="right mono">${fmt(rows.reduce((x,r)=>x+r.valorSemana,0))}</td>${vals.map(v=>`<td class="right mono">${fmt(v)}</td>`).join('')}<td class="right mono"><b>${fmt(vals.reduce((x,y)=>x+y,0))}</b></td></tr>`;
     });
     h+=`<tr class="total"><td>TOTAL</td><td class="right mono">${fmtH(det.reduce((a,r)=>a+r.horasSemana,0))}</td><td class="right mono">${fmt(det.reduce((a,r)=>a+r.valorSemana,0))}</td>${colTot.map(v=>`<td class="right mono">${fmt(v)}</td>`).join('')}<td class="right mono">${fmt(colTot.reduce((x,y)=>x+y,0))}</td></tr></tbody></table></div></div>`;
     h+=`<div class="card"><h3>Por sala</h3><div class="table-wrap"><table><thead><tr><th>Sala</th><th class="right">Atividades</th><th class="right">h/sem</th>${ms.map(m=>`<th class="right">${m.curto}</th>`).join('')}<th class="right">Total ano</th></tr></thead><tbody>`;
-    D.salas.filter(s=>s.cobrar).forEach(s=>{ const rows=det.filter(r=>r.sala.id===s.id); const vals=ms.map((m,i)=>rows.reduce((x,r)=>x+valorMes(r,sesPorMes[i]),0));
+    D.salas.filter(s=>s.cobrar).forEach(s=>{ const rows=det.filter(r=>r.sala.id===s.id); const vals=ms.map((m,i)=>rows.reduce((x,r)=>x+valorMesM(r,ms[i]),0));
       h+=`<tr><td><b>${esc(s.nome)}</b></td><td class="right mono">${rows.length}</td><td class="right mono">${fmtH(rows.reduce((x,r)=>x+r.horasSemana,0))}</td>${vals.map(v=>`<td class="right mono">${fmt(v)}</td>`).join('')}<td class="right mono"><b>${fmt(vals.reduce((x,y)=>x+y,0))}</b></td></tr>`; });
     h+=`</tbody></table></div></div>`;
   } else {
     const i=Number(mesSel), m=ms[i], ses=sesPorMes[i];
     const acMes=D.acertos.filter(x=>x.ym===m.ym); const totAc=acMes.reduce((a,x)=>a+(Number(x.valor)||0),0);
-    const tot=det.reduce((a,r)=>a+valorMes(r,ses),0)+totAc;
+    const tot=det.reduce((a,r)=>a+valorMesM(r,m),0)+totAc;
     h+=`<div class="kpis"><div class="kpi"><div class="n">${fmt(tot)}</div><div class="l">total ${m.nome}${totAc?' (inclui acertos '+fmt(totAc)+')':''}</div></div><div class="kpi"><div class="n">${ses.reduce((a,b)=>a+b,0)}</div><div class="l">dias com aulas no mês</div></div><div class="kpi"><div class="n sm">${DIAS_S.map((d,k)=>d+' '+ses[k]).join(' · ')}</div><div class="l">nº de cada dia da semana</div></div></div>`;
     h+=`<div class="card"><h3>Detalhe de ${m.nome} — por atividade e sala</h3><div class="table-wrap"><table><thead><tr><th>Atividade</th><th>Sala</th><th>Dias / horas por aula</th><th class="right">Aulas no mês</th><th class="right">Horas no mês</th><th>Escalão</th><th class="right">€/hora</th><th class="right">Valor do mês</th></tr></thead><tbody>`;
     D.atividades.forEach(a=>{ det.filter(r=>r.atv.id===a.id).forEach(r=>{
-      const dias=r.horasDia.map((hh,k)=>hh>0?`${DIAS_S[k]} ${fmtH(hh)}h`:null).filter(Boolean).join(', ');
-      const aulas=r.horasDia.reduce((x,hh,k)=>x+(hh>0?ses[k]:0),0), horas=r.horasDia.reduce((x,hh,k)=>x+hh*ses[k],0);
-      h+=`<tr><td><span class="legend"><span><i style="background:${esc(a.cor)}"></i><b>${esc(a.nome)}</b></span></span></td><td>${esc(r.sala.nome)}</td><td class="small">${dias}</td><td class="right mono">${aulas}</td><td class="right mono">${fmtH(horas)}</td><td title="${esc((D.obsManual||{})[r.sala.id+'|'+r.atv.id]||'')}">${r.escalao}${(D.obsManual||{})[r.sala.id+'|'+r.atv.id]?' <span class="small muted">📝</span>':''}</td><td class="right mono">${fmt(r.preco)}</td><td class="right mono"><b>${fmt(valorMes(r,ses))}</b></td></tr>`;
+      const dias=r.horasDia.map((hh,k)=>hh>0?`${DIAS_S[k]} ${fmtH(hh)}h`:null).filter(Boolean).join(', '); const sesR=sessoesMes(m.ano,m.mes,r.atv,r.sala.id);
+      const aulas=r.horasDia.reduce((x,hh,k)=>x+(hh>0?sesR[k]:0),0), horas=r.horasDia.reduce((x,hh,k)=>x+hh*sesR[k],0);
+      const evs=eventosDoMes(r,m); const evTxt=evs.length?`<div class="small" style="color:var(--coral-d)">Sala ocupada pela ARCA: ${evs.map(e=>fmtData(e.iso)+' ('+esc(e.motivo)+')').join(', ')} — sem pagamento nesses dias</div>`:'';
+      h+=`<tr><td><span class="legend"><span><i style="background:${esc(a.cor)}"></i><b>${esc(a.nome)}</b></span></span></td><td>${esc(r.sala.nome)}</td><td class="small">${dias}${evTxt}</td><td class="right mono">${aulas}</td><td class="right mono">${fmtH(horas)}</td><td title="${esc((D.obsManual||{})[r.sala.id+'|'+r.atv.id]||'')}">${r.escalao}${(D.obsManual||{})[r.sala.id+'|'+r.atv.id]?' <span class="small muted">📝</span>':''}</td><td class="right mono">${fmt(r.preco)}</td><td class="right mono"><b>${fmt(valorMesM(r,m))}</b></td></tr>`;
     }); });
     h+=`<tr class="total"><td colspan="7">TOTAL ${m.nome.toUpperCase()} (sem acertos)</td><td class="right mono">${fmt(tot-totAc)}</td></tr></tbody></table></div></div>`;
     // acertos manuais do mês
@@ -941,13 +989,13 @@ function renderPagamentos(){
     h+=`</div>`;
     h+=`<div class="card"><h3>Resumo a pagar por atividade / professor — ${m.nome}</h3><div class="table-wrap"><table><thead><tr><th>Atividade</th><th class="right">Aulas</th><th class="right">Horas</th><th class="right">Acertos</th><th class="right">Valor a pagar</th></tr></thead><tbody>`;
     D.atividades.forEach(a=>{ const rows=det.filter(r=>r.atv.id===a.id); if(!rows.length && !acertoTotal(a.id,m.ym)) return;
-      const aulas=rows.reduce((x,r)=>x+r.horasDia.reduce((y,hh,k)=>y+(hh>0?ses[k]:0),0),0), horas=rows.reduce((x,r)=>x+r.horasDia.reduce((y,hh,k)=>y+hh*ses[k],0),0), v=rows.reduce((x,r)=>x+valorMes(r,ses),0), ac=acertoTotal(a.id,m.ym);
+      const aulas=rows.reduce((x,r)=>{ const sR=sessoesMes(m.ano,m.mes,a,r.sala.id); return x+r.horasDia.reduce((y,hh,k)=>y+(hh>0?sR[k]:0),0); },0), horas=rows.reduce((x,r)=>{ const sR=sessoesMes(m.ano,m.mes,a,r.sala.id); return x+r.horasDia.reduce((y,hh,k)=>y+hh*sR[k],0); },0), v=rows.reduce((x,r)=>x+valorMesM(r,m),0), ac=acertoTotal(a.id,m.ym);
       h+=`<tr><td><b>${esc(a.nome)}</b></td><td class="right mono">${aulas}</td><td class="right mono">${fmtH(horas)}</td><td class="right mono">${ac?fmt(ac):'—'}</td><td class="right mono"><b>${fmt(v+ac)}</b></td></tr>`; });
     h+=`<tr class="total"><td>TOTAL</td><td></td><td></td><td class="right mono">${totAc?fmt(totAc):''}</td><td class="right mono">${fmt(tot)}</td></tr></tbody></table></div></div>`;
   }
   if(listaAnos().length>1){
     const anos=listaAnos();
-    const stats=anos.map(k=>comOutroAno(ALL.anos[k],()=>{ const dd=detalhe(); const mm=meses(); const porAtv={}; dd.forEach(r=>{ const key=r.atv.nome.toUpperCase(); porAtv[key]=porAtv[key]||{h:0,v:0}; porAtv[key].h+=r.horasSemana; porAtv[key].v+=mm.reduce((x,m)=>x+valorMes(r,sessoesMes(m.ano,m.mes)),0); }); D.acertos.forEach(x=>{ const a=atv(x.atvId); if(!a) return; const key=a.nome.toUpperCase(); porAtv[key]=porAtv[key]||{h:0,v:0}; porAtv[key].v+=Number(x.valor)||0; }); const total=Object.values(porAtv).reduce((x,y)=>x+y.v,0); const horas=D.salas.reduce((x,s)=>x+horasEspaco(s.id),0); return {porAtv,total,horas}; }));
+    const stats=anos.map(k=>comOutroAno(ALL.anos[k],()=>{ const dd=detalhe(); const mm=meses(); const porAtv={}; dd.forEach(r=>{ const key=r.atv.nome.toUpperCase(); porAtv[key]=porAtv[key]||{h:0,v:0}; porAtv[key].h+=r.horasSemana; porAtv[key].v+=mm.reduce((x,m)=>x+valorMesM(r,m),0); }); D.acertos.forEach(x=>{ const a=atv(x.atvId); if(!a) return; const key=a.nome.toUpperCase(); porAtv[key]=porAtv[key]||{h:0,v:0}; porAtv[key].v+=Number(x.valor)||0; }); const total=Object.values(porAtv).reduce((x,y)=>x+y.v,0); const horas=D.salas.reduce((x,s)=>x+horasEspaco(s.id),0); return {porAtv,total,horas}; }));
     const nomes=[...new Set(stats.flatMap(st=>Object.keys(st.porAtv)))].sort();
     h+=`<div class="card"><h3>Comparação entre anos letivos</h3><div class="table-wrap"><table><thead><tr><th>Atividade</th>${anos.map(k=>`<th class="right" colspan="2">${esc(k)}</th>`).join('')}<th class="right">Variação<br>(último vs anterior)</th></tr><tr><th></th>${anos.map(()=>`<th class="right">h/sem</th><th class="right">€/ano</th>`).join('')}<th></th></tr></thead><tbody>`;
     nomes.forEach(n=>{ const vals=stats.map(st=>st.porAtv[n]||{h:0,v:0}); const a=vals[vals.length-2].v, b=vals[vals.length-1].v; const dif=b-a;
@@ -965,17 +1013,18 @@ function imprimirPagamentos(){
     h=cabecalhoPrint('Pagamentos pela ocupação das salas — ano completo');
     h+=`<table><thead><tr><th>Atividade</th><th>h/sem</th>${ms.map(m=>`<th>${m.curto}</th>`).join('')}<th>Total</th></tr></thead><tbody>`;
     const colTot=new Array(ms.length).fill(0);
-    D.atividades.forEach(a=>{ const rows=det.filter(r=>r.atv.id===a.id); if(!rows.length && !D.acertos.some(x=>x.atvId===a.id)) return; const vals=ms.map(m=>rows.reduce((x,r)=>x+valorMes(r,sessoesMes(m.ano,m.mes)),0)+acertoTotal(a.id,m.ym)); vals.forEach((v,i)=>colTot[i]+=v);
+    D.atividades.forEach(a=>{ const rows=det.filter(r=>r.atv.id===a.id); if(!rows.length && !D.acertos.some(x=>x.atvId===a.id)) return; const vals=ms.map(m=>rows.reduce((x,r)=>x+valorMesM(r,m),0)+acertoTotal(a.id,m.ym)); vals.forEach((v,i)=>colTot[i]+=v);
       h+=`<tr><td><b>${esc(a.nome)}</b></td><td>${fmtH(rows.reduce((x,r)=>x+r.horasSemana,0))}</td>${vals.map(v=>`<td style="text-align:right">${fmt(v)}</td>`).join('')}<td style="text-align:right"><b>${fmt(vals.reduce((x,y)=>x+y,0))}</b></td></tr>`; });
     h+=`<tr><td><b>TOTAL</b></td><td></td>${colTot.map(v=>`<td style="text-align:right"><b>${fmt(v)}</b></td>`).join('')}<td style="text-align:right"><b>${fmt(colTot.reduce((x,y)=>x+y,0))}</b></td></tr></tbody></table>`;
   } else {
     const m=ms[Number(mesSel)], ses=sessoesMes(m.ano,m.mes);
     h=cabecalhoPrint('Pagamentos pela ocupação das salas — '+m.nome);
-    h+=`<p style="margin-bottom:8px">Dias com aulas no mês: ${DIAS_S.map((d,k)=>d+' '+ses[k]).join(' · ')}</p>`;
+    h+=`<p style="margin-bottom:8px">Dias com aulas no mês (geral): ${DIAS_S.map((d,k)=>d+' '+ses[k]).join(' · ')}. Atividades com pausas próprias ou que dão aulas nos feriados têm contagens diferentes (coluna Aulas).</p>`;
     h+=`<table><thead><tr><th>Atividade</th><th>Sala</th><th>Dias / horas por aula</th><th>Aulas</th><th>Horas</th><th>Escalão</th><th>€/hora</th><th>Valor</th></tr></thead><tbody>`;
     let tot=0;
-    D.atividades.forEach(a=>det.filter(r=>r.atv.id===a.id).forEach(r=>{ const v=valorMes(r,ses); tot+=v;
-      h+=`<tr><td><b>${esc(a.nome)}</b></td><td>${esc(r.sala.nome)}</td><td>${r.horasDia.map((hh,k)=>hh>0?`${DIAS_S[k]} ${fmtH(hh)}h`:null).filter(Boolean).join(', ')}</td><td style="text-align:right">${r.horasDia.reduce((x,hh,k)=>x+(hh>0?ses[k]:0),0)}</td><td style="text-align:right">${fmtH(r.horasDia.reduce((x,hh,k)=>x+hh*ses[k],0))}</td><td>${r.escalao}</td><td style="text-align:right">${fmt(r.preco)}</td><td style="text-align:right"><b>${fmt(v)}</b></td></tr>`; }));
+    D.atividades.forEach(a=>det.filter(r=>r.atv.id===a.id).forEach(r=>{ const v=valorMesM(r,m); tot+=v; const sesR=sessoesMes(m.ano,m.mes,r.atv,r.sala.id);
+      const evs=eventosDoMes(r,m);
+      h+=`<tr><td><b>${esc(a.nome)}</b></td><td>${esc(r.sala.nome)}</td><td>${r.horasDia.map((hh,k)=>hh>0?`${DIAS_S[k]} ${fmtH(hh)}h`:null).filter(Boolean).join(', ')}${evs.length?'<br><span style="font-size:9px">Sala ocupada pela ARCA: '+evs.map(e=>fmtData(e.iso)+' ('+esc(e.motivo)+')').join(', ')+'</span>':''}</td><td style="text-align:right">${r.horasDia.reduce((x,hh,k)=>x+(hh>0?sesR[k]:0),0)}</td><td style="text-align:right">${fmtH(r.horasDia.reduce((x,hh,k)=>x+hh*sesR[k],0))}</td><td>${r.escalao}</td><td style="text-align:right">${fmt(r.preco)}</td><td style="text-align:right"><b>${fmt(v)}</b></td></tr>`; }));
     const acMes=D.acertos.filter(x=>x.ym===m.ym);
     acMes.forEach(x=>{ const a=atv(x.atvId); tot+=Number(x.valor)||0; h+=`<tr><td><b>${esc(a?a.nome:'—')}</b></td><td colspan="6">Acerto: ${esc(x.desc)}</td><td style="text-align:right"><b>${fmt(x.valor)}</b></td></tr>`; });
     h+=`<tr><td colspan="7"><b>TOTAL</b></td><td style="text-align:right"><b>${fmt(tot)}</b></td></tr></tbody></table>`;
@@ -988,7 +1037,7 @@ function delAcerto(id){ D.acertos=D.acertos.filter(y=>y.id!==id); guardar(); ren
 function exportarCSV(){
   const ms=meses(), det=detalhe(); const sep=';'; const num=n=>(Number(n)||0).toFixed(2).replace('.',',');
   const lines=[['Atividade','Sala','Horas/semana','Escalao','Preco/hora','Valor/semana',...ms.map(m=>m.nome),'Total ano'].join(sep)];
-  det.forEach(r=>{ const vals=ms.map(m=>valorMes(r,sessoesMes(m.ano,m.mes))); lines.push([r.atv.nome,r.sala.nome,num(r.horasSemana),r.escalao,num(r.preco),num(r.valorSemana),...vals.map(num),num(vals.reduce((a,b)=>a+b,0))].join(sep)); });
+  det.forEach(r=>{ const vals=ms.map(m=>valorMesM(r,m)); lines.push([r.atv.nome,r.sala.nome,num(r.horasSemana),r.escalao,num(r.preco),num(r.valorSemana),...vals.map(num),num(vals.reduce((a,b)=>a+b,0))].join(sep)); });
   D.acertos.forEach(x=>{ const a=atv(x.atvId); const vals=ms.map(m=>m.ym===x.ym?Number(x.valor)||0:0); lines.push([(a?a.nome:'—')+' (acerto: '+x.desc+')','',0,'acerto',0,0,...vals.map(num),num(Number(x.valor)||0)].join(sep)); });
   const blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='pagamentos_salas_'+$('side-ano-txt').textContent.replace('/','-')+'.csv'; document.body.appendChild(a); a.click(); a.remove();
 }
