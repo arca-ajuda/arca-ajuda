@@ -208,8 +208,11 @@
 
   /* ---- PRINT ---- */
   #print-area{display:none}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
   @media print{
     @page{size:A4 landscape;margin:8mm}
+    *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    .folha table.fm td.slot[style*="background"]{border-color:#777}
     body.print-folha>*{display:none!important}
     body.print-folha #app{display:block!important;padding:0!important}
     body.print-folha aside#side,body.print-folha .folha-tools,body.print-folha .page-head,body.print-folha #cloud-banner{display:none!important}
