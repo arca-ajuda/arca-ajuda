@@ -224,8 +224,25 @@
     body.print-folha{background:#fff}
     #modal-bg{display:none!important}
     body.print-folha #sec-folha .card{display:none!important}
-    body.print-folha .folha{border:none;border-radius:0;padding:0;zoom:.78}
-    body.print-folha .folha table.fm th,body.print-folha .folha table.fm td{height:13px}
+    body.print-folha .folha{border:none;border-radius:0;padding:0;width:100%;max-width:100%;overflow:hidden;font-size:8px}
+    body.print-folha .folha .mapas{gap:5px}
+    body.print-folha .folha .campos{gap:5px}
+    body.print-folha .folha table.fm th,body.print-folha .folha table.fm td{height:12px;font-size:7px;padding:0 1px;line-height:1}
+    body.print-folha .folha table.fm td.slot{font-size:6.6px}
+    body.print-folha .folha table.fm td.h{width:44px;font-size:6px}
+    body.print-folha .folha table.fm th{height:12px;font-size:6.4px}
+    body.print-folha .folha table.fm th.sala{height:14px;font-size:8.5px}
+    body.print-folha .folha table.ft th,body.print-folha .folha table.ft td{font-size:7px;padding:1px 3px}
+    body.print-folha .folha table.atvs td{font-size:6.8px;padding:1px 2px}
+    body.print-folha .folha table.atvs tr.prof td{font-size:6.8px;height:12px}
+    body.print-folha .folha table.atvs td.fed{font-size:6.2px}
+    body.print-folha .folha .atvs-wrap{gap:4px;margin-top:5px}
+    body.print-folha .folha .rodape-grid{gap:5px;margin-top:5px}
+    body.print-folha .folha .aviso-box{font-size:7px;padding:3px 5px}
+    body.print-folha .folha .fh{padding-bottom:3px;margin-bottom:4px}
+    body.print-folha .folha .fh h1{font-size:10px}
+    body.print-folha .folha .fh .sub{font-size:7.5px}
+    body.print-folha .folha h2.ft{font-size:11px;margin:2px 0 4px}
     body.print-folha .folha .mapas{grid-template-columns:repeat(var(--ncol,3),minmax(0,1fr))!important}
     body.print-folha .folha{max-width:100%;overflow:hidden}
     body.print-folha .paleta-sticky{display:none!important}
