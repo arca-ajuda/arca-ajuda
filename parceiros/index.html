@@ -304,7 +304,7 @@ async function carregarPublico(){
     }
   }catch(e){ console.warn('logo arca:', e); }
   try{
-    const parceiros = await fetch(`${SUPA_URL}/rest/v1/parceiros?ativo=eq.true&order=ordem.asc,nome.asc`, {
+    const parceiros = await fetch(`${SUPA_URL}/rest/v1/parceiros?tipo=eq.apoio&ativo=eq.true&order=ordem.asc,nome.asc`, {
       headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
     }).then(r=>r.json());
 
@@ -413,7 +413,7 @@ function copiarLink(){
 // Gera o HTML dos apoios para impressão / PDF
 async function construirFolhaApoios(){
   let parceiros = [];
-  try{ parceiros = await supaFetch('parceiros?ativo=eq.true&order=ordem.asc,nome.asc') || []; }
+  try{ parceiros = await supaFetch('parceiros?tipo=eq.apoio&ativo=eq.true&order=ordem.asc,nome.asc') || []; }
   catch(e){ console.warn(e); }
   // logo da associação
   let logoArca = '';
@@ -544,7 +544,7 @@ async function carregarListaGestao(){
   const box = document.getElementById('gestao-lista');
   box.innerHTML = '<div style="color:#888;font-size:13px;padding:8px">A carregar…</div>';
   try{
-    const parceiros = await supaFetch('parceiros?order=ordem.asc,nome.asc');
+    const parceiros = await supaFetch('parceiros?tipo=eq.apoio&order=ordem.asc,nome.asc');
     if(!parceiros || parceiros.length===0){
       box.innerHTML = '<div style="color:#888;font-size:13px;padding:8px;text-align:center">Ainda não há parceiros. Adiciona o primeiro abaixo.</div>';
       return;
@@ -700,7 +700,7 @@ async function guardarParceiro(){
       const removerFundo = document.getElementById('p-remover-fundo').checked;
       logo_url = await uploadLogo(fileInput.files[0], removerFundo);
     }
-    const dados = {nome, categoria:categoria||null, vantagem:vantagem||null, telefone:tel||null, email:email||null, morada:morada||null, ativo:true};
+    const dados = {nome, tipo:'apoio', categoria:categoria||null, vantagem:vantagem||null, telefone:tel||null, email:email||null, morada:morada||null, ativo:true};
     if(logo_url!==undefined) dados.logo_url = logo_url;
 
     if(id){
