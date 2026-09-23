@@ -554,7 +554,7 @@ async function carregarListaGestao(){
         <div class="g-logo">${p.logo_url?`<img src="${p.logo_url}">`:'🏢'}</div>
         <div class="g-nome"><b>${escapeHtml(p.nome||'')}</b><small>${escapeHtml(p.categoria||'—')}</small></div>
         <button class="g-acao" title="Editar" onclick='editarParceiro(${JSON.stringify(p).replace(/'/g,"&#39;")})'>✏️</button>
-        <button class="g-acao" title="Remover" onclick="removerParceiro(${p.id})">🗑️</button>
+        <button class="g-acao" title="Remover" onclick="removerParceiro('${p.id}')">🗑️</button>
       </div>
     `).join('');
   }catch(e){
