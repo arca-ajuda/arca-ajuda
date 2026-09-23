@@ -31,6 +31,11 @@ input,select,textarea{font-family:inherit}
 .icon-btn:hover{transform:translateY(-1px);filter:brightness(1.06)}
 .icon-btn svg{width:19px;height:19px}
 .icon-btn.sair{--c:#DC9A92}.icon-btn.ajuda{--c:#83BEDD}
+.topbar-apps{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.tb-sep{width:1px;height:26px;background:rgba(255,255,255,.28);margin:0 3px;flex-shrink:0}
+.icon-btn.sm{width:34px;height:34px;border-radius:10px;font-size:16px;text-decoration:none}
+.icon-btn.tb-home{--c:#8FB3D9}.icon-btn.tb-app{--c:#AEB9C4}.icon-btn.tb-config{--c:#D9BE8F}
+@media(max-width:900px){.topbar-apps{display:none}}
 
 /* LAYOUT */
 .app-body{display:flex;flex:1;min-height:0}
@@ -161,6 +166,17 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!import
       <div class="logo-sub">Ofícios e Protocolos</div>
     </div>
   </div>
+  <div class="topbar-apps">
+    <a class="icon-btn sm tb-home" href="https://arca-ajuda.github.io/arca-ajuda/index.html" title="Casa">🏠</a>
+    <div class="tb-sep"></div>
+    <button class="icon-btn sm tb-app" onclick="return irLinkRapido('financeira')" title="Financeira">💰</button>
+    <button class="icon-btn sm tb-app" onclick="return irLinkRapido('socios')" title="Sócios">👥</button>
+    <button class="icon-btn sm tb-app" onclick="return irLinkRapido('salas')" title="Gestão de Salas">🏫</button>
+    <button class="icon-btn sm tb-app" onclick="return irLinkRapido('atl')" title="ATL">🧒</button>
+    <button class="icon-btn sm tb-app" onclick="return irLinkRapido('fichas')" title="Fichas de Inscrição">📝</button>
+    <div class="tb-sep"></div>
+    <button class="icon-btn sm tb-config" onclick="irPara('config')" title="Configurações">⚙️</button>
+  </div>
   <div class="topbar-right">
     <div class="user-chip"><div id="user-email">gestaoarcadajuda@gmail.com</div><small>sessão iniciada</small></div>
     <button class="icon-btn ajuda" onclick="abrirAjuda()" title="Ajuda">
@@ -174,15 +190,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!import
 
 <div class="app-body">
 <aside class="menu-lateral" id="menu-lateral">
-  <div class="ml-apps-scroll">
-    <a class="ml-btn ml-geral" href="https://arca-ajuda.github.io/arca-ajuda/index.html" title="Casa"><span class="ml-lbl">Casa</span><span class="ml-ico">🏠</span></a>
-    <div class="ml-grupo">Aplicações ARCA</div>
-    <a class="ml-btn ml-app" href="#" onclick="return irLinkRapido('financeira')" title="Financeira"><span class="ml-lbl">Financeira</span><span class="ml-ico">💰</span></a>
-    <a class="ml-btn ml-app" href="#" onclick="return irLinkRapido('socios')" title="Sócios"><span class="ml-lbl">Sócios</span><span class="ml-ico">👥</span></a>
-    <a class="ml-btn ml-app" href="#" onclick="return irLinkRapido('salas')" title="Gestão de Salas"><span class="ml-lbl">Gestão de Salas</span><span class="ml-ico">🏫</span></a>
-    <a class="ml-btn ml-app" href="#" onclick="return irLinkRapido('atl')" title="ATL"><span class="ml-lbl">ATL</span><span class="ml-ico">🧒</span></a>
-    <a class="ml-btn ml-app" href="#" onclick="return irLinkRapido('fichas')" title="Fichas de Inscrição"><span class="ml-lbl">Fichas de Inscrição</span><span class="ml-ico">📝</span></a>
-  </div>
   <div class="ml-grupo">Ofícios</div>
   <button class="ml-btn ml-roxo active" data-ml="lista" onclick="irPara(&#39;lista&#39;)"><span class="ml-lbl">Lista de Ofícios</span><span class="ml-ico">📋</span></button>
   <button class="ml-btn ml-marinho" onclick="openModalOficio()"><span class="ml-lbl">+ Novo Ofício</span><span class="ml-ico">✍️</span></button>
@@ -194,8 +201,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!import
   <button class="ml-btn ml-laranja" onclick="openModalProtocolo()"><span class="ml-lbl">+ Novo Protocolo</span><span class="ml-ico">📜</span></button>
   <div class="ml-grupo">Modelos</div>
   <button class="ml-btn ml-verde" data-ml="modelos" onclick="irPara(&#39;modelos&#39;)"><span class="ml-lbl">Modelos de texto</span><span class="ml-ico">📑</span></button>
-  <div class="ml-grupo">Gestão</div>
-  <button class="ml-btn ml-dourado" data-ml="config" onclick="irPara(&#39;config&#39;)"><span class="ml-lbl">Configurações</span><span class="ml-ico">⚙️</span></button>
   <div class="ml-rodape">ARCA d'Ajuda · Ofícios e Protocolos</div>
 </aside>
 
