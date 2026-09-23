@@ -36,6 +36,10 @@ input,select,textarea{font-family:inherit}
 .app-body{display:flex;flex:1;min-height:0}
 .menu-lateral{width:236px;flex-shrink:0;background:#fff;border-right:0.5px solid #dfe3e8;padding:12px 12px 10px;display:flex;flex-direction:column;gap:clamp(9px,1.9vh,22px);position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;scrollbar-width:none}
 .menu-lateral::-webkit-scrollbar{display:none}
+.ml-apps-scroll{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:clamp(9px,1.9vh,22px);padding-right:4px;margin-right:-4px;scrollbar-width:thin;scrollbar-color:#c7ccd3 transparent;flex-shrink:0}
+.ml-apps-scroll::-webkit-scrollbar{width:5px}
+.ml-apps-scroll::-webkit-scrollbar-thumb{background:#c7ccd3;border-radius:3px}
+.ml-apps-scroll::-webkit-scrollbar-track{background:transparent}
 .ml-grupo{font-size:10px;font-weight:800;color:#8a94a3;text-transform:uppercase;letter-spacing:.9px;padding:clamp(6px,1.5vh,16px) 4px 2px}
 .ml-btn{--c:#1B4570;flex-shrink:0;display:flex;align-items:stretch;width:100%;border:none;border-radius:9px;overflow:hidden;cursor:pointer;color:#fff;font-weight:700;font-size:12.5px;letter-spacing:.5px;text-transform:uppercase;background:linear-gradient(135deg,var(--c) 0%,color-mix(in srgb,var(--c) 72%,#fff) 100%);box-shadow:0 3px 9px color-mix(in srgb,var(--c) 45%,transparent);transition:transform .12s,filter .12s;text-decoration:none;padding:0;font-family:inherit;text-align:left}
 .ml-lbl{flex:1;padding:clamp(9px,1.8vh,15px) 13px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -170,13 +174,15 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2E6199!import
 
 <div class="app-body">
 <aside class="menu-lateral" id="menu-lateral">
-  <a class="ml-btn ml-geral" href="https://arca-ajuda.github.io/arca-ajuda/index.html" title="Casa"><span class="ml-lbl">Casa</span><span class="ml-ico">🏠</span></a>
-  <div class="ml-grupo">Aplicações ARCA</div>
-  <a class="ml-btn ml-app" href="#" onclick="return irLinkRapido('financeira')" title="Financeira"><span class="ml-lbl">Financeira</span><span class="ml-ico">💰</span></a>
-  <a class="ml-btn ml-app" href="#" onclick="return irLinkRapido('socios')" title="Sócios"><span class="ml-lbl">Sócios</span><span class="ml-ico">👥</span></a>
-  <a class="ml-btn ml-app" href="#" onclick="return irLinkRapido('salas')" title="Gestão de Salas"><span class="ml-lbl">Gestão de Salas</span><span class="ml-ico">🏫</span></a>
-  <a class="ml-btn ml-app" href="#" onclick="return irLinkRapido('atl')" title="ATL"><span class="ml-lbl">ATL</span><span class="ml-ico">🧒</span></a>
-  <a class="ml-btn ml-app" href="#" onclick="return irLinkRapido('fichas')" title="Fichas de Inscrição"><span class="ml-lbl">Fichas de Inscrição</span><span class="ml-ico">📝</span></a>
+  <div class="ml-apps-scroll">
+    <a class="ml-btn ml-geral" href="https://arca-ajuda.github.io/arca-ajuda/index.html" title="Casa"><span class="ml-lbl">Casa</span><span class="ml-ico">🏠</span></a>
+    <div class="ml-grupo">Aplicações ARCA</div>
+    <a class="ml-btn ml-app" href="#" onclick="return irLinkRapido('financeira')" title="Financeira"><span class="ml-lbl">Financeira</span><span class="ml-ico">💰</span></a>
+    <a class="ml-btn ml-app" href="#" onclick="return irLinkRapido('socios')" title="Sócios"><span class="ml-lbl">Sócios</span><span class="ml-ico">👥</span></a>
+    <a class="ml-btn ml-app" href="#" onclick="return irLinkRapido('salas')" title="Gestão de Salas"><span class="ml-lbl">Gestão de Salas</span><span class="ml-ico">🏫</span></a>
+    <a class="ml-btn ml-app" href="#" onclick="return irLinkRapido('atl')" title="ATL"><span class="ml-lbl">ATL</span><span class="ml-ico">🧒</span></a>
+    <a class="ml-btn ml-app" href="#" onclick="return irLinkRapido('fichas')" title="Fichas de Inscrição"><span class="ml-lbl">Fichas de Inscrição</span><span class="ml-ico">📝</span></a>
+  </div>
   <div class="ml-grupo">Ofícios</div>
   <button class="ml-btn ml-roxo active" data-ml="lista" onclick="irPara(&#39;lista&#39;)"><span class="ml-lbl">Lista de Ofícios</span><span class="ml-ico">📋</span></button>
   <button class="ml-btn ml-marinho" onclick="openModalOficio()"><span class="ml-lbl">+ Novo Ofício</span><span class="ml-ico">✍️</span></button>
