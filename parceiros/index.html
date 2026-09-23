@@ -146,12 +146,14 @@
   <button class="gestao-fechar-flutuante" onclick="fecharGestao()" title="Fechar">×</button>
   <div class="gestao-box">
 
-    <!-- LOGIN (PIN) -->
+    <!-- LOGIN (email + palavra-passe, o mesmo login do admin do site) -->
     <div id="gestao-login">
       <div class="gestao-titulo">🔒 Gestão de Parceiros <button class="gestao-fechar" onclick="fecharGestao()">×</button></div>
-      <p style="color:var(--texto-2);font-size:13.5px;margin-top:6px">Introduz o código de acesso.</p>
-      <label>Código (PIN)</label>
-      <input type="password" id="login-pin" inputmode="numeric" placeholder="••••" autocomplete="off" onkeydown="if(event.key==='Enter')fazerLogin()" style="text-align:center;font-size:22px;letter-spacing:6px">
+      <p style="color:var(--texto-2);font-size:13.5px;margin-top:6px">Entra com o mesmo email e palavra-passe que usas no admin do site.</p>
+      <label>Email</label>
+      <input type="email" id="login-email" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-senha').focus()">
+      <label>Palavra-passe</label>
+      <input type="password" id="login-senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')fazerLogin()">
       <button class="btn" id="btn-login" onclick="fazerLogin()">Entrar</button>
       <div class="erro" id="login-erro"></div>
     </div>
@@ -192,7 +194,7 @@
       <label>Vantagens / descontos (uma por linha)</label>
       <textarea id="p-vantagem" placeholder="15% de desconto nas mensalidades&#10;5% em produtos selecionados"></textarea>
       <div class="linha2">
-        <div><label>Telefone</label><input type="text" id="p-tel" placeholder="291 000 000"></div>
+        <div><label>Telefone</label><input type="text" id="p-telefone" placeholder="291 000 000"></div>
         <div><label>Email</label><input type="email" id="p-email" placeholder="email@empresa.pt"></div>
       </div>
       <label>Morada</label>
@@ -223,13 +225,7 @@
       <div class="compress-info">Ideal se o teu logo tem um quadrado branco à volta. Desliga se o logo já for transparente.</div>
       <button class="btn" style="margin-top:10px" onclick="guardarLogoArca()">Guardar logótipo</button>
 
-      <label style="margin-top:18px">Email de recuperação (para reaver o PIN caso o esqueças)</label>
-      <input type="email" id="cfg-email-recup" placeholder="email@arcadajuda.pt">
-      <div class="compress-info">Quando o sistema de email estiver ativo, poderás pedir o PIN para este endereço.</div>
-      <button class="btn" style="margin-top:12px" onclick="guardarEmailRecup()">Guardar email de recuperação</button>
-
-      <button class="btn btn-cinza" style="margin-top:24px" onclick="alterarPin()">🔑 Alterar PIN</button>
-      <button class="btn btn-cinza" style="margin-top:8px" onclick="sair()">Terminar sessão</button>
+      <button class="btn btn-cinza" style="margin-top:24px" onclick="sair()">Terminar sessão</button>
     </div>
 
   </div>
@@ -242,11 +238,17 @@ const SUPA_KEY = 'sb_publishable_AkzlMeHlYHDyl0HzeC7_qg__j_Y6C9W';
 let sessao = null;
 try{
   const s = JSON.parse(localStorage.getItem('arca_parc_sessao')||'null');
-  if(s && s.pin_ok === true) sessao = s; else localStorage.removeItem('arca_parc_sessao');
+  // Sessão só é válida se tiver um token real de login (email/palavra-passe) e não estiver expirado.
+  if(s && s.access_token && s.expires_at && s.expires_at > Date.now()) sessao = s;
+  else localStorage.removeItem('arca_parc_sessao');
 }catch(e){ localStorage.removeItem('arca_parc_sessao'); }
 
 // ---------- Helpers Supabase ----------
 async function supaFetch(path, method='GET', body=null, extraHeaders=null){
+  // Tenta renovar a sessão se estiver perto de expirar, antes de escrever.
+  if(method!=='GET' && sessao && sessao.expires_at && sessao.expires_at < Date.now()+30000){
+    await renovarSessao();
+  }
   const headers = {'apikey':SUPA_KEY,'Content-Type':'application/json'};
   headers['Authorization'] = 'Bearer ' + (sessao?.access_token || SUPA_KEY);
   if(method!=='GET') headers['Prefer']='return=representation';
@@ -254,9 +256,36 @@ async function supaFetch(path, method='GET', body=null, extraHeaders=null){
   const opts = {method, headers};
   if(body) opts.body = JSON.stringify(body);
   const res = await fetch(`${SUPA_URL}/rest/v1/${path}`, opts);
+  if(res.status===401){
+    // Sessão inválida/expirada: obriga a novo login.
+    sessao = null; localStorage.removeItem('arca_parc_sessao');
+    throw new Error('A sessão expirou. Fecha e volta a abrir a gestão para entrares de novo.');
+  }
   if(!res.ok){ const t = await res.text(); throw new Error(t || ('Erro '+res.status)); }
   if(res.status===204) return null;
   return res.json();
+}
+
+async function renovarSessao(){
+  if(!sessao || !sessao.refresh_token) return;
+  try{
+    const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method:'POST',
+      headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({refresh_token: sessao.refresh_token})
+    });
+    if(!res.ok) throw new Error('renovação falhou');
+    const dados = await res.json();
+    sessao = {
+      access_token: dados.access_token,
+      refresh_token: dados.refresh_token,
+      expires_at: Date.now() + (dados.expires_in||3600)*1000,
+      email: sessao.email
+    };
+    localStorage.setItem('arca_parc_sessao', JSON.stringify(sessao));
+  }catch(e){
+    sessao = null; localStorage.removeItem('arca_parc_sessao');
+  }
 }
 
 // ==========================================================
@@ -287,7 +316,7 @@ async function carregarPublico(){
       const vantagens = (p.vantagem||'').split('\n').filter(v=>v.trim()).map(v=>`<div class="v">${escapeHtml(v.trim())}</div>`).join('');
       const contactos = [];
       if(p.morada) contactos.push(`<span>📍 ${escapeHtml(p.morada)}</span>`);
-      if(p.tel) contactos.push(`<span>📞 ${escapeHtml(p.tel)}</span>`);
+      if(p.telefone) contactos.push(`<span>📞 ${escapeHtml(p.telefone)}</span>`);
       if(p.email) contactos.push(`<span>✉️ ${escapeHtml(p.email)}</span>`);
       return `
         <div class="parceiro">
@@ -323,22 +352,29 @@ function abrirGestao(){
 function fecharGestao(){ document.getElementById('gestao-overlay').classList.remove('aberto'); }
 
 async function fazerLogin(){
-  const pin = document.getElementById('login-pin').value.trim();
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
   const erro = document.getElementById('login-erro');
   const btn = document.getElementById('btn-login');
   erro.style.display='none';
-  if(!pin){ erro.textContent='Introduz o código.'; erro.style.display='block'; return; }
-  btn.disabled=true; btn.textContent='A verificar…';
+  if(!email || !senha){ erro.textContent='Preenche o email e a palavra-passe.'; erro.style.display='block'; return; }
+  btn.disabled=true; btn.textContent='A entrar…';
   try{
-    const rows = await fetch(`${SUPA_URL}/rest/v1/config_app?chave=eq.pin_gestao&select=valor`, {
-      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
-    }).then(r=>r.json());
-    const pinCerto = (rows && rows.length) ? String(rows[0].valor) : null;
-    if(!pinCerto){ throw new Error('PIN não configurado. Contacta o administrador.'); }
-    if(pin !== pinCerto){ throw new Error('Código incorreto.'); }
-    sessao = {pin_ok:true, ts:Date.now()};
+    const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
+      method:'POST',
+      headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({email, password: senha})
+    });
+    const dados = await res.json();
+    if(!res.ok){ throw new Error(dados.error_description || dados.msg || 'Email ou palavra-passe incorretos.'); }
+    sessao = {
+      access_token: dados.access_token,
+      refresh_token: dados.refresh_token,
+      expires_at: Date.now() + (dados.expires_in||3600)*1000,
+      email
+    };
     localStorage.setItem('arca_parc_sessao', JSON.stringify(sessao));
-    document.getElementById('login-pin').value='';
+    document.getElementById('login-senha').value='';
     mostrarConteudoGestao();
   }catch(e){
     erro.textContent = e.message || 'Erro ao entrar.';
@@ -355,59 +391,12 @@ function sair(){
   location.reload();
 }
 
-async function alterarPin(){
-  const novo = prompt('Novo PIN (só números, 4 a 6 dígitos):');
-  if(novo===null) return;
-  const p = novo.trim();
-  if(!/^\d{4,6}$/.test(p)){ alert('O PIN deve ter 4 a 6 números.'); return; }
-  const conf = prompt('Confirma o novo PIN:');
-  if(conf===null) return;
-  if(conf.trim() !== p){ alert('Os PINs não coincidem. Tenta de novo.'); return; }
-  try{
-    const existe = await supaFetch('config_app?chave=eq.pin_gestao');
-    if(existe && existe.length){
-      await supaFetch('config_app?chave=eq.pin_gestao', 'PATCH', {valor: p});
-    }else{
-      await supaFetch('config_app', 'POST', {chave:'pin_gestao', valor:p});
-    }
-    alert('✅ PIN alterado com sucesso. Vais precisar do novo PIN da próxima vez.');
-  }catch(e){
-    console.error(e);
-    alert('Erro ao alterar o PIN: ' + e.message);
-  }
-}
-
 function mostrarConteudoGestao(){
   document.getElementById('gestao-login').style.display='none';
   document.getElementById('gestao-conteudo').style.display='block';
   cancelarEdicao();
   carregarListaGestao();
-  carregarEmailRecup();
   carregarLogoArca();
-}
-
-async function carregarEmailRecup(){
-  try{
-    const rows = await supaFetch('config_app?chave=eq.email_recuperacao&select=valor');
-    if(rows && rows.length) document.getElementById('cfg-email-recup').value = rows[0].valor || '';
-  }catch(e){ console.warn('Não foi possível ler email de recuperação:', e); }
-}
-
-async function guardarEmailRecup(){
-  const email = document.getElementById('cfg-email-recup').value.trim();
-  if(email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ alert('Email inválido.'); return; }
-  try{
-    const existe = await supaFetch('config_app?chave=eq.email_recuperacao');
-    if(existe && existe.length){
-      await supaFetch('config_app?chave=eq.email_recuperacao', 'PATCH', {valor: email});
-    }else{
-      await supaFetch('config_app', 'POST', {chave:'email_recuperacao', valor: email});
-    }
-    alert('✅ Email de recuperação guardado.');
-  }catch(e){
-    console.error(e);
-    alert('Erro ao guardar: ' + e.message);
-  }
 }
 
 function copiarLink(){
@@ -437,7 +426,7 @@ async function construirFolhaApoios(){
     const vantagens = (p.vantagem||'').split('\n').filter(v=>v.trim()).map(v=>`<div class="v">✓ ${v.trim()}</div>`).join('');
     const contactos = [];
     if(p.morada) contactos.push(`📍 ${p.morada}`);
-    if(p.tel) contactos.push(`📞 ${p.tel}`);
+    if(p.telefone) contactos.push(`📞 ${p.telefone}`);
     if(p.email) contactos.push(`✉️ ${p.email}`);
     return `
       <div class="pcard">
@@ -693,7 +682,7 @@ async function guardarParceiro(){
   const nome = document.getElementById('p-nome').value.trim();
   const categoria = document.getElementById('p-categoria').value.trim();
   const vantagem = document.getElementById('p-vantagem').value.trim();
-  const tel = document.getElementById('p-tel').value.trim();
+  const tel = document.getElementById('p-telefone').value.trim();
   const email = document.getElementById('p-email').value.trim();
   const morada = document.getElementById('p-morada').value.trim();
   const fileInput = document.getElementById('p-logo');
@@ -711,7 +700,7 @@ async function guardarParceiro(){
       const removerFundo = document.getElementById('p-remover-fundo').checked;
       logo_url = await uploadLogo(fileInput.files[0], removerFundo);
     }
-    const dados = {nome, categoria:categoria||null, vantagem:vantagem||null, tel:tel||null, email:email||null, morada:morada||null, ativo:true};
+    const dados = {nome, categoria:categoria||null, vantagem:vantagem||null, telefone:tel||null, email:email||null, morada:morada||null, ativo:true};
     if(logo_url!==undefined) dados.logo_url = logo_url;
 
     if(id){
@@ -737,7 +726,7 @@ function editarParceiro(p){
   document.getElementById('p-nome').value = p.nome||'';
   document.getElementById('p-categoria').value = p.categoria||'';
   document.getElementById('p-vantagem').value = p.vantagem||'';
-  document.getElementById('p-tel').value = p.tel||'';
+  document.getElementById('p-telefone').value = p.telefone||'';
   document.getElementById('p-email').value = p.email||'';
   document.getElementById('p-morada').value = p.morada||'';
   document.getElementById('logo-preview').innerHTML = p.logo_url?`<img src="${p.logo_url}" style="max-height:70px;border-radius:8px;border:1px solid #ddd"> <small style="color:#888">(logo atual — escolhe outro para trocar)</small>`:'';
@@ -752,7 +741,7 @@ function cancelarEdicao(){
   document.getElementById('p-nome').value='';
   document.getElementById('p-categoria').value='';
   document.getElementById('p-vantagem').value='';
-  document.getElementById('p-tel').value='';
+  document.getElementById('p-telefone').value='';
   document.getElementById('p-email').value='';
   document.getElementById('p-morada').value='';
   document.getElementById('p-logo').value='';
