@@ -549,7 +549,7 @@ tbody tr:hover td{background:#F5F9FF}
         <option value="HONORÁRIO">Honorário</option>
         <option value="BENEMÉRITO">Benemérito</option>
       </select>
-      <input type="search" name="pesquisa-lista-socios" autocomplete="off" autocorrect="off" spellcheck="false" class="filter-input" id="sf-busca" placeholder="Pesquisar nome, NIF, email..." oninput="renderSociosList()" style="min-width:200px">
+      <input type="text" inputmode="search" name="pesquisa-lista-socios-nsg" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')" autocorrect="off" spellcheck="false" class="filter-input" id="sf-busca" placeholder="Pesquisar nome, NIF, email..." oninput="renderSociosList()" style="min-width:200px">
       <span id="sf-contagem" style="margin-left:auto;font-size:12.5px;font-weight:700;color:#1B4570;background:#E6F1FB;padding:6px 12px;border-radius:20px;white-space:nowrap">—</span>
       <button class="btn-secondary" onclick="toggleResumoSocios()" id="btn-resumo-socios" title="Ver quantos sócios há por tipo e estado">📊 Contagem</button>
     </div>
@@ -567,7 +567,7 @@ tbody tr:hover td{background:#F5F9FF}
     <div class="card" style="margin-bottom:14px">
       <div class="card-title">Seleciona o sócio para gerar o cartão</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <input type="search" name="pesquisa-cartao-socio" autocomplete="off" autocorrect="off" spellcheck="false" id="cartao-busca" class="filter-input" placeholder="Nome ou nº do sócio..." oninput="filterCartaoSocio()" style="flex:1;min-width:200px">
+        <input type="text" inputmode="search" name="pesquisa-cartao-socio-nsg" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')" autocorrect="off" spellcheck="false" id="cartao-busca" class="filter-input" placeholder="Nome ou nº do sócio..." oninput="filterCartaoSocio()" style="flex:1;min-width:200px">
         <select id="cartao-socio-sel" onchange="renderCartaoSocio()" style="flex:1;min-width:200px;padding:8px 10px;border:var(--border);border-radius:var(--radius);background:var(--bg);font-size:13px">
           <option value="">-- Seleciona --</option>
         </select>
@@ -610,7 +610,7 @@ tbody tr:hover td{background:#F5F9FF}
       <div class="card-title">Verificar sócio por QR Code ou número</div>
       <div style="font-size:13px;color:var(--text-2);margin-bottom:14px">Insere o número do sócio ou o código do QR para verificar o estado das quotas em tempo real.</div>
       <div style="display:flex;gap:8px;margin-bottom:16px">
-        <input type="search" name="verificar-codigo-socio" autocomplete="off" autocorrect="off" spellcheck="false" id="verificar-input" placeholder="Nº do sócio ou código QR..." class="filter-input" style="flex:1" onkeydown="if(event.key==='Enter')verificarSocio()">
+        <input type="text" inputmode="search" name="verificar-codigo-socio-nsg" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')" autocorrect="off" spellcheck="false" id="verificar-input" placeholder="Nº do sócio ou código QR..." class="filter-input" style="flex:1" onkeydown="if(event.key==='Enter')verificarSocio()">
         <button class="btn-primary" onclick="verificarSocio()">Verificar</button>
       </div>
       <div id="verificar-resultado"></div>
@@ -999,11 +999,11 @@ tbody tr:hover td{background:#F5F9FF}
     </div>
     <div style="margin-bottom:12px">
       <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Email</label>
-      <input type="email" id="supa-login-email" placeholder="geral@arcadajuda.pt" style="width:100%;padding:9px 11px;border:1px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box">
+      <input type="email" id="supa-login-email" name="username" autocomplete="username" placeholder="geral@arcadajuda.pt" style="width:100%;padding:9px 11px;border:1px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box">
     </div>
     <div style="margin-bottom:16px">
       <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Password</label>
-      <input type="password" id="supa-login-pass" placeholder="••••••••" style="width:100%;padding:9px 11px;border:1px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box" onkeydown="if(event.key==='Enter')fazerLoginSupabase()">
+      <input type="password" id="supa-login-pass" name="password" autocomplete="current-password" placeholder="••••••••" style="width:100%;padding:9px 11px;border:1px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box" onkeydown="if(event.key==='Enter')fazerLoginSupabase()">
     </div>
     <button onclick="fazerLoginSupabase()" style="width:100%;padding:10px;background:#1B4570;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">Entrar</button>
     <div id="supa-login-erro" style="color:#A23B2E;font-size:12.5px;margin-top:10px;text-align:center;display:none"></div>
