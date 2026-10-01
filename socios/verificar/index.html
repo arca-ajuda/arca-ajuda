@@ -52,8 +52,11 @@ async function verificar(){
     return;
   }
   try{
-    const res = await fetch(`${SUPA_URL}/rest/v1/socios_publico?codigo_verificacao=eq.${encodeURIComponent(codigo)}`, {
-      headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer '+SUPA_KEY}
+    // Proteção de dados: pede só o sócio deste código (função verificar_socio), em vez de ler a lista de sócios.
+    const res = await fetch(`${SUPA_URL}/rest/v1/rpc/verificar_socio`, {
+      method: 'POST',
+      headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer '+SUPA_KEY, 'Content-Type': 'application/json'},
+      body: JSON.stringify({p_codigo: codigo})
     });
     if(!res.ok) throw new Error('Erro '+res.status);
     const data = await res.json();
