@@ -347,7 +347,7 @@
         <h4>Encontrar</h4>
         <p>A coluna da esquerda lista os anos; a caixa de pesquisa procura no nome e na descrição. Clica num cartaz para o abrir.</p>
         <h4>Editar e apagar</h4>
-        <p>Dentro da ficha do cartaz: <b>Editar</b> muda nome, ano e descrição; <b>Apagar</b> remove-o da app (e da Drive); <b>Original</b> descarrega o ficheiro tal como foi carregado.</p>
+        <p>Dentro da ficha do cartaz: <b>Editar</b> muda nome, ano e descrição e permite <b>substituir o ficheiro</b> por uma versão nova (o cartaz mantém-se, a miniatura e a cópia na Drive são refeitas); <b>Apagar</b> remove-o da app (e da Drive); <b>Original</b> descarrega o ficheiro tal como foi carregado.</p>
       </section>
 
       <section id="h-imprimir" class="hidden">
@@ -374,7 +374,7 @@
 
       <section id="h-drive" class="hidden">
         <h4>Google Drive</h4>
-        <p>Cada cartaz carregado é copiado automaticamente para a Drive da conta gestaoarcadajuda@gmail.com, na pasta <b>Cartazes / ano</b>. O cartão mostra <b>☁ Drive</b> quando a cópia está feita e <b>☁ pendente</b> quando não. O botão <b>Sincronizar Drive</b> copia os pendentes. Apagar ou renomear na app faz o mesmo na Drive.</p>
+        <p>Cada cartaz carregado é copiado automaticamente para a Drive da conta gestaoarcadajuda@gmail.com, na pasta <b>Cartazes ARCA d'Ajuda / ano</b> (criada pela própria app). O cartão mostra <b>☁ Drive</b> quando a cópia está feita e <b>☁ pendente</b> quando não. O botão <b>Sincronizar Drive</b> copia os pendentes. Apagar ou renomear na app faz o mesmo na Drive.</p>
         <h4>Conta e sessão</h4>
         <p>A entrada é feita com o email gestaoarcadajuda@gmail.com e a password definida no Supabase. A sessão fica memorizada no dispositivo; o botão ⎋ no canto superior direito termina-a.</p>
         <h4>Instalar como app</h4>
@@ -466,6 +466,11 @@
         <div class="field" style="max-width:130px"><label>Ano</label><input id="e-year" type="number" min="2000" max="2100"></div>
       </div>
       <div class="field"><label>Descrição</label><textarea id="e-desc"></textarea></div>
+      <div class="field"><label>Substituir o ficheiro do cartaz (opcional)</label>
+        <input type="file" id="e-file" accept=".pdf,application/pdf,image/png,image/jpeg,image/webp">
+        <small style="color:var(--muted)">Escolhe um PDF ou imagem novo. O cartaz mantém o nome, o ano e a descrição; a miniatura e a cópia na Drive são refeitas.</small>
+      </div>
+      <div class="status" id="e-status"></div>
       <div class="actions"><button class="btn secondary" data-close="modal-edit">Cancelar</button><button class="btn" id="e-save">Guardar</button></div>
     </div>
   </div>
@@ -660,6 +665,9 @@ async function uploadOne(file, ano, title, desc){
   // ficheiro original
   let r = await sb.storage.from(BUCKET).upload(path, file, { contentType: file.type || (isPdf ? 'application/pdf' : 'image/png'), upsert: false });
   if (r.error) throw r.error;
+  // confirma que o ficheiro ficou mesmo guardado antes de registar o cartaz
+  const chk = await sb.storage.from(BUCKET).list(String(ano), { search: `${id}.${ext}` });
+  if (!chk.error && !(chk.data || []).some(f => f.name === `${id}.${ext}`)) throw new Error('O ficheiro não ficou guardado no armazenamento. Tenta de novo.');
   if (thumb) {
     r = await sb.storage.from(BUCKET).upload(thumbPath, thumb, { contentType: 'image/jpeg', upsert: true });
     if (r.error) { console.warn(r.error); thumb = null; }
@@ -786,8 +794,17 @@ $$('[data-close]').forEach(b => b.onclick = () => hide(b.dataset.close));
 $$('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.add('hidden'); }));
 
 async function fetchOriginal(p){
+  // 1.º via link assinado (o mesmo caminho das miniaturas); 2.º download direto
+  const s = await sb.storage.from(BUCKET).createSignedUrl(p.file_path, 300);
+  if (s.data?.signedUrl) {
+    try { const r = await fetch(s.data.signedUrl); if (r.ok) return await r.blob(); } catch(e){ console.warn(e); }
+  }
   const { data, error } = await sb.storage.from(BUCKET).download(p.file_path);
-  if (error) throw error;
+  if (error) {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) throw new Error('A sessão expirou — sai e volta a entrar.');
+    throw new Error('Não foi possível obter o ficheiro original (' + (error.message || error) + '). Usa Editar → Substituir o ficheiro.');
+  }
   return data; // Blob
 }
 $('#d-download').onclick = async () => {
@@ -810,18 +827,45 @@ $('#d-delete').onclick = async () => {
   hide('modal-detail'); toast('Cartaz apagado.'); await loadPosters();
 };
 
-$('#d-edit').onclick = () => { $('#e-title').value = current.titulo; $('#e-year').value = current.ano; $('#e-desc').value = current.descricao || ''; show('modal-edit'); };
+$('#d-edit').onclick = () => { $('#e-title').value = current.titulo; $('#e-year').value = current.ano; $('#e-desc').value = current.descricao || ''; $('#e-file').value = ''; $('#e-status').textContent = ''; show('modal-edit'); };
 $('#e-save').onclick = async () => {
   const upd = { titulo: $('#e-title').value.trim(), ano: parseInt($('#e-year').value,10), descricao: $('#e-desc').value.trim() };
   if (!upd.titulo || !upd.ano) { toast('Nome e ano são obrigatórios.'); return; }
-  const { error } = await sb.from('cartazes').update(upd).eq('id', current.id);
-  if (error) { toast('Erro: ' + error.message); return; }
-  hide('modal-edit'); toast('Alterado.');
-  if (DRIVE_SYNC && current.drive_file_id && (upd.titulo !== current.titulo || upd.ano !== current.ano)) {
-    const r = await driveSync('rename', current.id);
-    if (!r.ok) toast('Alterado na app, mas não na Drive: ' + r.error);
-  }
-  await loadPosters(); openDetail(posters.find(p => p.id === current.id));
+  const file = $('#e-file').files[0];
+  const btn = $('#e-save'); btn.disabled = true;
+  try {
+    const old = { file_path: current.file_path, thumb_path: current.thumb_path, drive_file_id: current.drive_file_id };
+    if (file) {
+      // 1) sobe o ficheiro novo (e a miniatura) para caminhos novos
+      $('#e-status').textContent = 'A carregar o ficheiro novo…';
+      const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+      const ext = isPdf ? 'pdf' : (file.name.split('.').pop() || 'png').toLowerCase();
+      const id = crypto.randomUUID();
+      const path = `${upd.ano}/${id}.${ext}`, thumbPath = `${upd.ano}/${id}_thumb.jpg`;
+      let thumb = null; try { thumb = isPdf ? await pdfThumb(file) : await imageThumb(file); } catch(e){ console.warn(e); }
+      let r = await sb.storage.from(BUCKET).upload(path, file, { contentType: file.type || (isPdf ? 'application/pdf' : 'image/png') });
+      if (r.error) throw r.error;
+      if (thumb) { r = await sb.storage.from(BUCKET).upload(thumbPath, thumb, { contentType: 'image/jpeg', upsert: true }); if (r.error) thumb = null; }
+      Object.assign(upd, { file_path: path, file_type: isPdf ? 'pdf' : 'image', mime: file.type, thumb_path: thumb ? thumbPath : null, tamanho: file.size, drive_file_id: null, drive_link: null });
+      // 2) tira a cópia antiga da Drive
+      if (DRIVE_SYNC && old.drive_file_id) { $('#e-status').textContent = 'A remover a versão antiga da Drive…'; await driveSync('delete', current.id); }
+    }
+    // 3) atualiza o registo
+    const { error } = await sb.from('cartazes').update(upd).eq('id', current.id);
+    if (error) throw error;
+    if (file) {
+      // 4) apaga os ficheiros antigos e envia o novo para a Drive
+      await sb.storage.from(BUCKET).remove([old.file_path, old.thumb_path].filter(Boolean));
+      delete thumbCache[old.thumb_path];
+      if (DRIVE_SYNC) { $('#e-status').textContent = 'A copiar para a Drive…'; const r = await driveSync('upload', current.id); if (!r.ok) toast('Substituído, mas a cópia para a Drive falhou: ' + r.error); }
+    } else if (DRIVE_SYNC && current.drive_file_id && (upd.titulo !== current.titulo || upd.ano !== current.ano)) {
+      const r = await driveSync('rename', current.id);
+      if (!r.ok) toast('Alterado na app, mas não na Drive: ' + r.error);
+    }
+    hide('modal-edit'); toast(file ? 'Cartaz substituído.' : 'Alterado.');
+    await loadPosters(); openDetail(posters.find(p => p.id === current.id));
+  } catch(e) { console.error(e); toast('Erro: ' + (e.message || e)); }
+  finally { btn.disabled = false; $('#e-status').textContent = ''; }
 };
 
 /* =====================================================================
