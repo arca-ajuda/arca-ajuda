@@ -112,6 +112,11 @@
   .paleta-sticky .chip .lapis{font-size:9px;margin-left:3px}
   .paleta-sticky .btn-sm{padding:2px 8px;font-size:11px}
   .paleta-sticky .sel-atual{font-size:11px}
+  .palette.bloqueada .chip,.palette.bloqueada .btn-primary:not(:first-child){opacity:.45;pointer-events:none}
+  .folha.bloqueada .ed{pointer-events:none;border-bottom-color:transparent!important}
+  .folha.bloqueada table.fm td.slot,.folha.bloqueada table.atvs td.fed{cursor:default}
+  .folha.bloqueada table.fm td.slot:hover,.folha.bloqueada table.atvs td.fed:hover{outline:none}
+  table.mapa.bloqueada td.slot{cursor:default}table.mapa.bloqueada td.slot:hover{outline:none}
   .paleta-sticky .sel-atual{font-size:12px;color:var(--text-2);margin-left:auto}
   .palette{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
   .chip{border:2px solid transparent;border-radius:99px;padding:5px 11px;font-size:12.5px;font-weight:700;cursor:pointer;color:#1b1b1b}
@@ -636,7 +641,8 @@ function renderAll(){
   render(tabAtual()); }
 
 /* ---------- PALETA + EDIÇÃO DE ATIVIDADES ---------- */
-let _renderDepois=null;
+let _renderDepois=null; let edicaoAtiva=false; // proteção: o mapa só se altera com «Editar» ligado
+function toggleEdicao(){ edicaoAtiva=!edicaoAtiva; if(!edicaoAtiva) painting=false; _renderDepois?_renderDepois():render(tabAtual()); toast(edicaoAtiva?'Edição ligada — podes alterar o mapa e os textos.':'Mapa bloqueado — só leitura.'); }
 function renderPaletaLateral(after){
   const box=$('side-paleta'); if(!box) return; _renderDepois=after;
   if(!brush || (brush!=='eraser' && !atv(brush))) brush = D.atividades[0]?D.atividades[0].id:'eraser';
@@ -647,12 +653,12 @@ function renderPaletaLateral(after){
 }
 function paletaHtml(after){
   _renderDepois=after;
-  let h=`<div class="palette"><b class="small muted" style="margin-right:2px;font-size:11px">Colocar:</b>`;
+  let h=`<div class="palette${edicaoAtiva?'':' bloqueada'}"><button class="btn btn-sm ${edicaoAtiva?'btn-primary':''}" onclick="toggleEdicao()" title="${edicaoAtiva?'Clica para bloquear o mapa':'Clica para permitir alterações'}">${edicaoAtiva?'🔓 Editar: LIGADO':'🔒 Editar: desligado'}</button><b class="small muted" style="margin:0 2px 0 6px;font-size:11px">Colocar:</b>`;
   D.atividades.forEach(a=>{ h+=`<span class="chip ${brush===a.id?'sel':''}" style="background:${esc(a.cor)}" onclick="brush='${a.id}';_renderDepois()" title="${a.federada?'Federada':'Não federada'} · clica no lápis para editar">${esc(a.nome)}<span class="lapis" onclick="event.stopPropagation();abrirAtividade('${a.id}')" title="Editar / eliminar">✏️</span></span>`; });
   h+=`<span class="chip eraser ${brush==='eraser'?'sel':''}" onclick="brush='eraser';_renderDepois()">🧽 Borracha</span>`;
   h+=`<button class="btn btn-sm btn-primary" style="margin-left:6px" onclick="abrirAtividade(null)">+ Nova atividade</button>`;
   const sel=brush==='eraser'?'Borracha':(atv(brush)||{}).nome||'—';
-  h+=`<span class="sel-atual">Selecionado: <b>${esc(sel)}</b> · ✏️ edita/elimina</span></div>`;
+  h+=`<span class="sel-atual">${edicaoAtiva?`Selecionado: <b>${esc(sel)}</b> · ✏️ edita/elimina`:'<b>Bloqueado</b> — liga «Editar» para alterar o mapa'}</span></div>`;
   return h;
 }
 function usoAtividade(id){ let n=0; D.salas.forEach(s=>{ n+=horasDia(s.id,id).reduce((a,b)=>a+b,0); }); const inv=ocupacoesInvisiveis().filter(x=>x.atv&&x.atv.id===id).length; return {horas:n, escondidas:inv}; }
@@ -687,7 +693,7 @@ function abrirAjuda(){
   $('modal').innerHTML=`<h3>❓ Ajuda — Gestão das Salas</h3>
     <div class="small muted" style="margin-bottom:6px">Guia rápido de cada secção.</div>
     <div class="subt">📄 Folha completa (o mapa para afixar)</div><ul>
-      <li>Escolhe a atividade na <b>barra fixa do topo</b> e <b>clica ou arrasta</b> nas meias-horas. Cada linha vai do início ao fim indicado (ex.: aula das 17:30 às 18:30 = linhas 17:30–18:00 e 18:00–18:30).</li>
+      <li>O mapa abre <b>bloqueado</b>: carrega em <b>🔒 Editar</b> na barra para ligar a edição (volta a bloquear ao recarregar a página). Depois escolhe a atividade na barra e <b>clica ou arrasta</b> nas meias-horas. Cada linha vai do início ao fim indicado (ex.: aula das 17:30 às 18:30 = linhas 17:30–18:00 e 18:00–18:30).</li>
       <li><b>🧽 Borracha</b> apaga; clicar de novo com a mesma atividade também apaga.</li>
       <li><b>✏️</b> numa atividade (barra): muda nome, cor, federada ou elimina. <b>+ Nova atividade</b> cria outra. Na tabela das atividades podes escrever o nome por cima, clicar em FEDERADA/NÃO FEDERADA para alternar e escrever o <b>professor/treinador</b>.</li>
       <li>Clica em qualquer <b>texto</b> (títulos, nomes das salas, valores de inscrição, avisos, observações) para o escrever por cima. Tudo fica guardado.</li>
@@ -722,13 +728,14 @@ function eliminarAtividade(id, btn){
 
 /* ---------- FOLHA COMPLETA (como no mapa impresso) ---------- */
 let folhaMostraValores = false;
-function edTexto(el, campo){ D.assoc[campo]=el.innerText.replace(/\n+$/,''); guardar(); }
-function edNomeAtv(el,id){ const a=atv(id); if(!a) return; const v=el.innerText.trim(); if(!v){ el.innerText=a.nome; return; } if(D.atividades.some(x=>x.id!==id && x.nome.toLowerCase()===v.toLowerCase())){ toast('Já existe uma atividade com esse nome.',false); el.innerText=a.nome; return; } if(v!==a.nome){ a.nome=v; guardar(); renderFolha(); } }
-function edProfAtv(el,id){ const a=atv(id); if(!a) return; a.prof=el.innerText.replace(/\n+$/,'').trim(); guardar(); }
-function toggleFed(id){ const a=atv(id); if(!a) return; a.federada=!a.federada; guardar(); renderFolha(); }
-function edTxt(el, k){ D.txt[k]=el.innerText.replace(/\n+$/,''); guardar(); }
+function edBloq(){ if(!edicaoAtiva){ toast('Bloqueado — liga «Editar» na barra.',false); return true; } return false; }
+function edTexto(el, campo){ if(edBloq()) return; D.assoc[campo]=el.innerText.replace(/\n+$/,''); guardar(); }
+function edNomeAtv(el,id){ if(edBloq()) return; const a=atv(id); if(!a) return; const v=el.innerText.trim(); if(!v){ el.innerText=a.nome; return; } if(D.atividades.some(x=>x.id!==id && x.nome.toLowerCase()===v.toLowerCase())){ toast('Já existe uma atividade com esse nome.',false); el.innerText=a.nome; return; } if(v!==a.nome){ a.nome=v; guardar(); renderFolha(); } }
+function edProfAtv(el,id){ if(edBloq()) return; const a=atv(id); if(!a) return; a.prof=el.innerText.replace(/\n+$/,'').trim(); guardar(); }
+function toggleFed(id){ if(edBloq()) return; const a=atv(id); if(!a) return; a.federada=!a.federada; guardar(); renderFolha(); }
+function edTxt(el, k){ if(edBloq()) return; D.txt[k]=el.innerText.replace(/\n+$/,''); guardar(); }
 const T=(k)=>`<span class="ed" contenteditable="true" spellcheck="false" onblur="edTxt(this,'${k}')">${esc(D.txt[k])}</span>`;
-function edSalaNome(el, id){ const x=sala(id); if(!x) return; const v=el.innerText.trim(); if(v){ x.nome=v; guardar(); } }
+function edSalaNome(el, id){ if(edBloq()) return; const x=sala(id); if(!x) return; const v=el.innerText.trim(); if(v){ x.nome=v; guardar(); } }
 function tabelaEspaco(s){
   let h=`<table class="fm" data-sala="${s.id}"><thead><tr><th class="sala" colspan="8"><span class="ed" contenteditable="true" spellcheck="false" onblur="edSalaNome(this,'${s.id}')">${esc(s.nome)}</span></th></tr><tr><th>${esc(D.txt.colHoras)}</th>${DIAS.map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>`;
   slots(s).forEach(hr=>{ h+=`<tr><td class="h">${horaTxt(hr)}<span class="fim">–${horaTxt(hr+PASSO())}</span></td>`; for(let d=0;d<7;d++){ const id=celula(s.id,d,hr); const a=id?atv(id):null; const first=a && celula(s.id,d,Math.round((hr-PASSO())*100)/100)!==id; h+=`<td class="slot ${first?'first':''}" data-d="${d}" data-h="${hr}" style="${a?'background:'+esc(a.cor):''}" title="${a?esc(a.nome)+' · ':''}${horaTxt(hr)}–${horaTxt(hr+PASSO())}${a?' ('+fmtH(blocoDuracao(s.id,d,hr))+'h seguidas)':''}">${a&&first?esc(a.nome):''}</td>`; } h+=`</tr>`; });
@@ -740,10 +747,10 @@ function renderFolha(){
   const anoTxt=ini.getFullYear()+'/'+String(ini.getFullYear()+1).slice(2);
   const salasT=D.salas.filter(x=>x.tipo!=='campo'), campos=D.salas.filter(x=>x.tipo==='campo');
   const usadas=D.atividades.slice(); // todas as atividades da lista, como no mapa original
-  let h=`<div class="page-head"><div><h2>Mapa das atividades</h2><p>Escolhe a atividade na barra e clica/arrasta nas meias-horas; clica nos textos para os alterar. Dúvidas: <a href="#" onclick="abrirAjuda();return false">❓ Ajuda</a>.</p></div></div>`;
+  let h=`<div class="page-head"><div><h2>Mapa das atividades</h2><p>Por segurança o mapa abre bloqueado: liga «Editar» na barra para alterar; depois escolhe a atividade e clica/arrasta nas meias-horas, ou clica nos textos para os alterar. Dúvidas: <a href="#" onclick="abrirAjuda();return false">❓ Ajuda</a>.</p></div></div>`;
   h+=`<div class="folha-tools"><button class="btn btn-primary" onclick="imprimirFolha()">🖶 Imprimir / guardar PDF</button><label class="small muted"><input type="checkbox" ${folhaMostraValores?'checked':''} onchange="folhaMostraValores=this.checked;renderFolha()"> Juntar tabela de valores a pagar por mês</label></div>`;
   h+=`<div class="paleta-sticky">${paletaHtml(renderFolha)}</div>`;
-  h+=`<div class="folha" id="folha">`;
+  h+=`<div class="folha${edicaoAtiva?'':' bloqueada'}" id="folha">`;
   h+=`<div class="fh"><h1><span class="ed" contenteditable="true" onblur="edTexto(this,'nome')">${esc(D.assoc.nome)}</span> - ${T('nipc')} <span class="ed" contenteditable="true" onblur="edTexto(this,'nipc')">${esc(D.assoc.nipc)}</span></h1><div class="sub">${T('morada')} <span class="ed" contenteditable="true" onblur="edTexto(this,'morada')">${esc(D.assoc.morada)}</span> - ${T('contacto')} <span class="ed" contenteditable="true" onblur="edTexto(this,'contacto')">${esc(D.assoc.contacto)}</span></div></div>`;
   h+=`<h2 class="ft">${T('titulo')} - ${anoTxt}</h2>`;
   const ncol=salasT.length+(campos.length?1:0);
@@ -790,6 +797,7 @@ function renderFolha(){
   }
   h+=`</div>`;
   $('sec-folha').innerHTML=h;
+  if(!edicaoAtiva) document.querySelectorAll('#sec-folha .ed').forEach(el=>el.setAttribute('contenteditable','false'));
   ligarPintura('#sec-folha table.fm', renderFolha);
 }
 function imprimirFolha(){ document.body.classList.add('print-folha'); const done=()=>{ document.body.classList.remove('print-folha'); window.removeEventListener('afterprint',done); }; window.addEventListener('afterprint',done); window.print(); setTimeout(done,2000); }
@@ -808,7 +816,7 @@ function renderMapa(){
   h+=`<div class="salas-grid">`;
   D.salas.forEach(s=>{
     const hs=det.filter(r=>r.sala.id===s.id).reduce((a,r)=>a+r.horasSemana,0);
-    h+=`<div class="card" style="margin:0"><h3><span>${esc(s.nome)}</span><span class="small muted">${fmtH(horasEspaco(s.id))} h/semana${s.cobrar?' · '+fmt(s.p1)+' / '+fmt(s.p2)+' por hora':' · sem cobrança'}</span></h3><div class="table-wrap"><table class="mapa" data-sala="${s.id}"><thead><tr><th style="width:40px">Início</th><th style="width:40px">Fim</th>`;
+    h+=`<div class="card" style="margin:0"><h3><span>${esc(s.nome)}</span><span class="small muted">${fmtH(horasEspaco(s.id))} h/semana${s.cobrar?' · '+fmt(s.p1)+' / '+fmt(s.p2)+' por hora':' · sem cobrança'}</span></h3><div class="table-wrap"><table class="mapa${edicaoAtiva?'':' bloqueada'}" data-sala="${s.id}"><thead><tr><th style="width:40px">Início</th><th style="width:40px">Fim</th>`;
     DIAS_S.forEach(d=>h+=`<th>${d}</th>`); h+=`</tr></thead><tbody>`;
     slots(s).forEach((hr,idx)=>{
       h+=`<tr class="${Number.isInteger(hr)?'hora-cheia':''}"><td class="hora">${horaTxt(hr)}</td><td class="hora" style="color:#888">${horaTxt(hr+PASSO())}</td>`;
@@ -841,10 +849,10 @@ let _afterPaint=null, _ultimoToque=0;
 function ligarPintura(sel, after){
   document.querySelectorAll(sel).forEach(tb=>{
     const sid=tb.dataset.sala;
-    tb.addEventListener('mousedown',e=>{ if(_ultimoToque && Date.now()-_ultimoToque<800) return; const td=e.target.closest('td.slot'); if(!td) return; e.preventDefault(); painting=true; _afterPaint=after; const cur=celula(sid,+td.dataset.d,+td.dataset.h); paintValue = (brush==='eraser'||cur===brush)? null : brush; aplicar(sid,td); });
+    tb.addEventListener('mousedown',e=>{ if(!edicaoAtiva){ const td0=e.target.closest('td.slot'); if(td0){ e.preventDefault(); toast('Mapa bloqueado — liga «Editar» na barra para alterar.',false); } return; } if(_ultimoToque && Date.now()-_ultimoToque<800) return; const td=e.target.closest('td.slot'); if(!td) return; e.preventDefault(); painting=true; _afterPaint=after; const cur=celula(sid,+td.dataset.d,+td.dataset.h); paintValue = (brush==='eraser'||cur===brush)? null : brush; aplicar(sid,td); });
     tb.addEventListener('mouseover',e=>{ if(!painting) return; const td=e.target.closest('td.slot'); if(td) aplicar(sid,td); });
     tb.addEventListener('mouseleave',()=>{ if(painting){ painting=false; guardar(); (_afterPaint||renderMapa)(); } });
-    tb.addEventListener('touchstart',e=>{ _ultimoToque=Date.now(); const td=e.target.closest('td.slot'); if(!td) return; _afterPaint=after; const cur=celula(sid,+td.dataset.d,+td.dataset.h); paintValue=(brush==='eraser'||cur===brush)?null:brush; aplicar(sid,td); },{passive:true});
+    tb.addEventListener('touchstart',e=>{ _ultimoToque=Date.now(); if(!edicaoAtiva) return; const td=e.target.closest('td.slot'); if(!td) return; _afterPaint=after; const cur=celula(sid,+td.dataset.d,+td.dataset.h); paintValue=(brush==='eraser'||cur===brush)?null:brush; aplicar(sid,td); },{passive:true});
   });
 }
 document.addEventListener('mouseup',()=>{ if(painting){ painting=false; guardar(); (_afterPaint||renderMapa)(); } });
