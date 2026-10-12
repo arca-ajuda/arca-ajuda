@@ -1134,14 +1134,31 @@ function render(){
 }
 
 /* ---------- LISTA ---------- */
+/* Pesquisa: todas as palavras têm de existir (por qualquer ordem), sem acentos nem maiúsculas.
+   Números: nº do sócio exato; telemóvel/NIF por parte (3+ dígitos, com ou sem espaços e +351); código do cartão e email por parte. */
+function digits(v){return String(v==null?'':v).replace(/\D/g,'')}
+function stripCC(d){return d.replace(/^(00)?351(?=\d{9}$)/,'')}
+function matchSocio(s,q){
+  q=A.norm(q).trim(); if(!q)return true;
+  var nome=A.norm(s.nome).replace(/\s+/g,' '), mail=A.norm(s.email), cod=A.norm(s.codigo_verificacao), num=String(s.num), tel=stripCC(digits(s.tel)), nif=digits(s.nif);
+  var qd=q.replace(/[\s+.\-]/g,'');
+  if(/^\d+$/.test(qd)){                       /* só números (ex.: 12, 912 345 678, +351 291 222 333) */
+    var qq=stripCC(qd);
+    if(num===qd)return true;
+    return qq.length>=3&&(tel.indexOf(qq)>=0||nif.indexOf(qq)>=0||(qd.length>=3&&cod.indexOf(qd)>=0));
+  }
+  return q.split(/\s+/).every(function(t){
+    if(/^\d+$/.test(t))return t===num||(t.length>=3&&(tel.indexOf(stripCC(t))>=0||nif.indexOf(t)>=0));
+    return nome.indexOf(t)>=0||mail.indexOf(t)>=0||cod.indexOf(t)>=0;
+  });
+}
 function filtered(){
-  var f=S.f,q=A.norm(f.q);
+  var f=S.f;
   return S.socios.filter(function(s){
     if(f.estado&&s.estado!==f.estado)return false;
     if(f.tipo&&s.tipo!==f.tipo)return false;
     if(f.sit&&(inativo(s)||sitOf(s)!==f.sit))return false;
-    if(q&&!(A.norm(s.nome).indexOf(q)>=0||String(s.num).indexOf(q)>=0||(s.nif||'').indexOf(q)>=0||A.norm(s.email).indexOf(q)>=0||(s.tel||'').indexOf(q)>=0))return false;
-    return true;
+    return matchSocio(s,f.q);
   });
 }
 function viewLista(body){
@@ -1374,9 +1391,12 @@ function viewCartao(body,id){
   var sel=h('select',{class:'select',style:{flex:'1',minWidth:'220px'}});
   sel.appendChild(h('option',{value:'',text:'— Selecione um sócio —'}));
   S.socios.forEach(function(s){sel.appendChild(h('option',{value:s.id,text:s.num+' — '+s.nome,selected:cur&&cur.id===s.id}))});
-  var q=h('input',{class:'input',type:'search',placeholder:'Pesquisar sócio…',style:{flex:'1',minWidth:'180px'},autocomplete:'off',oninput:function(){
-    var n=A.norm(q.value);[].forEach.call(sel.options,function(o,i){if(i)o.hidden=n&&A.norm(o.text).indexOf(n)<0});
-    var first=[].filter.call(sel.options,function(o,i){return i&&!o.hidden})[0]; if(n&&first){sel.value=first.value;show()}}});
+  var q=h('input',{class:'input',type:'search',placeholder:'Pesquisar nome, nº, telemóvel…',style:{flex:'1',minWidth:'180px'},autocomplete:'off',oninput:A.debounce(function(){
+    var keep=sel.value; var lst=S.socios.filter(function(x){return matchSocio(x,q.value)});
+    sel.innerHTML=''; sel.appendChild(h('option',{value:'',text:lst.length?'— Selecione um sócio ('+lst.length+') —':'— Nenhum sócio encontrado —'}));
+    lst.forEach(function(x){sel.appendChild(h('option',{value:x.id,text:x.num+' — '+x.nome}))});
+    if(keep&&lst.some(function(x){return String(x.id)===String(keep)}))sel.value=keep;
+    else if(lst.length===1&&q.value.trim()){sel.value=lst[0].id;ctx.route[1]=sel.value;show()}},150)});
   body.appendChild(h('div',{class:'card',style:{marginBottom:'14px'}},h('h3',{text:'Selecione o sócio para gerar o cartão'}),h('div',{class:'toolbar',style:{marginBottom:0}},q,sel)));
   var area=h('div',{style:{display:'flex',gap:'22px',flexWrap:'wrap',alignItems:'flex-start'}});body.appendChild(area);
   sel.onchange=function(){ctx.route[1]=sel.value;show()};
@@ -1434,8 +1454,9 @@ function viewVerificar(body){
     var t=inp.value.trim(); if(!t){A.toast('Introduza um código, número ou link.','bad');return}
     var s,m=t.match(/[?&]c=([a-zA-Z0-9]+)/);
     if(m)s=S.socios.filter(function(x){return (x.codigo_verificacao||'').toUpperCase()===m[1].toUpperCase()})[0];
-    else{var n=parseInt((t.match(/num=(\d+)/)||t.match(/^ARCA:(\d+)/)||[null,t])[1]);
-      s=!isNaN(n)?S.socios.filter(function(x){return Number(x.num)===n})[0]:S.socios.filter(function(x){return (x.codigo_verificacao||'').toUpperCase()===t.toUpperCase()})[0]}
+    else{var mm=t.match(/num=(\d+)/)||t.match(/^ARCA:(\d+)/)||(/^\d+$/.test(t)?[null,t]:null), n=mm?parseInt(mm[1],10):NaN;
+      s=!isNaN(n)?S.socios.filter(function(x){return Number(x.num)===n})[0]:null;
+      if(!s)s=S.socios.filter(function(x){return (x.codigo_verificacao||'').toUpperCase()===t.toUpperCase()})[0]}
     out.innerHTML='';
     if(!s){out.appendChild(h('div',{class:'err',text:'❌ Sócio não encontrado.'}));return}
     A.log('verificar',s.nome);
