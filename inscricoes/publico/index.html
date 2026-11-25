@@ -620,5 +620,6 @@ function iniciar(){
 iniciar();
 })();
 </script>
+<script>/* botão para voltar ao menu das fichas */(function(){try{var p=new URLSearchParams(location.search);if(!p.get('tipo'))return;var t=document.querySelector('.topbar');if(!t)return;var a=document.createElement('a');a.href=location.pathname;a.textContent='← Outras fichas';a.setAttribute('style','margin-left:auto;color:#fff;text-decoration:none;font-weight:700;font-size:13px;border:1px solid rgba(255,255,255,.55);border-radius:99px;padding:7px 14px;white-space:nowrap');t.appendChild(a)}catch(e){}})();</script>
 </body>
 </html>
